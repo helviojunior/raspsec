@@ -1,0 +1,13 @@
+{
+  "commits": [
+    {
+      "hash": "4c60d91c99ad622bfb9779547558038bb3604051",
+      "message": "Rename secmatrix to strataap across entire codebase",
+      "skipped": true
+    },
+    {
+      "hash": "acc9588e6ec629d44ae2e82d7e9a9c5a63981652",
+      "message": "Remove company module, MFA authentication, and password policy"
+    }
+  ]
+}
