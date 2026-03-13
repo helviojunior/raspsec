@@ -12,6 +12,10 @@
     {
       "hash": "8c269308933c93a1495370a1a17ec8188cd9c37e",
       "message": "Switch to username auth, SQLite, and auto-create superadmin"
+    },
+    {
+      "hash": "55cb45001251aa4d0f0f131c5c65d0d7c779b758",
+      "message": "Migrate Raspberry Pi build infrastructure from raspap-insiders"
     }
   ]
 }
