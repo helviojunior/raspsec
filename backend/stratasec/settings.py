@@ -19,7 +19,6 @@ from pathlib import Path
 import os, json
 from dotenv import dotenv_values
 from cryptography.hazmat.primitives import serialization
-import dj_database_url
 
 
 def _smart_cast(value: str):
@@ -169,10 +168,10 @@ WSGI_APPLICATION = 'stratasec.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(
-        env='POSTGRES_URL',
-        default='sqlite:///db.sqlite3',
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'data', 'db.sqlite3'),
+    }
 }
 
 

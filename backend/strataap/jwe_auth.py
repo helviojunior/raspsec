@@ -31,7 +31,7 @@ def create_token(user, scope='auth'):
     payload = {
         'jti': str(uuid.uuid4()),
         'sub': str(user.pk),
-        'email': user.email,
+        'username': user.username,
         'first_name': user.first_name,
         'last_name': user.last_name,
         'is_admin': user.is_admin,

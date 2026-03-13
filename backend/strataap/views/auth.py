@@ -1,6 +1,5 @@
 import time
 
-from django.conf import settings
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -10,11 +9,9 @@ from strataap.decorators import require_scope
 from strataap.jwe_auth import create_token
 from strataap.models import User
 from strataap.serializers import (
-    EmailStepSerializer,
-    PasswordStepSerializer,
+    LoginSerializer,
     ChangePasswordSerializer,
 )
-from strataap.tools import sanitize_email
 
 # Lockout settings
 MAX_PASSWORD_ATTEMPTS = 5
@@ -28,38 +25,26 @@ class CsrfExemptSessionAuth(SessionAuthentication):
         return
 
 
-class EmailStepView(APIView):
+def _user_response(user):
+    """Build standard user response dict."""
+    return {
+        'username': user.username,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'is_admin': user.is_admin,
+    }
+
+
+class LoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = [CsrfExemptSessionAuth]
 
     def post(self, request):
-        serializer = EmailStepSerializer(data=request.data)
+        serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        email = sanitize_email(serializer.validated_data['email']).lower()
-
-        # Clear any previous auth state
-        request.session.pop('password_attempts', None)
-        request.session.pop('lockout_until', None)
-
-        # Store email in session
-        request.session['login_email'] = email
-
-        # Always return 200 to avoid leaking user existence
-        return Response({'detail': 'ok'})
-
-
-class PasswordStepView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = [CsrfExemptSessionAuth]
-
-    def post(self, request):
-        email = request.session.get('login_email')
-        if not email:
-            return Response(
-                {'detail': 'Sessão inválida.'},
-                status=400,
-            )
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
 
         # Check lockout
         lockout_until = request.session.get('lockout_until', 0)
@@ -69,16 +54,11 @@ class PasswordStepView(APIView):
                 status=400,
             )
 
-        serializer = PasswordStepSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        password = serializer.validated_data['password']
-
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(username=username)
         except User.DoesNotExist:
             return Response(
-                {'detail': 'Senha incorreta.'},
+                {'detail': 'Usuário ou senha incorretos.'},
                 status=400,
             )
 
@@ -94,7 +74,7 @@ class PasswordStepView(APIView):
                 )
 
             return Response(
-                {'detail': 'Senha incorreta.'},
+                {'detail': 'Usuário ou senha incorretos.'},
                 status=400,
             )
 
@@ -104,23 +84,13 @@ class PasswordStepView(APIView):
         # Check if user must change password
         if user.change_password_next_login:
             return Response({
-                'user': {
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'is_admin': user.is_admin,
-                },
+                'user': _user_response(user),
                 'token': create_token(user, scope='password_change'),
                 'must_change_password': True,
             })
 
         return Response({
-            'user': {
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'is_admin': user.is_admin,
-            },
+            'user': _user_response(user),
             'token': create_token(user),
         })
 
@@ -143,12 +113,7 @@ class ChangePasswordView(APIView):
 
         # Issue a normal auth token
         return Response({
-            'user': {
-                'email': request.user.email,
-                'first_name': request.user.first_name,
-                'last_name': request.user.last_name,
-                'is_admin': request.user.is_admin,
-            },
+            'user': _user_response(request.user),
             'token': create_token(request.user),
         })
 

@@ -8,6 +8,10 @@
     {
       "hash": "acc9588e6ec629d44ae2e82d7e9a9c5a63981652",
       "message": "Remove company module, MFA authentication, and password policy"
+    },
+    {
+      "hash": "8c269308933c93a1495370a1a17ec8188cd9c37e",
+      "message": "Switch to username auth, SQLite, and auto-create superadmin"
     }
   ]
 }

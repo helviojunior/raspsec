@@ -4,7 +4,7 @@
 *.pyc
 __pycache__
 db.sqlite3
-backend/.idea
+.idea/
 *.*~
 *.sqlite3
 .DS_Store

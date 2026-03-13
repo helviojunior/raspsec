@@ -15,9 +15,10 @@ class AbstractUser(models.Model):
     """
 
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(_("email address"), unique=True)
+    username = models.CharField(_("username"), max_length=150, unique=True)
     first_name = models.CharField(_("first name"), max_length=150, blank=True)
     last_name = models.CharField(_("last name"), max_length=150, blank=True)
+    email = models.EmailField(_("email address"), blank=True)
     mobile_phone = models.CharField(_("mobile phone"), max_length=50, blank=True)
     is_active = models.BooleanField(
         _("active"),
@@ -38,15 +39,11 @@ class AbstractUser(models.Model):
     def __str__(self):
         desc = self.full_name
         if desc != '':
-            return f'{desc} <{self.email}>'
-        return f'{self.email}'
+            return f'{desc} ({self.username})'
+        return f'{self.username}'
 
     def __repr__(self):
         return str(self)
-
-    def clean(self):
-        super().clean()
-        #self.email = self.__class__.objects.normalize_email(self.email)
 
     @property
     def full_name(self):
@@ -60,7 +57,7 @@ class AbstractUser(models.Model):
         if self.first_name is not None and self.first_name != "":
             return self.first_name
 
-        return self.email
+        return self.username
 
     def get_full_name(self):
         return self.full_name
@@ -68,4 +65,3 @@ class AbstractUser(models.Model):
     def get_short_name(self):
         """Return the short name for the user."""
         return self.first_name
-

@@ -15,5 +15,3 @@ django-filter
 django-crontab
 djangorestframework-simplejwt
 django-recaptcha
-psycopg2-binary
-dj-database-url

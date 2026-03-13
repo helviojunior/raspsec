@@ -40,6 +40,17 @@ def _should_run_now() -> bool:
     return True
 
 
+def _ensure_superadmin():
+    """Create default superadmin if no admin user exists."""
+    from strataap.models import User
+    if not User.objects.filter(is_admin=True).exists():
+        User.objects.create_superuser(
+            username='stratasec',
+            password='@Pass123',
+        )
+        log.info("Default superadmin 'stratasec' created.")
+
+
 def on_startup():
     global _ALREADY_RAN
     if _ALREADY_RAN:
@@ -48,20 +59,17 @@ def on_startup():
         return
     _ALREADY_RAN = True
 
-    # 👇 Coloque aqui o que precisa rodar no startup
     try:
         log.info("Running startup tasks...")
-        # exemplos:
-        # - registrar schedulers
-        # - pré-carregar caches
-        # - validar variáveis de ambiente
-        # - checar conexões externas
 
         env_path = Path(settings.DATA_DIR) / ".env"
         if not env_path.exists():
             log.exception("Environment file '.env' not found, creating a default one!")
             create_default_dot_env()
             os.kill(os.getpid(), signal.SIGTERM)
+
+        # Ensure default superadmin exists
+        _ensure_superadmin()
 
         from django.core.cache import cache
         cache.set("app:healthy", True, timeout=60)

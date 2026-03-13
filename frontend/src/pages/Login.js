@@ -7,9 +7,33 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { useAuth } from "contexts/AuthContext";
 import api from "lib/api";
-import { setToken } from "lib/api";
 
-function EmailStep({ email, setEmail, onSubmit, loading, error }) {
+function LoginForm({ onSuccess }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await api.post("/api/auth/login/", { username, password });
+      onSuccess(response.data);
+    } catch (err) {
+      const message =
+        err.response?.data?.detail ||
+        err.response?.data?.error ||
+        "Usuário ou senha incorretos.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       <CardHeader className="text-center pb-2">
@@ -17,65 +41,26 @@ function EmailStep({ email, setEmail, onSubmit, loading, error }) {
           Acessar o sistema
         </h1>
         <p className="text-sm text-gray-500 mt-2">
-          Entre com o e-mail cadastrado no sistema.
+          Entre com suas credenciais para continuar.
         </p>
       </CardHeader>
       <CardContent>
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-700">E-mail</Label>
+            <Label htmlFor="username" className="text-gray-700">Usuário</Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="voce@exemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="username"
+              type="text"
+              placeholder="seu.usuario"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               error={!!error}
               required
               autoFocus
-              autoComplete="email"
+              autoComplete="username"
               className="bg-white text-gray-900 border-gray-300 placeholder:text-gray-400"
             />
-            {error && (
-              <p className="text-xs text-red-500 mt-1">{error}</p>
-            )}
           </div>
-          <Button type="submit" className="w-full" size="lg" loading={loading}>
-            Continuar
-          </Button>
-        </form>
-      </CardContent>
-      <CardFooter className="justify-center">
-        <p className="text-xs text-center text-gray-500 leading-relaxed max-w-[280px]">
-          Caso não lembre seu e-mail cadastrado entre em contato
-          através do nosso e-mail{" "}
-          <a
-            href="mailto:contato@stratasec.com.br"
-            className="text-blue-600 hover:underline font-medium"
-          >
-            contato@stratasec.com.br
-          </a>
-        </p>
-      </CardFooter>
-    </div>
-  );
-}
-
-function PasswordStep({ password, setPassword, onSubmit, onBack, loading, error }) {
-  const [showPassword, setShowPassword] = useState(false);
-
-  return (
-    <div className="animate-fade-in">
-      <CardHeader className="text-center pb-2">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-          Acessar o sistema
-        </h1>
-        <p className="text-sm text-gray-500 mt-2">
-          Informe a senha da sua conta para continuar.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="password" className="text-gray-700">Senha</Label>
             <div className="relative">
@@ -87,7 +72,6 @@ function PasswordStep({ password, setPassword, onSubmit, onBack, loading, error 
                 onChange={(e) => setPassword(e.target.value)}
                 error={!!error}
                 required
-                autoFocus
                 autoComplete="current-password"
                 className="pr-10 bg-white text-gray-900 border-gray-300 placeholder:text-gray-400"
               />
@@ -100,22 +84,13 @@ function PasswordStep({ password, setPassword, onSubmit, onBack, loading, error 
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
           </div>
+          {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
           <Button type="submit" className="w-full" size="lg" loading={loading}>
             Entrar
           </Button>
         </form>
       </CardContent>
-      <CardFooter className="justify-center">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-        >
-          ← Voltar
-        </button>
-      </CardFooter>
     </div>
   );
 }
@@ -128,7 +103,6 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState([]);
 
-  // Inline password strength checks
   const checks = [
     { label: "Mínimo 8 caracteres", ok: newPassword.length >= 8 },
     { label: "Letra maiúscula", ok: /[A-Z]/.test(newPassword) },
@@ -229,7 +203,6 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
             </div>
           </div>
 
-          {/* Password strength indicators */}
           {newPassword && (
             <div className="space-y-1.5 pt-1">
               {checks.map((check, i) => (
@@ -267,13 +240,6 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
 export default function Login() {
   const navigate = useNavigate();
   const { user, loginUser } = useAuth();
-  const [step, setStep] = useState(1);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // For change password flow
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [tempToken, setTempToken] = useState(null);
 
@@ -281,50 +247,17 @@ export default function Login() {
     if (user) navigate("/dashboard", { replace: true });
   }, [user, navigate]);
 
-  const handleEmailSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      await api.post("/api/auth/email/", { email });
-    } catch (err) {
-      // Always proceed to step 2 regardless of response
-    } finally {
-      setLoading(false);
+  const handleLoginSuccess = (data) => {
+    if (data?.must_change_password) {
+      setTempToken(data.token);
+      setMustChangePassword(true);
+      return;
     }
-    setStep(2);
-  };
 
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const response = await api.post("/api/auth/password/", { password });
-
-      if (response.data?.must_change_password) {
-        // User must change password — show change password form
-        setTempToken(response.data.token);
-        setMustChangePassword(true);
-        setLoading(false);
-        return;
-      }
-
-      if (response.data?.user && response.data?.token) {
-        loginUser(response.data.user, response.data.token);
-      }
-      navigate("/dashboard");
-    } catch (err) {
-      const message =
-        err.response?.data?.detail ||
-        err.response?.data?.error ||
-        "Senha incorreta. Tente novamente.";
-      setError(message);
-    } finally {
-      setLoading(false);
+    if (data?.user && data?.token) {
+      loginUser(data.user, data.token);
     }
+    navigate("/dashboard");
   };
 
   const handlePasswordChanged = (data) => {
@@ -332,14 +265,6 @@ export default function Login() {
       loginUser(data.user, data.token);
     }
     navigate("/dashboard");
-  };
-
-  const goToStep = (targetStep) => {
-    setError("");
-    if (targetStep < step) {
-      if (targetStep <= 1) setPassword("");
-    }
-    setStep(targetStep);
   };
 
   return (
@@ -352,27 +277,7 @@ export default function Login() {
               onSuccess={handlePasswordChanged}
             />
           ) : (
-            <>
-              {step === 1 && (
-                <EmailStep
-                  email={email}
-                  setEmail={setEmail}
-                  onSubmit={handleEmailSubmit}
-                  loading={loading}
-                  error={error}
-                />
-              )}
-              {step === 2 && (
-                <PasswordStep
-                  password={password}
-                  setPassword={setPassword}
-                  onSubmit={handlePasswordSubmit}
-                  onBack={() => goToStep(1)}
-                  loading={loading}
-                  error={error}
-                />
-              )}
-            </>
+            <LoginForm onSuccess={handleLoginSuccess} />
           )}
         </Card>
       </div>

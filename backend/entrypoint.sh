@@ -3,19 +3,8 @@ set -e
 
 export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-stratasec.settings}"
 
-echo "==> Waiting for database..."
-until python -c "
-import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stratasec.settings')
-import django
-django.setup()
-from django.db import connections
-connections['default'].ensure_connection()
-" 2>/dev/null; do
-    echo "    Database unavailable, retrying in 2s..."
-    sleep 2
-done
-echo "==> Database is ready."
+# Ensure data directory exists for SQLite
+mkdir -p /app/data
 
 echo "==> Checking migrations..."
 python manage.py makemigrations --noinput

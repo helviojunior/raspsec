@@ -278,7 +278,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
           {/* User info */}
           <div className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">
-              {user?.first_name || user?.email}
+              {user?.first_name || user?.username}
             </span>
           </div>
 

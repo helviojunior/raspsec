@@ -1,11 +1,8 @@
 from rest_framework import serializers
 
 
-class EmailStepSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-
-
-class PasswordStepSerializer(serializers.Serializer):
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
     password = serializers.CharField()
 
 
@@ -20,9 +17,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    username = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     is_admin = serializers.BooleanField()
-
-
