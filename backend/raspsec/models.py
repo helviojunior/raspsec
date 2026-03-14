@@ -8,6 +8,7 @@ from django.contrib.auth.models import (
 import uuid
 
 from raspsec.dbmodels.abstract_user import AbstractUser
+from raspsec.dbmodels.service_status import ServiceStatus  # noqa: F401
 
 
 class UserManager(BaseUserManager):

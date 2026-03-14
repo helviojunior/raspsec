@@ -1,0 +1,342 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { Save, Plus, Trash2 } from "lucide-react";
+import api from "lib/api";
+import { Card, CardContent } from "components/ui/card";
+import { Button } from "components/ui/button";
+import { Input } from "components/ui/input";
+import { Label } from "components/ui/label";
+import { Toggle } from "components/ui/toggle";
+
+const RouterIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
+    <path d="M160-120q-33 0-56.5-23.5T80-200v-160q0-33 23.5-56.5T160-440h640q33 0 56.5 23.5T880-360v160q0 33-23.5 56.5T800-120H160Zm0-80h640v-160H160v160Zm560-40q17 0 28.5-11.5T760-280q0-17-11.5-28.5T720-320q-17 0-28.5 11.5T680-280q0 17 11.5 28.5T720-240Zm-120 0q17 0 28.5-11.5T640-280q0-17-11.5-28.5T600-320q-17 0-28.5 11.5T560-280q0 17 11.5 28.5T600-240ZM480-520q-42 0-73-26t-40-64H160v-80h207q9-38 40-64t73-26q42 0 73 26t40 64h207v80H553q-9 38-40 64t-73 26Zm0-80q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Z"/>
+  </svg>
+);
+
+const NetworkIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
+    <path d="M80-200v-80h400v80H80Zm0-200v-80h200v80H80Zm0-200v-80h200v80H80Zm760 400-36-120H664l-36 120h-84l144-440h92l144 440h-84ZM684-400h152l-74-246h-4l-74 246Z"/>
+  </svg>
+);
+
+export default function Wifi() {
+  const [activeTab, setActiveTab] = useState("ap");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // AP state
+  const [ap, setAp] = useState({
+    ssid: "",
+    bssid: "",
+    password: "",
+    hidden: false,
+    enabled: false,
+  });
+
+  // Networking state
+  const [net, setNet] = useState({
+    dhcp_enabled: false,
+    interface_ip: "",
+    range_start: "",
+    range_end: "",
+    subnet_mask: "",
+    dns_mode: "system",
+    dns_servers: [],
+  });
+
+  const [newDns, setNewDns] = useState("");
+
+  const fetchConfig = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get("/api/wifi/config/");
+      setAp(data.ap);
+      setNet(data.networking);
+    } catch (err) {
+      setError("Erro ao carregar configurações.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchConfig();
+  }, [fetchConfig]);
+
+  const clearMessages = () => {
+    setError("");
+    setSuccess("");
+  };
+
+  const handleSaveAp = async () => {
+    clearMessages();
+    setSaving(true);
+    try {
+      await api.put("/api/wifi/ap/", ap);
+      setSuccess("Access Point salvo com sucesso.");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao salvar Access Point.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveNet = async () => {
+    clearMessages();
+    setSaving(true);
+    try {
+      await api.put("/api/wifi/networking/", net);
+      setSuccess("Configurações de rede salvas com sucesso.");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao salvar configurações de rede.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addDns = () => {
+    const dns = newDns.trim();
+    if (dns && !net.dns_servers.includes(dns)) {
+      setNet({ ...net, dns_servers: [...net.dns_servers, dns] });
+      setNewDns("");
+    }
+  };
+
+  const removeDns = (index) => {
+    setNet({ ...net, dns_servers: net.dns_servers.filter((_, i) => i !== index) });
+  };
+
+  const tabs = [
+    { id: "ap", label: "Management Access Point", icon: RouterIcon },
+    { id: "networking", label: "Networking", icon: NetworkIcon },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in">
+      <h1 className="text-2xl font-bold mb-6">WiFi</h1>
+
+      {error && (
+        <div className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-4 p-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-sm">
+          {success}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 border-b border-border">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => { setActiveTab(tab.id); clearMessages(); }}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              activeTab === tab.id
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <tab.icon />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab: Management Access Point */}
+      {activeTab === "ap" && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="ssid">SSID</Label>
+                <Input
+                  id="ssid"
+                  value={ap.ssid}
+                  onChange={(e) => setAp({ ...ap, ssid: e.target.value })}
+                  placeholder="Nome da rede"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bssid">BSSID</Label>
+                <Input
+                  id="bssid"
+                  value={ap.bssid}
+                  onChange={(e) => setAp({ ...ap, bssid: e.target.value })}
+                  placeholder="AA:BB:CC:DD:EE:FF"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={ap.password}
+                  onChange={(e) => setAp({ ...ap, password: e.target.value })}
+                  placeholder="Senha do Access Point"
+                />
+              </div>
+
+              <div className="flex items-center justify-between py-2">
+                <Label>Oculto</Label>
+                <Toggle
+                  checked={ap.hidden}
+                  onChange={(val) => setAp({ ...ap, hidden: val })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between py-2">
+                <Label>Habilitado</Label>
+                <Toggle
+                  checked={ap.enabled}
+                  onChange={(val) => setAp({ ...ap, enabled: val })}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-border">
+                <Button onClick={handleSaveAp} loading={saving}>
+                  <Save size={16} />
+                  Salvar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tab: Networking */}
+      {activeTab === "networking" && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between py-2">
+                <Label>DHCP Server</Label>
+                <Toggle
+                  checked={net.dhcp_enabled}
+                  onChange={(val) => setNet({ ...net, dhcp_enabled: val })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="interface_ip">IP da Interface (wlan0)</Label>
+                <Input
+                  id="interface_ip"
+                  value={net.interface_ip}
+                  onChange={(e) => setNet({ ...net, interface_ip: e.target.value })}
+                  placeholder="10.3.141.1"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subnet_mask">Máscara de Sub-rede</Label>
+                <Input
+                  id="subnet_mask"
+                  value={net.subnet_mask}
+                  onChange={(e) => setNet({ ...net, subnet_mask: e.target.value })}
+                  placeholder="255.255.255.0"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="range_start">IP Início do Escopo</Label>
+                <Input
+                  id="range_start"
+                  value={net.range_start}
+                  onChange={(e) => setNet({ ...net, range_start: e.target.value })}
+                  placeholder="10.3.141.50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="range_end">IP Final do Escopo</Label>
+                <Input
+                  id="range_end"
+                  value={net.range_end}
+                  onChange={(e) => setNet({ ...net, range_end: e.target.value })}
+                  placeholder="10.3.141.254"
+                />
+              </div>
+
+              {/* DNS Mode */}
+              <div className="space-y-3">
+                <Label>DNS Server</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="dns_mode"
+                      checked={net.dns_mode === "system"}
+                      onChange={() => setNet({ ...net, dns_mode: "system", dns_servers: [] })}
+                      className="accent-emerald-500"
+                    />
+                    Sistema
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="dns_mode"
+                      checked={net.dns_mode === "custom"}
+                      onChange={() => setNet({ ...net, dns_mode: "custom" })}
+                      className="accent-emerald-500"
+                    />
+                    Customizado
+                  </label>
+                </div>
+              </div>
+
+              {net.dns_mode === "custom" && (
+                <div className="space-y-3 pl-2 border-l-2 border-border">
+                  <div className="flex gap-2">
+                    <Input
+                      value={newDns}
+                      onChange={(e) => setNewDns(e.target.value)}
+                      placeholder="Ex: 8.8.8.8"
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDns())}
+                    />
+                    <Button variant="outline" size="sm" onClick={addDns} className="shrink-0 h-10">
+                      <Plus size={16} />
+                    </Button>
+                  </div>
+                  {net.dns_servers.map((dns, i) => (
+                    <div key={i} className="flex items-center justify-between bg-muted/30 rounded-md px-3 py-2 text-sm">
+                      <span>{dns}</span>
+                      <button
+                        onClick={() => removeDns(i)}
+                        className="text-muted-foreground hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {net.dns_servers.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Nenhum DNS customizado adicionado.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-border">
+                <Button onClick={handleSaveNet} loading={saving}>
+                  <Save size={16} />
+                  Salvar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

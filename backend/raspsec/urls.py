@@ -5,6 +5,8 @@ from raspsec.views.auth import (
     LoginView, TokenRefreshView, ChangePasswordView,
 )
 from raspsec.views.me import MeView
+from raspsec.views.wifi import WifiConfigView, WifiApView, WifiNetworkingView
+from raspsec.views.health import HealthView
 
 
 app_name = 'raspsec'
@@ -22,5 +24,13 @@ urlpatterns = [
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='auth-refresh'),
     path('api/auth/me/', MeView.as_view(), name='auth-me'),
     path('api/auth/change-password/', ChangePasswordView.as_view(), name='auth-change-password'),
+
+    # Health
+    path('api/health/', HealthView.as_view(), name='health'),
+
+    # WiFi
+    path('api/wifi/config/', WifiConfigView.as_view(), name='wifi-config'),
+    path('api/wifi/ap/', WifiApView.as_view(), name='wifi-ap'),
+    path('api/wifi/networking/', WifiNetworkingView.as_view(), name='wifi-networking'),
 
 ]

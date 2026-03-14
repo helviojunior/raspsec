@@ -8,7 +8,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
-from .models import User
+from .models import User, ServiceStatus
 
 logger = logging.getLogger(__name__)
 
@@ -82,3 +82,11 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.site.register(User, UserAdmin)
+
+
+@admin.register(ServiceStatus)
+class ServiceStatusAdmin(admin.ModelAdmin):
+    list_display = ('friendly_name', 'slug', 'status', 'required')
+    list_filter = ('status', 'required')
+    search_fields = ('slug', 'friendly_name')
+    readonly_fields = ('slug',)

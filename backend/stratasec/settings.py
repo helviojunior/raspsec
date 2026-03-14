@@ -243,7 +243,7 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
 
 CRONJOBS = [
-    #('* * * * *', 'raspsec.cron.mailer'),
+    ('* * * * *', 'raspsec.cron.watchdog'),
 ]
 
 # Django REST Framework
@@ -277,3 +277,9 @@ EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() in ('true', '1'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@raspsec.local')
+
+CRONJOBS = [
+    # em ambiente de teste manter 0 5 * * *
+    # em produção mudar para * * * * *
+    ('* * * * *', 'raspsec.cron.watchdog'),
+]

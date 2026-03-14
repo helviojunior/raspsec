@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api, { setToken, clearToken, getToken } from "lib/api";
+import axios from "axios";
 
 const AuthContext = createContext(null);
 
@@ -10,6 +11,7 @@ const RENEW_INTERVAL_MS = 15 * 60 * 1000;
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [servicesReady, setServicesReady] = useState(true);
   const navigate = useNavigate();
   const renewTimer = useRef(null);
 
@@ -40,7 +42,21 @@ export function AuthProvider({ children }) {
     renewTimer.current = setInterval(renewToken, RENEW_INTERVAL_MS);
   }, [renewToken, stopRenewal]);
 
+  const checkHealth = useCallback(async () => {
+    try {
+      const { data } = await axios.get("/api/health/");
+      setServicesReady(data.ready);
+      return data.ready;
+    } catch {
+      // If health endpoint fails, assume not ready
+      setServicesReady(false);
+      return false;
+    }
+  }, []);
+
   const fetchUser = useCallback(async () => {
+    await checkHealth();
+
     if (!getToken()) {
       setUser(null);
       setLoading(false);
@@ -56,7 +72,7 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [startRenewal]);
+  }, [startRenewal, checkHealth]);
 
   useEffect(() => {
     fetchUser();
@@ -77,7 +93,7 @@ export function AuthProvider({ children }) {
   }, [navigate, stopRenewal]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginUser, logout, fetchUser }}>
+    <AuthContext.Provider value={{ user, loading, servicesReady, loginUser, logout, fetchUser, checkHealth }}>
       {children}
     </AuthContext.Provider>
   );

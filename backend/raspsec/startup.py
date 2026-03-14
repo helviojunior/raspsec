@@ -71,12 +71,63 @@ def on_startup():
         # Ensure default superadmin exists
         _ensure_superadmin()
 
+        # Ensure default services exist and reset status
+        _ensure_services()
+        _reset_service_status()
+
+        # Start watchdog cron
+        _start_watchdog()
+
         from django.core.cache import cache
         cache.set("app:healthy", True, timeout=60)
 
         log.info("Startup ok.")
     except Exception:
         log.exception("Fail running startup tasks.")
+
+
+DEFAULT_SERVICES = [
+    {"slug": "managment-network", "friendly_name": "Management Network", "required": True},
+    {"slug": "router",            "friendly_name": "Router",             "required": True},
+    {"slug": "frontend",          "friendly_name": "Frontend",           "required": True},
+    {"slug": "firewall",          "friendly_name": "Firewall",           "required": True},
+]
+
+
+def _ensure_services():
+    """Create default services if they don't exist."""
+    from raspsec.models import ServiceStatus
+    for svc in DEFAULT_SERVICES:
+        ServiceStatus.objects.get_or_create(
+            slug=svc["slug"],
+            defaults={
+                "friendly_name": svc["friendly_name"],
+                "required": svc["required"],
+                "status": ServiceStatus.Status.UNHEALTHY,
+                "message": "",
+            },
+        )
+    log.info("Default services ensured.")
+
+
+def _reset_service_status():
+    """Reset all services to Unhealthy on startup."""
+    from raspsec.models import ServiceStatus
+    ServiceStatus.objects.all().update(
+        status=ServiceStatus.Status.UNHEALTHY,
+        message="Aguardando watchdog...",
+    )
+    log.info("All service statuses reset to Unhealthy.")
+
+
+def _start_watchdog():
+    """Register and start the watchdog cron job."""
+    from django.core.management import call_command
+    try:
+        call_command("crontab", "add")
+        log.info("Watchdog cron job registered.")
+    except Exception as e:
+        log.warning(f"Could not register crontab: {e}")
 
 
 def create_default_dot_env():

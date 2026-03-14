@@ -3,6 +3,7 @@ import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import {
   LayoutDashboard,
+  Wifi,
   Shield,
   Settings,
   Moon,
@@ -21,6 +22,13 @@ const menuStructure = [
     path: "/dashboard",
     icon: LayoutDashboard,
     label: "Dashboard",
+    children: null,
+  },
+  {
+    id: "wifi",
+    path: "/network/wifi",
+    icon: Wifi,
+    label: "WiFi",
     children: null,
   },
   {

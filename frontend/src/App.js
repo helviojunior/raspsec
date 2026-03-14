@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "contexts/AuthContext";
+import { AuthProvider, useAuth } from "contexts/AuthContext";
 import AppLayout from "components/layout/AppLayout";
 import Login from "pages/Login";
+import Startup from "pages/Startup";
 import Dashboard from "pages/Dashboard";
 import AdminSettings from "pages/admin/Settings";
+import Wifi from "pages/network/Wifi";
 import "./App.css";
+
+function RequireHealthy({ children }) {
+  const { servicesReady, loading } = useAuth();
+  if (loading) return null;
+  if (!servicesReady) return <Navigate to="/startup" replace />;
+  return children;
+}
 
 function App() {
   const [darkMode, setDarkMode] = useState(true);
@@ -24,10 +33,16 @@ function App() {
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/startup" element={<Startup />} />
 
-            {/* Authenticated routes */}
-            <Route element={<AppLayout darkMode={darkMode} setDarkMode={setDarkMode} />}>
+            {/* Authenticated routes — require healthy services */}
+            <Route element={
+              <RequireHealthy>
+                <AppLayout darkMode={darkMode} setDarkMode={setDarkMode} />
+              </RequireHealthy>
+            }>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/network/wifi" element={<Wifi />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
             </Route>
 
