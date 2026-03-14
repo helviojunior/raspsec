@@ -6,6 +6,7 @@ import {
   Wifi,
   Usb,
   Network,
+  Wrench,
   Shield,
   Settings,
   Moon,
@@ -17,6 +18,14 @@ import {
 } from "lucide-react";
 import { useAuth } from "contexts/AuthContext";
 import { cn } from "lib/utils";
+import WebShell from "components/WebShell";
+
+const WebShellIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="m20,19l0,-12l-16,0l0,12l16,0m0,-16a2,2 0 0 1 2,2l0,14a2,2 0 0 1 -2,2l-16,0a2,2 0 0 1 -2,-2l0,-14c0,-1.11 0.9,-2 2,-2l16,0m-7,14l0,-2l5,0l0,2l-5,0m-3.42,-4l-4.01,-4l2.83,0l3.3,3.3c0.39,0.39 0.39,1.03 0,1.42l-3.28,3.28l-2.83,0l3.99,-4z"/>
+    <rect x="2.088" y="24.25" width="19.949" height="2.111"/>
+  </svg>
+);
 
 const menuStructure = [
   {
@@ -33,6 +42,14 @@ const menuStructure = [
     children: [
       { id: "wifi", path: "/network/wifi", label: "WiFi", icon: Wifi },
       { id: "usb-gadget", path: "/network/usb-gadget", label: "USB Gadget Mode", icon: Usb },
+    ],
+  },
+  {
+    id: "tools",
+    icon: Wrench,
+    label: "Tools",
+    children: [
+      { id: "webshell", action: "webshell", label: "Web Shell", icon: WebShellIcon },
     ],
   },
   {
@@ -67,6 +84,7 @@ const findActiveMenu = (pathname) => {
 
 export default function AppLayout({ darkMode, setDarkMode }) {
   const { user, loading, logout } = useAuth();
+  const [shellOpen, setShellOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebarCollapsed");
     return saved === "true";
@@ -124,6 +142,12 @@ export default function AppLayout({ darkMode, setDarkMode }) {
   const handleMenuLeave = () => {
     if (effectiveCollapsed) {
       hoverTimeoutRef.current = setTimeout(() => setHoveredMenu(null), 150);
+    }
+  };
+
+  const handleMenuAction = (action) => {
+    if (action === "webshell") {
+      setShellOpen(true);
     }
   };
 
@@ -216,6 +240,17 @@ export default function AppLayout({ darkMode, setDarkMode }) {
                 </div>
                 {item.children.map((child) => {
                   const isChildActive = child.id === activeSubMenuId;
+                  if (child.action) {
+                    return (
+                      <button
+                        key={child.id}
+                        className="block w-full text-left px-4 py-2 text-sm transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+                        onClick={() => { setHoveredMenu(null); handleMenuAction(child.action); }}
+                      >
+                        {child.label}
+                      </button>
+                    );
+                  }
                   return (
                     <Link
                       key={child.id}
@@ -241,6 +276,17 @@ export default function AppLayout({ darkMode, setDarkMode }) {
           <div className="space-y-0.5 bg-black/20">
             {item.children.map((child) => {
               const isChildActive = child.id === activeSubMenuId;
+              if (child.action) {
+                return (
+                  <button
+                    key={child.id}
+                    onClick={() => handleMenuAction(child.action)}
+                    className="block w-full text-left pl-11 pr-4 py-2 text-sm transition-colors text-muted-foreground/70 hover:text-foreground hover:bg-white/5"
+                  >
+                    {child.label}
+                  </button>
+                );
+              }
               return (
                 <Link
                   key={child.id}
@@ -374,10 +420,17 @@ export default function AppLayout({ darkMode, setDarkMode }) {
           </div>
         </aside>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-background relative">
-          <Outlet />
-        </main>
+        {/* Page Content + Shell */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <main className="flex-1 overflow-y-auto p-6 bg-background relative">
+            <Outlet />
+          </main>
+          <WebShell
+            open={shellOpen}
+            onToggle={() => setShellOpen(false)}
+            onClose={() => setShellOpen(false)}
+          />
+        </div>
       </div>
     </div>
   );

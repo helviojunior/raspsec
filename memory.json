@@ -88,6 +88,10 @@
     {
       "hash": "70127c377edb9b6a367de3fb6fe907ad3b96d7cf",
       "message": "Add USB Gadget Mode (Ethernet over USB) page and backend"
+    },
+    {
+      "hash": "da2619529f17036c2cf11a23ec68a93e331db602",
+      "message": "Add Web Shell with resizable bottom panel"
     }
   ]
 }

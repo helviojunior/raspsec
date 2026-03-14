@@ -8,6 +8,7 @@ from raspsec.views.me import MeView
 from raspsec.views.wifi import WifiConfigView, WifiApView, WifiNetworkingView
 from raspsec.views.health import HealthView
 from raspsec.views.usb_gadget import UsbGadgetConfigView, UsbGadgetToggleView, UsbGadgetNetworkingView
+from raspsec.views.shell import ShellExecView, ShellInfoView
 
 
 app_name = 'raspsec'
@@ -38,5 +39,9 @@ urlpatterns = [
     path('api/usb-gadget/config/', UsbGadgetConfigView.as_view(), name='usb-gadget-config'),
     path('api/usb-gadget/toggle/', UsbGadgetToggleView.as_view(), name='usb-gadget-toggle'),
     path('api/usb-gadget/networking/', UsbGadgetNetworkingView.as_view(), name='usb-gadget-networking'),
+
+    # Shell
+    path('api/shell/info/', ShellInfoView.as_view(), name='shell-info'),
+    path('api/shell/exec/', ShellExecView.as_view(), name='shell-exec'),
 
 ]
