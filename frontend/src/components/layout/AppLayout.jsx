@@ -7,6 +7,7 @@ import {
   Usb,
   Network,
   Activity,
+  ShieldCheck,
   Wrench,
   Shield,
   Settings,
@@ -44,6 +45,7 @@ const menuStructure = [
       { id: "net-status", path: "/network/status", label: "General", icon: Activity },
       { id: "wifi", path: "/network/wifi", label: "WiFi", icon: Wifi },
       { id: "usb-gadget", path: "/network/usb-gadget", label: "USB Gadget Mode", icon: Usb },
+      { id: "firewall", path: "/network/firewall", label: "Firewall", icon: ShieldCheck },
     ],
   },
   {

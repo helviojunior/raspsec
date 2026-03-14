@@ -112,6 +112,10 @@
     {
       "hash": "ff65557b4d6bb50abd56f637fe63d2bd93c8e15f",
       "message": "Add DNS management with DB-backed ordering, health checks, and fix entrypoint loop"
+    },
+    {
+      "hash": "42ee4f94f6e4dc149428ee6250de74614dd67a11",
+      "message": "Add Firewall with chain-based rules, NAT, and fix systemd restart loop"
     }
   ]
 }

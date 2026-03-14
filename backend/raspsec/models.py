@@ -11,6 +11,7 @@ from raspsec.dbmodels.abstract_user import AbstractUser
 from raspsec.dbmodels.service_status import ServiceStatus  # noqa: F401
 from raspsec.dbmodels.device_info import DeviceInfo  # noqa: F401
 from raspsec.dbmodels.dns_server import DnsServer  # noqa: F401
+from raspsec.dbmodels.firewall import FirewallRule, NatRule, ChainMapping  # noqa: F401
 
 
 class UserManager(BaseUserManager):

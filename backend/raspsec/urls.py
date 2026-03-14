@@ -11,6 +11,7 @@ from raspsec.views.usb_gadget import UsbGadgetConfigView, UsbGadgetToggleView, U
 from raspsec.views.shell import ShellExecView, ShellInfoView
 from raspsec.views.netstat import NetworkStatusView, GatewayConfigView
 from raspsec.views.dns import DnsConfigView, DnsSyncView, DnsServersView
+from raspsec.views.firewall import FirewallConfigView, FirewallRuleView, NatRuleView, FirewallApplyView
 
 
 app_name = 'raspsec'
@@ -48,6 +49,12 @@ urlpatterns = [
     path('api/network/dns/', DnsConfigView.as_view(), name='dns-config'),
     path('api/network/dns/sync/', DnsSyncView.as_view(), name='dns-sync'),
     path('api/network/dns/servers/', DnsServersView.as_view(), name='dns-servers'),
+
+    # Firewall
+    path('api/firewall/', FirewallConfigView.as_view(), name='firewall-config'),
+    path('api/firewall/rule/', FirewallRuleView.as_view(), name='firewall-rule'),
+    path('api/firewall/nat/', NatRuleView.as_view(), name='firewall-nat'),
+    path('api/firewall/apply/', FirewallApplyView.as_view(), name='firewall-apply'),
 
     # Shell
     path('api/shell/info/', ShellInfoView.as_view(), name='shell-info'),

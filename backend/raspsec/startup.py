@@ -75,6 +75,9 @@ def on_startup():
         _ensure_services()
         _reset_service_status()
 
+        # Ensure firewall defaults
+        _ensure_firewall_defaults()
+
         # Apply network configurations
         _apply_network_configs()
 
@@ -123,6 +126,16 @@ def _reset_service_status():
     log.info("All service statuses reset to Unhealthy.")
 
 
+def _ensure_firewall_defaults():
+    """Create default firewall chain mappings and rules."""
+    try:
+        from raspsec.services.firewall import FirewallService
+        FirewallService.ensure_defaults()
+        log.info("Firewall defaults ensured.")
+    except Exception as e:
+        log.warning(f"Failed to ensure firewall defaults: {e}")
+
+
 def _apply_network_configs():
     """Apply saved network configurations on boot."""
     try:
@@ -145,6 +158,13 @@ def _apply_network_configs():
         log.info("DNS config applied.")
     except Exception as e:
         log.warning(f"Failed to apply DNS config: {e}")
+
+    try:
+        from raspsec.services.firewall import FirewallService
+        FirewallService.apply()
+        log.info("Firewall rules applied.")
+    except Exception as e:
+        log.warning(f"Failed to apply firewall rules: {e}")
 
 
 def _start_watchdog():

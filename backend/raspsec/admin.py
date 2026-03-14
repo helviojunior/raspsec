@@ -8,7 +8,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
-from .models import User, ServiceStatus, DeviceInfo, DnsServer
+from .models import User, ServiceStatus, DeviceInfo, DnsServer, FirewallRule, NatRule, ChainMapping
 
 logger = logging.getLogger(__name__)
 
@@ -105,3 +105,23 @@ class DnsServerAdmin(admin.ModelAdmin):
     list_filter = ('status', 'enabled')
     search_fields = ('ip',)
     ordering = ('priority',)
+
+
+@admin.register(FirewallRule)
+class FirewallRuleAdmin(admin.ModelAdmin):
+    list_display = ('chain', 'protocol', 'port', 'source_ip', 'action', 'priority', 'enabled')
+    list_filter = ('chain', 'action', 'enabled')
+    ordering = ('chain', 'priority')
+
+
+@admin.register(NatRule)
+class NatRuleAdmin(admin.ModelAdmin):
+    list_display = ('source_chain', 'dest_chain', 'nat_type', 'protocol', 'port', 'priority', 'enabled')
+    list_filter = ('nat_type', 'enabled')
+    ordering = ('priority',)
+
+
+@admin.register(ChainMapping)
+class ChainMappingAdmin(admin.ModelAdmin):
+    list_display = ('interface', 'chain')
+    list_filter = ('chain',)
