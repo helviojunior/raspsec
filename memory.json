@@ -116,6 +116,15 @@
     {
       "hash": "42ee4f94f6e4dc149428ee6250de74614dd67a11",
       "message": "Add Firewall with chain-based rules, NAT, and fix systemd restart loop"
+    },
+    {
+      "hash": "3eba6e073b21b69f14e2c3a3dfbc554fbc4511c7",
+      "message": "build",
+      "skipped": true
+    },
+    {
+      "hash": "ca01e3987b9ae3783f67879e3c359d14d3f3823d",
+      "message": "Persist network configs at OS level so boot works without backend"
     }
   ]
 }

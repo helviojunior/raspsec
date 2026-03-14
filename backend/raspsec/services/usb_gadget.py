@@ -1,8 +1,7 @@
-import ipaddress
-
 from raspsec.libs.cmd import Exec
 from raspsec.libs.config import load_config, save_config
 from raspsec.libs.log import StrataLogger
+from raspsec.libs.network import write_dhcpcd, write_system_file
 
 CONFIG_FILE = "ethernet_over_usb.yml"
 DNSMASQ_CONF = "/etc/dnsmasq.d/090_usb0.conf"
@@ -57,11 +56,13 @@ class UsbGadgetService:
         config["networking"] = data
         save_config(CONFIG_FILE, config)
 
+        # Persist to OS-level configs (dhcpcd for IP, dnsmasq for DHCP server)
+        write_dhcpcd()
         UsbGadgetService._write_dnsmasq(config)
-        UsbGadgetService._apply_interface_ip(config)
 
         if config["enabled"]:
-            UsbGadgetService._restart_dnsmasq()
+            Exec.execute("sudo /usr/bin/systemctl restart dhcpcd.service", raise_error=False)
+            Exec.execute("sudo /usr/bin/systemctl restart dnsmasq.service", raise_error=False)
 
     # ── USB Gadget mode ──
 
@@ -74,7 +75,7 @@ class UsbGadgetService:
         Exec.execute("sudo /sbin/modprobe dwc2", raise_error=False)
         Exec.execute("sudo /sbin/modprobe g_ether", raise_error=False)
 
-        # Ensure dtoverlay=dwc2 is in /boot/config.txt
+        # Persist dtoverlay=dwc2 in /boot/firmware/config.txt
         ret, out = Exec.execute(
             "/bin/grep -c 'dtoverlay=dwc2' /boot/firmware/config.txt",
             raise_error=False,
@@ -85,7 +86,7 @@ class UsbGadgetService:
                 raise_error=False,
             )
 
-        # Ensure dwc2 and g_ether are in /etc/modules
+        # Persist dwc2 and g_ether in /etc/modules
         for module in ["dwc2", "g_ether"]:
             ret, _ = Exec.execute(
                 f"/bin/grep -c '^{module}$' /etc/modules",
@@ -97,10 +98,13 @@ class UsbGadgetService:
                     raise_error=False,
                 )
 
-        # Configure interface and DHCP
-        UsbGadgetService._apply_interface_ip(config)
+        # Persist IP config in dhcpcd.conf and DHCP server in dnsmasq
+        write_dhcpcd()
         UsbGadgetService._write_dnsmasq(config)
-        UsbGadgetService._restart_dnsmasq()
+
+        # Restart dhcpcd to pick up new usb0 static IP
+        Exec.execute("sudo /usr/bin/systemctl restart dhcpcd.service", raise_error=False)
+        Exec.execute("sudo /usr/bin/systemctl restart dnsmasq.service", raise_error=False)
 
         logger.log("USB Gadget mode enabled.")
 
@@ -113,27 +117,14 @@ class UsbGadgetService:
 
         # Remove dnsmasq config for usb0
         Exec.execute(f"sudo /bin/rm -f {DNSMASQ_CONF}", raise_error=False)
-        UsbGadgetService._restart_dnsmasq()
+
+        # Update dhcpcd.conf (usb0 section will be excluded since enabled=false)
+        write_dhcpcd()
+
+        Exec.execute("sudo /usr/bin/systemctl restart dhcpcd.service", raise_error=False)
+        Exec.execute("sudo /usr/bin/systemctl restart dnsmasq.service", raise_error=False)
 
         logger.log("USB Gadget mode disabled.")
-
-    # ── Interface IP ──
-
-    @staticmethod
-    def _apply_interface_ip(config):
-        """Set static IP on usb0 interface."""
-        net = config["networking"]
-        ip = net["interface_ip"]
-        mask = net["subnet_mask"]
-        prefix = ipaddress.IPv4Network(f"0.0.0.0/{mask}").prefixlen
-
-        # Flush and set IP
-        Exec.execute("sudo /sbin/ip addr flush dev usb0", raise_error=False)
-        Exec.execute(
-            f"sudo /sbin/ip addr add {ip}/{prefix} dev usb0",
-            raise_error=False,
-        )
-        Exec.execute("sudo /sbin/ip link set usb0 up", raise_error=False)
 
     # ── dnsmasq (DHCP server for usb0) ──
 
@@ -157,20 +148,4 @@ class UsbGadgetService:
             )
 
         logger.log(f"Writing dnsmasq config to {DNSMASQ_CONF}")
-        UsbGadgetService._write_system_file(DNSMASQ_CONF, content)
-
-    @staticmethod
-    def _restart_dnsmasq():
-        Exec.execute("sudo /usr/bin/systemctl restart dnsmasq.service", raise_error=False)
-
-    # ── Helpers ──
-
-    @staticmethod
-    def _write_system_file(path, content):
-        """Write content to a system file via sudo."""
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".conf", delete=False) as tmp:
-            tmp.write(content)
-            tmp_path = tmp.name
-        Exec.execute(f"sudo /bin/cp {tmp_path} {path}")
-        Exec.execute(f"/bin/rm -f {tmp_path}", raise_error=False)
+        write_system_file(DNSMASQ_CONF, content)
