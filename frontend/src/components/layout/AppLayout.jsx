@@ -336,7 +336,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
             >
               {!effectiveCollapsed && (
                 <div className="text-xs text-muted-foreground">
-                  <div className="text-[11px] font-medium">StrataAP v1.0.0</div>
+                  <div className="text-[11px] font-medium">RaspSec v1.0.0</div>
                   <div className="text-[10px] text-muted-foreground/60">
                     &copy; StrataSec 2026
                   </div>

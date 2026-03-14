@@ -130,7 +130,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
 
-    'strataap'
+    'raspsec'
 ]
 
 MIDDLEWARE = [
@@ -193,7 +193,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'strataap.User'
+AUTH_USER_MODEL = 'raspsec.User'
 
 
 USE_THOUSAND_SEPARATOR = True
@@ -210,7 +210,7 @@ STATIC_URL = '/static/'  # Usado para dev
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # usado em produção
 
 if DEBUG:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'strataap', 'static')
+    STATIC_ROOT = os.path.join(BASE_DIR, 'raspsec', 'static')
 
 # Media files
 MEDIA_URL = '/media/'
@@ -243,17 +243,17 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
 
 CRONJOBS = [
-    #('* * * * *', 'strataap.cron.mailer'),
+    #('* * * * *', 'raspsec.cron.mailer'),
 ]
 
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'strataap.jwe_auth.JWEAuthentication',
+        'raspsec.jwe_auth.JWEAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-        'strataap.permissions.DenyPasswordChangeToken',
+        'raspsec.permissions.DenyPasswordChangeToken',
     ],
 }
 
@@ -276,4 +276,4 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1',
 EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 'yes')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@strataap.local')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@raspsec.local')

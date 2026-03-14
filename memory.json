@@ -16,6 +16,35 @@
     {
       "hash": "55cb45001251aa4d0f0f131c5c65d0d7c779b758",
       "message": "Migrate Raspberry Pi build infrastructure from raspap-insiders"
+    },
+    {
+      "hash": "08622917af1626c3f8d8f918f39076ec7c508fcc",
+      "message": "Add uWSGI reload/logging options and order backend before nginx",
+      "skipped": true
+    },
+    {
+      "hash": "e66762949a96db9e34e0f158ff3f134c15659a9b",
+      "message": "Rename builder image to strataap-ng-builder",
+      "skipped": true
+    },
+    {
+      "hash": "84f0eb5d8f84af8ee9e8dbe83714bfa596ee46a4",
+      "message": "Fix executable permissions on build scripts",
+      "skipped": true
+    },
+    {
+      "hash": "d68b37a057dc6779cd72e0f83be23799dd785e42",
+      "message": "Build React frontend in Docker multi-stage instead of ARM chroot",
+      "skipped": true
+    },
+    {
+      "hash": "2ee0d46109fc8f360e3a70f357ffbe3b7ece09b5",
+      "message": "Fix Dockerfile ARG scope — move PIGEN_ROOTFS before first FROM",
+      "skipped": true
+    },
+    {
+      "hash": "903b90eb3561c27190f13a95dbb834b7cc16e942",
+      "message": "Rebrand StrataAP to RaspSec"
     }
   ]
 }

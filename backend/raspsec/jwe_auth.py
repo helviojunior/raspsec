@@ -78,7 +78,7 @@ class JWEAuthentication(BaseAuthentication):
         token_str = auth_header[len(self.keyword) + 1:]
         payload = decode_token(token_str)
 
-        from strataap.models import User
+        from raspsec.models import User
         try:
             user = User.objects.get(pk=payload['sub'])
         except User.DoesNotExist:

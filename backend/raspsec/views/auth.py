@@ -5,10 +5,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from strataap.decorators import require_scope
-from strataap.jwe_auth import create_token
-from strataap.models import User
-from strataap.serializers import (
+from raspsec.decorators import require_scope
+from raspsec.jwe_auth import create_token
+from raspsec.models import User
+from raspsec.serializers import (
     LoginSerializer,
     ChangePasswordSerializer,
 )

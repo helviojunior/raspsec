@@ -7,7 +7,7 @@ export default function Dashboard() {
       <h1 className="text-2xl font-bold tracking-tight mb-6">Dashboard</h1>
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold">Bem-vindo ao StrataAP</h2>
+          <h2 className="text-lg font-semibold">Bem-vindo ao RaspSec</h2>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">

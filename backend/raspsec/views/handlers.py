@@ -6,9 +6,9 @@ import traceback
 import logging
 import os
 
-from strataap.tools import ban
+from raspsec.tools import ban
 
-logger = logging.getLogger('StrataAP')
+logger = logging.getLogger('RaspSec')
 logger.setLevel(logging.DEBUG)
 if os.isatty(0):
     handler = logging.StreamHandler(sys.stdout)

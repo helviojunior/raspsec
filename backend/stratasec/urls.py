@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('strataap.urls')),
+    path('', include('raspsec.urls')),
 ]
 
 # Serve media files during development
@@ -30,7 +30,7 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 #Custom Handlers
-handler404 = 'strataap.views.handlers.handler404'
-handler500 = 'strataap.views.handlers.handler500'
-handler403 = 'strataap.views.handlers.handler500'
-handler400 = 'strataap.views.handlers.handler500'
+handler404 = 'raspsec.views.handlers.handler404'
+handler500 = 'raspsec.views.handlers.handler500'
+handler403 = 'raspsec.views.handlers.handler500'
+handler400 = 'raspsec.views.handlers.handler500'

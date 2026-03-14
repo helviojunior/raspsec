@@ -146,10 +146,10 @@ GitHub.sublime-settings
 !**/migrations/__init__.py
 
 #Reinclude all static files
-!backend/strataap/static/**
+!backend/raspsec/static/**
 
 # Data volumes
-strataap_data/
+raspsec_data/
 
 # Node
 node_modules/

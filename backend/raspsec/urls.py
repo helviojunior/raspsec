@@ -1,13 +1,13 @@
 from django.urls import path, re_path
 from django.views.generic import RedirectView
 
-from strataap.views.auth import (
+from raspsec.views.auth import (
     LoginView, TokenRefreshView, ChangePasswordView,
 )
-from strataap.views.me import MeView
+from raspsec.views.me import MeView
 
 
-app_name = 'strataap'
+app_name = 'raspsec'
 
 favicon_view = RedirectView.as_view(url='/static/favicon.png', permanent=True)
 

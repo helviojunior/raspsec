@@ -7,7 +7,7 @@ from django.contrib.auth.models import (
 )
 import uuid
 
-from strataap.dbmodels.abstract_user import AbstractUser
+from raspsec.dbmodels.abstract_user import AbstractUser
 
 
 class UserManager(BaseUserManager):

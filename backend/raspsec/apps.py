@@ -1,11 +1,11 @@
 from django.apps import AppConfig
 
 
-class StrataapConfig(AppConfig):
+class RaspsecConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'strataap'
-    app_name = 'strataap'
-    verbose_name = "StrataAP"
+    name = 'raspsec'
+    app_name = 'raspsec'
+    verbose_name = "RaspSec"
 
     def ready(self):
         # Import tardio para evitar import circular

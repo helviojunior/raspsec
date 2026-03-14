@@ -42,7 +42,7 @@ def _should_run_now() -> bool:
 
 def _ensure_superadmin():
     """Create default superadmin if no admin user exists."""
-    from strataap.models import User
+    from raspsec.models import User
     if not User.objects.filter(is_admin=True).exists():
         User.objects.create_superuser(
             username='stratasec',
