@@ -49,6 +49,10 @@
     {
       "hash": "9f823dee3a8f39bfd875dfd6457652820986a994",
       "message": "Log e Cmd"
+    },
+    {
+      "hash": "0dfefe595038076bd129b2c27c557bf008265ee0",
+      "message": "Delegate show/save logic to log_raw in Exec"
     }
   ]
 }

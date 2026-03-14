@@ -73,8 +73,7 @@ class Exec(object):
         logger.log_raw(msg=log, show=False, save=True)
         del log
 
-        if show_output:
-            logger.log_raw(out)
+        logger.log_raw(out, show=show_output, save=save_output)
 
         if proc.returncode != 0:
             logger.log(
