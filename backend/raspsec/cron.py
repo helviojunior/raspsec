@@ -37,6 +37,15 @@ def watchdog():
     # ── Update managment-network status ──
     _update_managment_network(ServiceStatus, ssh_ok, dhcp_ok, ap_ok)
 
+    # ── 6. Enable IPv4 forwarding and mark router as healthy ──
+    _ensure_router(Exec, ServiceStatus)
+
+    # ── 7. Check nginx for frontend status ──
+    _check_frontend(Exec, ServiceStatus)
+
+    # ── 8. Firewall (placeholder) ──
+    _check_firewall(ServiceStatus)
+
     log.info("Watchdog complete.")
 
 
@@ -142,4 +151,80 @@ def _update_managment_network(ServiceStatus, ssh_ok, dhcp_ok, ap_ok):
         svc.status = ServiceStatus.Status.UNHEALTHY
         svc.message = f"Serviços com falha: {', '.join(failures)}"
 
+    svc.save(update_fields=["status", "message", "updated"])
+
+
+def _ensure_router(Exec, ServiceStatus):
+    """Enable IPv4 forwarding via sysctl and mark router as healthy."""
+    try:
+        svc = ServiceStatus.objects.get(slug="router")
+    except ServiceStatus.DoesNotExist:
+        return
+
+    # Enable ip_forward
+    Exec.execute(
+        "sudo /usr/sbin/sysctl -w net.ipv4.ip_forward=1",
+        raise_error=False,
+    )
+
+    # Verify
+    ret, out = Exec.execute(
+        "/usr/sbin/sysctl -n net.ipv4.ip_forward",
+        raise_error=False,
+    )
+
+    if out.strip() == "1":
+        svc.status = ServiceStatus.Status.HEALTHY
+        svc.message = "IPv4 forwarding habilitado."
+    else:
+        svc.status = ServiceStatus.Status.UNHEALTHY
+        svc.message = "Falha ao habilitar IPv4 forwarding."
+
+    svc.save(update_fields=["status", "message", "updated"])
+
+
+def _check_frontend(Exec, ServiceStatus):
+    """Check if nginx is active and mark frontend status accordingly."""
+    try:
+        svc = ServiceStatus.objects.get(slug="frontend")
+    except ServiceStatus.DoesNotExist:
+        return
+
+    ret, out = Exec.execute(
+        "sudo /usr/bin/systemctl is-active nginx.service",
+        raise_error=False,
+    )
+
+    if out.strip() == "active":
+        svc.status = ServiceStatus.Status.HEALTHY
+        svc.message = "Nginx operacional."
+    else:
+        # Try to start
+        Exec.execute(
+            "sudo /usr/bin/systemctl start nginx.service",
+            raise_error=False,
+        )
+        ret, out = Exec.execute(
+            "sudo /usr/bin/systemctl is-active nginx.service",
+            raise_error=False,
+        )
+        if out.strip() == "active":
+            svc.status = ServiceStatus.Status.HEALTHY
+            svc.message = "Nginx iniciado pelo watchdog."
+        else:
+            svc.status = ServiceStatus.Status.UNHEALTHY
+            svc.message = "Falha ao iniciar Nginx."
+
+    svc.save(update_fields=["status", "message", "updated"])
+
+
+def _check_firewall(ServiceStatus):
+    """Placeholder — mark firewall as healthy until actual rules are implemented."""
+    try:
+        svc = ServiceStatus.objects.get(slug="firewall")
+    except ServiceStatus.DoesNotExist:
+        return
+
+    svc.status = ServiceStatus.Status.HEALTHY
+    svc.message = "Aguardando implementação."
     svc.save(update_fields=["status", "message", "updated"])

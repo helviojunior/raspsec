@@ -80,6 +80,10 @@
     {
       "hash": "d4551859571d999acfdc4779d76721e8b1a4517a",
       "message": "Implement watchdog cron with first boot detection and service health checks"
+    },
+    {
+      "hash": "e9aaea6f5b52da244d4b42c793721f2e721e9bb7",
+      "message": "Add router, frontend and firewall watchdog checks; register crontab on boot"
     }
   ]
 }

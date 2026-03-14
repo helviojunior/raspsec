@@ -20,5 +20,7 @@ fi
 echo "==> Collecting static files..."
 python manage.py collectstatic --noinput 2>/dev/null || true
 
-echo "==> Starting application..."
-exec "$@"
+echo "==> Registering cron jobs..."
+python manage.py crontab add 2>/dev/null || true
+
+echo "==> Entrypoint complete."
