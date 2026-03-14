@@ -11,6 +11,17 @@ SSH_HOST_KEYS = [
 ]
 
 
+def dns_keepalive():
+    """DNS health check — runs every minute via django-crontab."""
+    try:
+        from raspsec.services.dns import DnsService
+        DnsService.sync_from_dhcp()
+        DnsService.health_check()
+        log.info("DNS keepalive complete.")
+    except Exception as e:
+        log.warning(f"DNS keepalive failed: {e}")
+
+
 def watchdog():
     """Periodic health check — runs every minute via django-crontab."""
     from raspsec.dbmodels.device_info import DeviceInfo

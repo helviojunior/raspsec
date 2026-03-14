@@ -247,6 +247,7 @@ if not DEBUG:
 
 CRONJOBS = [
     ('* * * * *', 'raspsec.cron.watchdog'),
+    ('* * * * *', 'raspsec.cron.dns_keepalive'),
 ]
 
 # Django REST Framework

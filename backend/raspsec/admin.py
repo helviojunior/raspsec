@@ -8,7 +8,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
-from .models import User, ServiceStatus, DeviceInfo
+from .models import User, ServiceStatus, DeviceInfo, DnsServer
 
 logger = logging.getLogger(__name__)
 
@@ -97,3 +97,11 @@ class DeviceInfoAdmin(admin.ModelAdmin):
     list_display = ('key', 'value', 'created')
     search_fields = ('key', 'value')
     readonly_fields = ('key', 'value', 'created')
+
+
+@admin.register(DnsServer)
+class DnsServerAdmin(admin.ModelAdmin):
+    list_display = ('ip', 'source', 'enabled', 'status', 'priority')
+    list_filter = ('status', 'enabled')
+    search_fields = ('ip',)
+    ordering = ('priority',)

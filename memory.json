@@ -108,6 +108,10 @@
     {
       "hash": "cd46c0977e66f03bd078e6d5c873b9281a030f3c",
       "message": "Ensure DATA_DIR exists on startup and log backend to HDMI console"
+    },
+    {
+      "hash": "ff65557b4d6bb50abd56f637fe63d2bd93c8e15f",
+      "message": "Add DNS management with DB-backed ordering, health checks, and fix entrypoint loop"
     }
   ]
 }

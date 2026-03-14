@@ -10,6 +10,7 @@ from raspsec.views.health import HealthView
 from raspsec.views.usb_gadget import UsbGadgetConfigView, UsbGadgetToggleView, UsbGadgetNetworkingView
 from raspsec.views.shell import ShellExecView, ShellInfoView
 from raspsec.views.netstat import NetworkStatusView, GatewayConfigView
+from raspsec.views.dns import DnsConfigView, DnsSyncView, DnsServersView
 
 
 app_name = 'raspsec'
@@ -44,6 +45,9 @@ urlpatterns = [
     # Network Status
     path('api/network/status/', NetworkStatusView.as_view(), name='network-status'),
     path('api/network/gateways/', GatewayConfigView.as_view(), name='network-gateways'),
+    path('api/network/dns/', DnsConfigView.as_view(), name='dns-config'),
+    path('api/network/dns/sync/', DnsSyncView.as_view(), name='dns-sync'),
+    path('api/network/dns/servers/', DnsServersView.as_view(), name='dns-servers'),
 
     # Shell
     path('api/shell/info/', ShellInfoView.as_view(), name='shell-info'),

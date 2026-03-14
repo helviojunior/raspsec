@@ -139,6 +139,13 @@ def _apply_network_configs():
     except Exception as e:
         log.warning(f"Failed to apply USB Gadget config: {e}")
 
+    try:
+        from raspsec.services.dns import DnsService
+        DnsService.apply_on_boot()
+        log.info("DNS config applied.")
+    except Exception as e:
+        log.warning(f"Failed to apply DNS config: {e}")
+
 
 def _start_watchdog():
     """Register and start the watchdog cron job."""
