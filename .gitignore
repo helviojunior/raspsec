@@ -154,6 +154,8 @@ raspsec_data/
 # Node
 node_modules/
 
+output/
+
 # Project files
 TODO.md
 
