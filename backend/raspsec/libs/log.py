@@ -6,7 +6,7 @@ import logging
 import inspect, traceback
 from pathlib import Path
 
-from backend.raspsec.exceptions import CommandError
+from ..exceptions import CommandError
 
 
 class StrataLogger(object):

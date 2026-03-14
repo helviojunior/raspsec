@@ -3,8 +3,8 @@ import re
 import subprocess
 import time
 
-from backend.raspsec.exceptions import CommandError
-from backend.raspsec.libs.log import StrataLogger
+from ..exceptions import CommandError
+from ..libs.log import StrataLogger
 
 
 class Exec(object):

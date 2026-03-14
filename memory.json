@@ -100,6 +100,10 @@
     {
       "hash": "67ae3bccb6af8a483e9d711eadae1331b98578b5",
       "message": "Add Network Status page with gateway priority management"
+    },
+    {
+      "hash": "1be15965f23a61a68f97fc67e9451935e96a6e00",
+      "message": "Fix imports and make DATA_DIR dynamic for dev/prod"
     }
   ]
 }

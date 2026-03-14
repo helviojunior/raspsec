@@ -57,9 +57,14 @@ START_TIME = datetime.datetime.now()
 APP_STARTED = str(int(datetime.datetime.now().timestamp()))
 VERSION = 'v0.1'
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = "/app/data"
+DATA_DIR = BASE_DIR
+if not DEBUG:
+    DATA_DIR = "/app/data"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -67,11 +72,7 @@ DATA_DIR = "/app/data"
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-pk+@s=gxiu_v_z!a@8(b0d6l!j28amk_@)jg54f8le^ma99pfy'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
-
 ALLOWED_HOSTS = ['*']
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -83,7 +84,7 @@ TIME_ZONE = 'America/Sao_Paulo'
 RSA_PUB_KEY = ""
 
 # 1) Carrega o .env
-_env = dotenv_values(BASE_DIR / ".env")  # não polui os.environ
+_env = dotenv_values(DATA_DIR / ".env")  # não polui os.environ
 
 # 2) Promove apenas variáveis MAIÚSCULAS do .env que ainda não existem no módulo
 for key, val in (_env or {}).items():
@@ -170,7 +171,7 @@ WSGI_APPLICATION = 'stratasec.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'data', 'db.sqlite3'),
+        'NAME': os.path.join(DATA_DIR, 'db.sqlite3'),
     }
 }
 
