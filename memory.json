@@ -92,6 +92,10 @@
     {
       "hash": "da2619529f17036c2cf11a23ec68a93e331db602",
       "message": "Add Web Shell with resizable bottom panel"
+    },
+    {
+      "hash": "e8379ac3ba24a08d44581f2a8e516e604f7be272",
+      "message": "Apply saved network configs on boot"
     }
   ]
 }

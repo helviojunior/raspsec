@@ -30,6 +30,17 @@ class UsbGadgetService:
         return load_config(CONFIG_FILE, DEFAULT_CONFIG)
 
     @staticmethod
+    def apply_config():
+        """Re-apply saved configuration on boot."""
+        config = UsbGadgetService.get_config()
+        logger.log("Applying USB Gadget config on boot...")
+
+        if config.get("enabled"):
+            UsbGadgetService._enable_gadget(config)
+        else:
+            UsbGadgetService._disable_gadget()
+
+    @staticmethod
     def save_gadget(data):
         config = UsbGadgetService.get_config()
         config["enabled"] = data.get("enabled", False)

@@ -39,6 +39,21 @@ class WifiService:
         return load_config(CONFIG_FILE, DEFAULT_CONFIG)
 
     @staticmethod
+    def apply_config():
+        """Re-apply saved configuration on boot."""
+        config = WifiService.get_config()
+        logger.log("Applying WiFi config on boot...")
+
+        WifiService._write_hostapd(config)
+        WifiService._write_dhcpcd(config)
+        WifiService._write_dnsmasq(config)
+
+        if config["ap"].get("enabled"):
+            WifiService._start_ap(config)
+        else:
+            WifiService._stop_ap()
+
+    @staticmethod
     def save_ap(data):
         config = WifiService.get_config()
         config["ap"] = data

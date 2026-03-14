@@ -75,6 +75,9 @@ def on_startup():
         _ensure_services()
         _reset_service_status()
 
+        # Apply network configurations
+        _apply_network_configs()
+
         # Start watchdog cron
         _start_watchdog()
 
@@ -118,6 +121,23 @@ def _reset_service_status():
         message="Aguardando watchdog...",
     )
     log.info("All service statuses reset to Unhealthy.")
+
+
+def _apply_network_configs():
+    """Apply saved network configurations on boot."""
+    try:
+        from raspsec.services.wifi import WifiService
+        WifiService.apply_config()
+        log.info("WiFi config applied.")
+    except Exception as e:
+        log.warning(f"Failed to apply WiFi config: {e}")
+
+    try:
+        from raspsec.services.usb_gadget import UsbGadgetService
+        UsbGadgetService.apply_config()
+        log.info("USB Gadget config applied.")
+    except Exception as e:
+        log.warning(f"Failed to apply USB Gadget config: {e}")
 
 
 def _start_watchdog():
