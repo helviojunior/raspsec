@@ -84,6 +84,10 @@
     {
       "hash": "e9aaea6f5b52da244d4b42c793721f2e721e9bb7",
       "message": "Add router, frontend and firewall watchdog checks; register crontab on boot"
+    },
+    {
+      "hash": "70127c377edb9b6a367de3fb6fe907ad3b96d7cf",
+      "message": "Add USB Gadget Mode (Ethernet over USB) page and backend"
     }
   ]
 }

@@ -4,6 +4,8 @@ import { createPortal } from "react-dom";
 import {
   LayoutDashboard,
   Wifi,
+  Usb,
+  Network,
   Shield,
   Settings,
   Moon,
@@ -25,11 +27,13 @@ const menuStructure = [
     children: null,
   },
   {
-    id: "wifi",
-    path: "/network/wifi",
-    icon: Wifi,
-    label: "WiFi",
-    children: null,
+    id: "networking",
+    icon: Network,
+    label: "Networking",
+    children: [
+      { id: "wifi", path: "/network/wifi", label: "WiFi", icon: Wifi },
+      { id: "usb-gadget", path: "/network/usb-gadget", label: "USB Gadget Mode", icon: Usb },
+    ],
   },
   {
     id: "admin",

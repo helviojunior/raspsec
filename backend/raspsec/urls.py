@@ -7,6 +7,7 @@ from raspsec.views.auth import (
 from raspsec.views.me import MeView
 from raspsec.views.wifi import WifiConfigView, WifiApView, WifiNetworkingView
 from raspsec.views.health import HealthView
+from raspsec.views.usb_gadget import UsbGadgetConfigView, UsbGadgetToggleView, UsbGadgetNetworkingView
 
 
 app_name = 'raspsec'
@@ -32,5 +33,10 @@ urlpatterns = [
     path('api/wifi/config/', WifiConfigView.as_view(), name='wifi-config'),
     path('api/wifi/ap/', WifiApView.as_view(), name='wifi-ap'),
     path('api/wifi/networking/', WifiNetworkingView.as_view(), name='wifi-networking'),
+
+    # USB Gadget
+    path('api/usb-gadget/config/', UsbGadgetConfigView.as_view(), name='usb-gadget-config'),
+    path('api/usb-gadget/toggle/', UsbGadgetToggleView.as_view(), name='usb-gadget-toggle'),
+    path('api/usb-gadget/networking/', UsbGadgetNetworkingView.as_view(), name='usb-gadget-networking'),
 
 ]

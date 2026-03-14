@@ -1,0 +1,300 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { Save, Plus, Trash2 } from "lucide-react";
+import api from "lib/api";
+import { Card, CardContent } from "components/ui/card";
+import { Button } from "components/ui/button";
+import { Input } from "components/ui/input";
+import { Label } from "components/ui/label";
+import { Toggle } from "components/ui/toggle";
+
+const UsbIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
+    <path d="M480-80q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM360-200v-80h240v80H360Zm-30-120q-71-53-110.5-124.5T180-600q0-133 93.5-226.5T500-920q17 0 28.5 11.5T540-880q0 17-11.5 28.5T500-840q-100 0-170 70t-70 170q0 72 34.5 127.5T390-388l30 28v40h120v-40l30-28q61-59 95.5-114.5T700-630h-60v-80h80q0-17-3-33.5T708-776l57-57q14 26 22 54.5t10 58.5h43v80h-43q-7 73-43 137T660-388v68H330Z"/>
+  </svg>
+);
+
+const NetworkIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
+    <path d="M80-200v-80h400v80H80Zm0-200v-80h200v80H80Zm0-200v-80h200v80H80Zm760 400-36-120H664l-36 120h-84l144-440h92l144 440h-84ZM684-400h152l-74-246h-4l-74 246Z"/>
+  </svg>
+);
+
+export default function UsbGadget() {
+  const [activeTab, setActiveTab] = useState("gadget");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const [enabled, setEnabled] = useState(false);
+
+  const [net, setNet] = useState({
+    dhcp_enabled: false,
+    interface_ip: "",
+    range_start: "",
+    range_end: "",
+    subnet_mask: "",
+    dns_mode: "system",
+    dns_servers: [],
+  });
+
+  const [newDns, setNewDns] = useState("");
+
+  const fetchConfig = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get("/api/usb-gadget/config/");
+      setEnabled(data.enabled || false);
+      setNet(data.networking);
+    } catch (err) {
+      setError("Erro ao carregar configurações.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchConfig();
+  }, [fetchConfig]);
+
+  const clearMessages = () => {
+    setError("");
+    setSuccess("");
+  };
+
+  const handleSaveGadget = async () => {
+    clearMessages();
+    setSaving(true);
+    try {
+      await api.put("/api/usb-gadget/toggle/", { enabled });
+      setSuccess("USB Gadget Mode salvo com sucesso.");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao salvar USB Gadget Mode.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveNet = async () => {
+    clearMessages();
+    setSaving(true);
+    try {
+      await api.put("/api/usb-gadget/networking/", net);
+      setSuccess("Configurações de rede salvas com sucesso.");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao salvar configurações de rede.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addDns = () => {
+    const dns = newDns.trim();
+    if (dns && !net.dns_servers.includes(dns)) {
+      setNet({ ...net, dns_servers: [...net.dns_servers, dns] });
+      setNewDns("");
+    }
+  };
+
+  const removeDns = (index) => {
+    setNet({ ...net, dns_servers: net.dns_servers.filter((_, i) => i !== index) });
+  };
+
+  const tabs = [
+    { id: "gadget", label: "USB Gadget Mode", icon: UsbIcon },
+    { id: "networking", label: "Networking", icon: NetworkIcon },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in">
+      <h1 className="text-2xl font-bold mb-6">USB Gadget Mode</h1>
+
+      {error && (
+        <div className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-4 p-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-sm">
+          {success}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 border-b border-border">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => { setActiveTab(tab.id); clearMessages(); }}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              activeTab === tab.id
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <tab.icon />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab: USB Gadget Mode */}
+      {activeTab === "gadget" && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <Label>Habilitado</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Ativa o modo Ethernet over USB (usb0) via dwc2 + g_ether
+                  </p>
+                </div>
+                <Toggle
+                  checked={enabled}
+                  onChange={(val) => setEnabled(val)}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-border">
+                <Button onClick={handleSaveGadget} loading={saving}>
+                  <Save size={16} />
+                  Salvar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tab: Networking */}
+      {activeTab === "networking" && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between py-2">
+                <Label>DHCP Server</Label>
+                <Toggle
+                  checked={net.dhcp_enabled}
+                  onChange={(val) => setNet({ ...net, dhcp_enabled: val })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="usb_interface_ip">IP da Interface (usb0)</Label>
+                <Input
+                  id="usb_interface_ip"
+                  value={net.interface_ip}
+                  onChange={(e) => setNet({ ...net, interface_ip: e.target.value })}
+                  placeholder="172.21.254.1"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="usb_subnet_mask">Máscara de Sub-rede</Label>
+                <Input
+                  id="usb_subnet_mask"
+                  value={net.subnet_mask}
+                  onChange={(e) => setNet({ ...net, subnet_mask: e.target.value })}
+                  placeholder="255.255.255.0"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="usb_range_start">IP Início do Escopo</Label>
+                <Input
+                  id="usb_range_start"
+                  value={net.range_start}
+                  onChange={(e) => setNet({ ...net, range_start: e.target.value })}
+                  placeholder="172.21.254.50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="usb_range_end">IP Final do Escopo</Label>
+                <Input
+                  id="usb_range_end"
+                  value={net.range_end}
+                  onChange={(e) => setNet({ ...net, range_end: e.target.value })}
+                  placeholder="172.21.254.100"
+                />
+              </div>
+
+              {/* DNS Mode */}
+              <div className="space-y-3">
+                <Label>DNS Server</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="usb_dns_mode"
+                      checked={net.dns_mode === "system"}
+                      onChange={() => setNet({ ...net, dns_mode: "system", dns_servers: [] })}
+                      className="accent-emerald-500"
+                    />
+                    Sistema
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="usb_dns_mode"
+                      checked={net.dns_mode === "custom"}
+                      onChange={() => setNet({ ...net, dns_mode: "custom" })}
+                      className="accent-emerald-500"
+                    />
+                    Customizado
+                  </label>
+                </div>
+              </div>
+
+              {net.dns_mode === "custom" && (
+                <div className="space-y-3 pl-2 border-l-2 border-border">
+                  <div className="flex gap-2">
+                    <Input
+                      value={newDns}
+                      onChange={(e) => setNewDns(e.target.value)}
+                      placeholder="Ex: 8.8.8.8"
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDns())}
+                    />
+                    <Button variant="outline" size="sm" onClick={addDns} className="shrink-0 h-10">
+                      <Plus size={16} />
+                    </Button>
+                  </div>
+                  {net.dns_servers.map((dns, i) => (
+                    <div key={i} className="flex items-center justify-between bg-muted/30 rounded-md px-3 py-2 text-sm">
+                      <span>{dns}</span>
+                      <button
+                        onClick={() => removeDns(i)}
+                        className="text-muted-foreground hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {net.dns_servers.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Nenhum DNS customizado adicionado.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-border">
+                <Button onClick={handleSaveNet} loading={saving}>
+                  <Save size={16} />
+                  Salvar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
