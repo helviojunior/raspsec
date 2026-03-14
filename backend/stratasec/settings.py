@@ -66,6 +66,8 @@ DATA_DIR = BASE_DIR
 if not DEBUG:
     DATA_DIR = "/app/data"
 
+Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 

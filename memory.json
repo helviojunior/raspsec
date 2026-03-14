@@ -104,6 +104,10 @@
     {
       "hash": "1be15965f23a61a68f97fc67e9451935e96a6e00",
       "message": "Fix imports and make DATA_DIR dynamic for dev/prod"
+    },
+    {
+      "hash": "cd46c0977e66f03bd078e6d5c873b9281a030f3c",
+      "message": "Ensure DATA_DIR exists on startup and log backend to HDMI console"
     }
   ]
 }
