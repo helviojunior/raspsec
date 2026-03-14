@@ -40,6 +40,9 @@ def watchdog():
     # ── 6. Enable IPv4 forwarding and mark router as healthy ──
     _ensure_router(Exec, ServiceStatus)
 
+    # ── 6b. Enforce gateway routing config ──
+    _enforce_routing()
+
     # ── 7. Check nginx for frontend status ──
     _check_frontend(Exec, ServiceStatus)
 
@@ -152,6 +155,15 @@ def _update_managment_network(ServiceStatus, ssh_ok, dhcp_ok, ap_ok):
         svc.message = f"Serviços com falha: {', '.join(failures)}"
 
     svc.save(update_fields=["status", "message", "updated"])
+
+
+def _enforce_routing():
+    """Check and enforce gateway routing configuration."""
+    try:
+        from raspsec.services.routing import RoutingService
+        RoutingService.check_and_enforce()
+    except Exception as e:
+        log.warning(f"Failed to enforce routing: {e}")
 
 
 def _ensure_router(Exec, ServiceStatus):

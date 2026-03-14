@@ -96,6 +96,10 @@
     {
       "hash": "e8379ac3ba24a08d44581f2a8e516e604f7be272",
       "message": "Apply saved network configs on boot"
+    },
+    {
+      "hash": "67ae3bccb6af8a483e9d711eadae1331b98578b5",
+      "message": "Add Network Status page with gateway priority management"
     }
   ]
 }

@@ -6,6 +6,7 @@ import {
   Wifi,
   Usb,
   Network,
+  Activity,
   Wrench,
   Shield,
   Settings,
@@ -40,6 +41,7 @@ const menuStructure = [
     icon: Network,
     label: "Networking",
     children: [
+      { id: "net-status", path: "/network/status", label: "Status", icon: Activity },
       { id: "wifi", path: "/network/wifi", label: "WiFi", icon: Wifi },
       { id: "usb-gadget", path: "/network/usb-gadget", label: "USB Gadget Mode", icon: Usb },
     ],

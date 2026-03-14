@@ -9,6 +9,7 @@ from raspsec.views.wifi import WifiConfigView, WifiApView, WifiNetworkingView
 from raspsec.views.health import HealthView
 from raspsec.views.usb_gadget import UsbGadgetConfigView, UsbGadgetToggleView, UsbGadgetNetworkingView
 from raspsec.views.shell import ShellExecView, ShellInfoView
+from raspsec.views.netstat import NetworkStatusView, GatewayConfigView
 
 
 app_name = 'raspsec'
@@ -39,6 +40,10 @@ urlpatterns = [
     path('api/usb-gadget/config/', UsbGadgetConfigView.as_view(), name='usb-gadget-config'),
     path('api/usb-gadget/toggle/', UsbGadgetToggleView.as_view(), name='usb-gadget-toggle'),
     path('api/usb-gadget/networking/', UsbGadgetNetworkingView.as_view(), name='usb-gadget-networking'),
+
+    # Network Status
+    path('api/network/status/', NetworkStatusView.as_view(), name='network-status'),
+    path('api/network/gateways/', GatewayConfigView.as_view(), name='network-gateways'),
 
     # Shell
     path('api/shell/info/', ShellInfoView.as_view(), name='shell-info'),

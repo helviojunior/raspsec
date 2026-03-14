@@ -8,6 +8,7 @@ import Dashboard from "pages/Dashboard";
 import AdminSettings from "pages/admin/Settings";
 import Wifi from "pages/network/Wifi";
 import UsbGadget from "pages/network/UsbGadget";
+import NetworkStatus from "pages/network/Status";
 import "./App.css";
 
 function RequireHealthy({ children }) {
@@ -45,6 +46,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/network/wifi" element={<Wifi />} />
               <Route path="/network/usb-gadget" element={<UsbGadget />} />
+              <Route path="/network/status" element={<NetworkStatus />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
             </Route>
 
