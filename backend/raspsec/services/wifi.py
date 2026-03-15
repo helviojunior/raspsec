@@ -140,6 +140,11 @@ class WifiService:
         write_dhcpcd()
         WifiService._write_dnsmasq(config)
 
+        # Ensure wireless interface is ready before starting hostapd
+        Exec.execute("sudo /usr/sbin/rfkill unblock wifi", raise_error=False)
+        Exec.execute("sudo /usr/sbin/ip link set wlan0 up", raise_error=False)
+        Exec.execute("sudo /usr/sbin/iw reg set BR", raise_error=False)
+
         Exec.execute("sudo /usr/bin/systemctl stop hostapd.service", raise_error=False)
         Exec.execute("sudo /usr/bin/systemctl stop dnsmasq.service", raise_error=False)
 

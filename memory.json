@@ -125,6 +125,10 @@
     {
       "hash": "ca01e3987b9ae3783f67879e3c359d14d3f3823d",
       "message": "Persist network configs at OS level so boot works without backend"
+    },
+    {
+      "hash": "dede87e2c0ca1fe4527adaf81788c5c5da0c3951",
+      "message": "Fix WiFi AP not starting by unblocking rfkill and bringing wlan0 up"
     }
   ]
 }
