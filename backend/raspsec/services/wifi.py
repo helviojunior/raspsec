@@ -8,9 +8,11 @@ CONFIG_FILE = "managment_ap.yml"
 HOSTAPD_CONF = "/etc/hostapd/hostapd.conf"
 DNSMASQ_CONF = "/etc/dnsmasq.d/090_wlan0.conf"
 
+FACTORY_SSID = "RaspSec"
+
 DEFAULT_CONFIG = {
     "ap": {
-        "ssid": "RaspSec",
+        "ssid": FACTORY_SSID,
         "bssid": "",
         "password": "@Pass123",
         "hidden": False,
@@ -37,10 +39,31 @@ class WifiService:
         return load_config(CONFIG_FILE, DEFAULT_CONFIG)
 
     @staticmethod
+    def _generate_unique_ssid():
+        """Generate SSID from wlan0 MAC: STRATA_XXXXXXXX (last 8 hex digits)."""
+        try:
+            with open("/sys/class/net/wlan0/address", "r") as f:
+                mac = f.read().strip()
+            # e.g. dc:a6:32:99:e4:fb → 3299e4fb → STRATA_3299E4FB
+            suffix = mac.replace(":", "")[-8:].upper()
+            return f"STRATA_{suffix}"
+        except (FileNotFoundError, IOError):
+            logger.log("Could not read wlan0 MAC, keeping default SSID")
+            return FACTORY_SSID
+
+    @staticmethod
     def apply_config():
         """Re-apply saved configuration on boot."""
         config = WifiService.get_config()
         logger.log("Applying WiFi config on boot...")
+
+        # On first boot, replace factory SSID with unique name based on MAC
+        if config["ap"].get("ssid") == FACTORY_SSID:
+            unique_ssid = WifiService._generate_unique_ssid()
+            if unique_ssid != FACTORY_SSID:
+                config["ap"]["ssid"] = unique_ssid
+                save_config(CONFIG_FILE, config)
+                logger.log(f"SSID set to {unique_ssid}")
 
         WifiService._write_hostapd(config)
         write_dhcpcd()
