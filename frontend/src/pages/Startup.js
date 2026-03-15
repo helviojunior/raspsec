@@ -13,10 +13,10 @@ const statusColor = {
 };
 
 const statusLabel = {
-  healthy: "Healthy",
-  unhealthy: "Unhealthy",
-  degraded: "Degraded",
-  stopped: "Stopped",
+  healthy: "Saudável",
+  unhealthy: "Indisponível",
+  degraded: "Degradado",
+  stopped: "Parado",
 };
 
 export default function Startup() {
@@ -52,7 +52,7 @@ export default function Startup() {
             className="h-12 mx-auto mb-6 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]"
           />
           <h1 className="text-2xl font-bold text-foreground">
-            RaspSec will be available shortly
+            RaspSec estará disponível em breve
           </h1>
         </div>
 
@@ -60,10 +60,10 @@ export default function Startup() {
         <Card className="mb-10">
           <CardContent className="py-6 text-center">
             <p className="text-foreground font-semibold mb-1">
-              This might take a few minutes
+              Isso pode levar alguns minutos
             </p>
             <p className="text-sm text-primary">
-              Checking services status...
+              Verificando status dos serviços...
             </p>
           </CardContent>
         </Card>
@@ -94,7 +94,7 @@ export default function Startup() {
 
                   {svc.message && (
                     <div>
-                      <p className="text-sm font-medium text-foreground mb-1">Message</p>
+                      <p className="text-sm font-medium text-foreground mb-1">Mensagem</p>
                       <p className="text-sm text-muted-foreground break-words">
                         {svc.message}
                       </p>

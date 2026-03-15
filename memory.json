@@ -209,6 +209,20 @@
     {
       "hash": "6b3c3585c772f31f9162ac6d0f972c3edf919b7d",
       "message": "Suppress collectstatic stdout in entrypoint"
+    },
+    {
+      "hash": "ea3e42c1ca602d7de4b87456bade29456984d1c6",
+      "message": "Fix backend service crash and socket permission denied",
+      "skipped": true
+    },
+    {
+      "hash": "a68cd88eb628de369ed8b19c41cb85ac4763c16f",
+      "message": "Fix nginx socket permission denied by setting worker user to www-data",
+      "skipped": true
+    },
+    {
+      "hash": "596197c98ffc2febf1c3e9abc5d1e85b129ce66b",
+      "message": "Translate Startup page UI texts to Portuguese"
     }
   ]
 }
