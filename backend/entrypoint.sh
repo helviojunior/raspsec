@@ -2,8 +2,10 @@
 
 export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-stratasec.settings}"
 
-# Ensure data directory exists for SQLite
-mkdir -p /app/data
+# Ensure data directory exists and is writable
+sudo /bin/mkdir -p /app/data
+sudo /bin/chown stratasec:www-data /app/data
+sudo /bin/chmod 775 /app/data
 
 echo "==> Running migrations..."
 python manage.py makemigrations --noinput 2>&1 || echo "WARN: makemigrations failed"

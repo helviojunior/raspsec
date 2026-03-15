@@ -192,6 +192,10 @@
     {
       "hash": "fa980ac0019ee643dd4d393747b86a57204790bd",
       "message": "Use explicit special chars in secret key generation instead of digits"
+    },
+    {
+      "hash": "2a46f3d61a0df052dd62c84e00bf18433d358482",
+      "message": "Fix /app/data permissions -- was created as root, backend could not write"
     }
   ]
 }
