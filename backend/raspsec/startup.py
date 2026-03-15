@@ -78,6 +78,9 @@ def on_startup():
         # Ensure firewall defaults
         _ensure_firewall_defaults()
 
+        # Verify and fix boot configs before applying network
+        _verify_boot_configs()
+
         # Apply network configurations
         _apply_network_configs()
 
@@ -134,6 +137,24 @@ def _ensure_firewall_defaults():
         log.info("Firewall defaults ensured.")
     except Exception as e:
         log.warning(f"Failed to ensure firewall defaults: {e}")
+
+
+def _verify_boot_configs():
+    """Verify and auto-fix boot configurations (config.txt, rfkill, etc)."""
+    try:
+        from raspsec.libs.boot_check import verify_and_fix, detect_pi_model
+        pi_info = detect_pi_model()
+        if pi_info["raw"]:
+            log.info(f"Detected board: {pi_info['raw']}")
+        remaining = verify_and_fix(runtime=True, sudo=True)
+        for level, msg in remaining:
+            if level == "warn":
+                log.warning(f"Boot check: {msg}")
+            elif level == "error":
+                log.error(f"Boot check: {msg}")
+        log.info("Boot config verification complete.")
+    except Exception as e:
+        log.warning(f"Failed to verify boot configs: {e}")
 
 
 def _apply_network_configs():

@@ -5,12 +5,19 @@ DATA_DIR = "/app/data"
 
 
 def load_config(filename, defaults=None):
-    """Load a YAML config file from DATA_DIR. Returns defaults if file doesn't exist."""
+    """Load a YAML config file from DATA_DIR.
+
+    If the file doesn't exist and defaults are provided, creates the file
+    with those defaults so there is always a single source of truth on disk.
+    """
     path = os.path.join(DATA_DIR, filename)
     if os.path.isfile(path):
         with open(path, "r") as f:
             return yaml.safe_load(f) or (defaults or {})
-    return defaults or {}
+    if defaults:
+        save_config(filename, defaults)
+        return dict(defaults)
+    return {}
 
 
 def save_config(filename, data):

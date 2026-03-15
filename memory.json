@@ -129,6 +129,10 @@
     {
       "hash": "dede87e2c0ca1fe4527adaf81788c5c5da0c3951",
       "message": "Fix WiFi AP not starting by unblocking rfkill and bringing wlan0 up"
+    },
+    {
+      "hash": "13fc5aca779263c70cfc9288558694c733cff8f6",
+      "message": "Add boot config verifier, fix USB gadget and WiFi startup issues"
     }
   ]
 }

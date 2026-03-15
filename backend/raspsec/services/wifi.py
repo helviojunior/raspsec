@@ -14,7 +14,7 @@ DEFAULT_CONFIG = {
         "bssid": "",
         "password": "@Pass123",
         "hidden": False,
-        "enabled": False,
+        "enabled": True,
     },
     "networking": {
         "dhcp_enabled": True,

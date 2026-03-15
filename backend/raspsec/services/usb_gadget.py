@@ -7,7 +7,7 @@ CONFIG_FILE = "ethernet_over_usb.yml"
 DNSMASQ_CONF = "/etc/dnsmasq.d/090_usb0.conf"
 
 DEFAULT_CONFIG = {
-    "enabled": False,
+    "enabled": True,
     "networking": {
         "dhcp_enabled": True,
         "interface_ip": "172.21.254.1",
@@ -75,14 +75,20 @@ class UsbGadgetService:
         Exec.execute("sudo /sbin/modprobe dwc2", raise_error=False)
         Exec.execute("sudo /sbin/modprobe g_ether", raise_error=False)
 
-        # Persist dtoverlay=dwc2 in /boot/firmware/config.txt
+        # Persist dtoverlay=dwc2 in peripheral mode in /boot/firmware/config.txt
         ret, out = Exec.execute(
             "/bin/grep -c 'dtoverlay=dwc2' /boot/firmware/config.txt",
             raise_error=False,
         )
         if out.strip() == "0" or ret != 0:
             Exec.execute(
-                "echo 'dtoverlay=dwc2' | sudo /usr/bin/tee -a /boot/firmware/config.txt",
+                "echo 'dtoverlay=dwc2,dr_mode=peripheral' | sudo /usr/bin/tee -a /boot/firmware/config.txt",
+                raise_error=False,
+            )
+        else:
+            # Ensure existing entry uses peripheral mode
+            Exec.execute(
+                "sudo /usr/bin/sed -i 's/dtoverlay=dwc2.*/dtoverlay=dwc2,dr_mode=peripheral/' /boot/firmware/config.txt",
                 raise_error=False,
             )
 
