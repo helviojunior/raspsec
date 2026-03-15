@@ -64,9 +64,14 @@ def on_startup():
 
         env_path = Path(settings.DATA_DIR) / ".env"
         if not env_path.exists():
-            log.exception("Environment file '.env' not found, creating a default one!")
+            log.warning("Environment file '.env' not found, creating a default one.")
             create_default_dot_env()
-            os.kill(os.getpid(), signal.SIGTERM)
+            if env_path.exists():
+                log.info(".env created, restarting to load new settings...")
+                os.kill(os.getpid(), signal.SIGTERM)
+            else:
+                log.error("Failed to create .env — check /app/data permissions")
+                return
 
         # Ensure default superadmin exists
         _ensure_superadmin()

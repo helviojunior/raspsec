@@ -7,6 +7,10 @@ sudo /bin/mkdir -p /app/data
 sudo /bin/chown stratasec:www-data /app/data
 sudo /bin/chmod 775 /app/data
 
+# Ensure log directory exists (tmpfs may not have it yet)
+sudo /bin/mkdir -p /var/log/raspsec
+sudo /bin/chown stratasec:www-data /var/log/raspsec
+
 echo "==> Running migrations..."
 python manage.py makemigrations --noinput 2>&1 || echo "WARN: makemigrations failed"
 python manage.py migrate --noinput 2>&1 || echo "WARN: migrate failed"

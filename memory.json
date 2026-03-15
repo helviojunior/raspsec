@@ -196,6 +196,10 @@
     {
       "hash": "2a46f3d61a0df052dd62c84e00bf18433d358482",
       "message": "Fix /app/data permissions -- was created as root, backend could not write"
+    },
+    {
+      "hash": "11b0c061934b0d0216a3f7495092b3899ef720f6",
+      "message": "Fix backend restart loop on first boot"
     }
   ]
 }
