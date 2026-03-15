@@ -236,6 +236,10 @@
     {
       "hash": "29becaa507a8914465f01e564060c1e6dedbe6d0",
       "message": "Improve USB gadget: fix first-boot init, dynamic naming, and DHCP routing"
+    },
+    {
+      "hash": "1c8b8f834ac70663937591fdb48a218567d66f13",
+      "message": "Defer startup tasks until first DB connection to fix Django warning"
     }
   ]
 }
