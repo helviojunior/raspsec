@@ -2,9 +2,11 @@ import datetime
 import os
 import sys
 import logging
-# import datetime
+import logging.handlers
 import inspect, traceback
 from pathlib import Path
+
+BACKEND_LOG = '/var/log/raspsec/backend.log'
 
 
 class SystemLogger(object):
@@ -28,6 +30,14 @@ class SystemLogger(object):
         logging.basicConfig(format="%(threadName)s:%(message)s")
         self.logger.handlers.clear()
         self.logger.addHandler(handler)
+
+        try:
+            fh = logging.FileHandler(BACKEND_LOG)
+            fh.setLevel(logging.DEBUG)
+            fh.setFormatter(logging.Formatter('%(asctime)s %(threadName)s:%(message)s'))
+            self.logger.addHandler(fh)
+        except OSError:
+            pass
 
     @property
     def base_logger(self):

@@ -223,6 +223,10 @@
     {
       "hash": "596197c98ffc2febf1c3e9abc5d1e85b129ce66b",
       "message": "Translate Startup page UI texts to Portuguese"
+    },
+    {
+      "hash": "50220b624a4a80f9a25a5627089d8e3440ceaa98",
+      "message": "Add persistent file logging to SystemLogger (/var/log/raspsec/backend.log)"
     }
   ]
 }
