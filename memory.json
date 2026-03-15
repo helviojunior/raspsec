@@ -141,6 +141,10 @@
     {
       "hash": "9c1573d6040bc420b4e8b7f22d9f89b71e222295",
       "message": "Generate unique SSID from wlan0 MAC on first boot"
+    },
+    {
+      "hash": "8dc91989a24c35c7f229851c710c6577bbd80699",
+      "message": "Replace Raspberry Pi boot logo with StrataSec branding"
     }
   ]
 }

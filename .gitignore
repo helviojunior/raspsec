@@ -159,3 +159,6 @@ output/
 # Project files
 TODO.md
 
+# Generated boot logo (built by Docker/generate_boot_logo.py)
+raspberry/config/boot-logo.png
+
