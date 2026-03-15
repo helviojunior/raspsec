@@ -71,9 +71,16 @@ class UsbGadgetService:
         """Enable USB Ethernet gadget (dwc2 + g_ether) and configure networking."""
         logger.log("Enabling USB Gadget mode...")
 
-        # Load dwc2 overlay and g_ether module
+        # Load dwc2 overlay and g_ether module (modprobe.d sets iProduct/iManufacturer)
         Exec.execute("sudo /sbin/modprobe dwc2", raise_error=False)
         Exec.execute("sudo /sbin/modprobe g_ether", raise_error=False)
+
+        # Ensure modprobe config for device branding exists
+        Exec.execute(
+            "echo 'options g_ether iManufacturer=\"StrataSec\" iProduct=\"RaspSec\" iSerialNumber=\"raspsec-001\"'"
+            " | sudo /usr/bin/tee /etc/modprobe.d/raspsec-usb-gadget.conf",
+            raise_error=False,
+        )
 
         # Persist dtoverlay=dwc2 in peripheral mode in /boot/firmware/config.txt
         ret, out = Exec.execute(

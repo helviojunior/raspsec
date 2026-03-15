@@ -133,6 +133,10 @@
     {
       "hash": "13fc5aca779263c70cfc9288558694c733cff8f6",
       "message": "Add boot config verifier, fix USB gadget and WiFi startup issues"
+    },
+    {
+      "hash": "869ca5a0b21da9aab75f4564d4556d998d7399a6",
+      "message": "Brand USB gadget as RaspSec on host OS via g_ether module params"
     }
   ]
 }
