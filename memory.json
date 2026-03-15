@@ -200,6 +200,15 @@
     {
       "hash": "11b0c061934b0d0216a3f7495092b3899ef720f6",
       "message": "Fix backend restart loop on first boot"
+    },
+    {
+      "hash": "7875acbcf65f5113eeece481643731e80fa6aed3",
+      "message": "Disable DNS in dnsmasq to avoid port 53 conflict with bind9",
+      "skipped": true
+    },
+    {
+      "hash": "6b3c3585c772f31f9162ac6d0f972c3edf919b7d",
+      "message": "Suppress collectstatic stdout in entrypoint"
     }
   ]
 }
