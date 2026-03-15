@@ -145,6 +145,25 @@
     {
       "hash": "8dc91989a24c35c7f229851c710c6577bbd80699",
       "message": "Replace Raspberry Pi boot logo with StrataSec branding"
+    },
+    {
+      "hash": "66b05adada9245aa1a49958742bd440f4e9785aa",
+      "message": "Mount /var/log as tmpfs to reduce SD card IO",
+      "skipped": true
+    },
+    {
+      "hash": "8a7ae0ce85c7faaeb62c163f20ea44f7d7119bc9",
+      "message": "Rename .img to match zip name and package as .zip",
+      "skipped": true
+    },
+    {
+      "hash": "c09d4ce6be365042010d8d17a1e977e4a9ac033f",
+      "message": "Move cleanup step to end of build to fix missing file error",
+      "skipped": true
+    },
+    {
+      "hash": "49feccecfddbf4acbf3aac48b82d19b37d2a6ab6",
+      "message": "Force traditional ethX naming for wired network interfaces"
     }
   ]
 }

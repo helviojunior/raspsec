@@ -34,7 +34,7 @@ def write_dhcpcd():
     """Write complete /etc/dhcpcd.conf from wifi and usb YAML configs.
 
     Both wlan0 and usb0 sections are derived from the persisted YAML files.
-    eth0/end0 are denied DHCP (no client, no server).
+    eth0 is denied DHCP (no client, no server).
     """
     wifi = load_config("managment_ap.yml", {})
     usb = load_config("ethernet_over_usb.yml", {})
@@ -52,8 +52,8 @@ def write_dhcpcd():
         "slaac private\n"
         "nohook lookup-hostname\n"
         "\n"
-        "# Disable DHCP client on eth0/end0\n"
-        "denyinterfaces eth0 end0\n"
+        "# Disable DHCP client on eth0 (wired uplink — managed externally)\n"
+        "denyinterfaces eth0\n"
     )
 
     # wlan0 section (always present — interface keeps its IP even with AP off)
