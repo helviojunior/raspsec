@@ -181,6 +181,13 @@ def _apply_network_configs():
         log.warning(f"Failed to apply DNS config: {e}")
 
     try:
+        from raspsec.services.vlan import VlanService
+        VlanService.apply_on_boot()
+        log.info("VLAN config applied.")
+    except Exception as e:
+        log.warning(f"Failed to apply VLAN config: {e}")
+
+    try:
         from raspsec.services.firewall import FirewallService
         FirewallService.apply()
         log.info("Firewall rules applied.")

@@ -164,6 +164,10 @@
     {
       "hash": "49feccecfddbf4acbf3aac48b82d19b37d2a6ab6",
       "message": "Force traditional ethX naming for wired network interfaces"
+    },
+    {
+      "hash": "045134e9757deeef1da8fce16efb712c0df88a52",
+      "message": "Add VLAN management service with ethX.VLAN_ID naming"
     }
   ]
 }
