@@ -5,6 +5,7 @@ from raspsec.libs.network import write_dhcpcd, write_system_file
 
 CONFIG_FILE = "ethernet_over_usb.yml"
 DNSMASQ_CONF = "/etc/dnsmasq.d/090_usb0.conf"
+MODPROBE_CONF = "/etc/modprobe.d/raspsec-usb-gadget.conf"
 
 DEFAULT_CONFIG = {
     "enabled": True,
@@ -71,16 +72,11 @@ class UsbGadgetService:
         """Enable USB Ethernet gadget (dwc2 + g_ether) and configure networking."""
         logger.log("Enabling USB Gadget mode...")
 
-        # Load dwc2 overlay and g_ether module (modprobe.d sets iProduct/iManufacturer)
+        # Load dwc2 overlay
         Exec.execute("sudo /sbin/modprobe dwc2", raise_error=False)
-        Exec.execute("sudo /sbin/modprobe g_ether", raise_error=False)
 
-        # Ensure modprobe config for device branding exists
-        Exec.execute(
-            "echo 'options g_ether iManufacturer=\"StrataSec\" iProduct=\"RaspSec\" iSerialNumber=\"raspsec-001\"'"
-            " | sudo /usr/bin/tee /etc/modprobe.d/raspsec-usb-gadget.conf",
-            raise_error=False,
-        )
+        # Write modprobe config with MAC-based product name
+        UsbGadgetService._write_modprobe_conf()
 
         # Persist dtoverlay=dwc2 in peripheral mode in /boot/firmware/config.txt
         ret, out = Exec.execute(
@@ -99,17 +95,20 @@ class UsbGadgetService:
                 raise_error=False,
             )
 
-        # Persist dwc2 and g_ether in /etc/modules
-        for module in ["dwc2", "g_ether"]:
-            ret, _ = Exec.execute(
-                f"/bin/grep -c '^{module}$' /etc/modules",
+        # Persist dwc2 in /etc/modules (g_ether is managed by raspsec-usb-gadget.service)
+        ret, _ = Exec.execute(
+            "/bin/grep -c '^dwc2$' /etc/modules",
+            raise_error=False,
+        )
+        if ret != 0:
+            Exec.execute(
+                "echo 'dwc2' | sudo /usr/bin/tee -a /etc/modules",
                 raise_error=False,
             )
-            if ret != 0:
-                Exec.execute(
-                    f"echo '{module}' | sudo /usr/bin/tee -a /etc/modules",
-                    raise_error=False,
-                )
+
+        # Ensure the USB gadget service is enabled and started
+        Exec.execute("sudo /usr/bin/systemctl enable raspsec-usb-gadget.service", raise_error=False)
+        Exec.execute("sudo /usr/bin/systemctl start raspsec-usb-gadget.service", raise_error=False)
 
         # Persist IP config in dhcpcd.conf and DHCP server in dnsmasq
         write_dhcpcd()
@@ -126,6 +125,8 @@ class UsbGadgetService:
         """Disable USB Ethernet gadget."""
         logger.log("Disabling USB Gadget mode...")
 
+        Exec.execute("sudo /usr/bin/systemctl stop raspsec-usb-gadget.service", raise_error=False)
+        Exec.execute("sudo /usr/bin/systemctl disable raspsec-usb-gadget.service", raise_error=False)
         Exec.execute("sudo /sbin/modprobe -r g_ether", raise_error=False)
 
         # Remove dnsmasq config for usb0
@@ -138,6 +139,30 @@ class UsbGadgetService:
         Exec.execute("sudo /usr/bin/systemctl restart dnsmasq.service", raise_error=False)
 
         logger.log("USB Gadget mode disabled.")
+
+    # ── modprobe (USB gadget branding) ──
+
+    @staticmethod
+    def _get_mac_suffix():
+        """Return last 6 hex digits of wlan0 MAC (uppercase), e.g. 'A1B2C3'."""
+        try:
+            with open("/sys/class/net/wlan0/address") as f:
+                mac = f.read().strip()
+            return mac.replace(":", "")[-6:].upper()
+        except OSError:
+            return "000000"
+
+    @staticmethod
+    def _write_modprobe_conf():
+        """Write modprobe config with MAC-based product name."""
+        suffix = UsbGadgetService._get_mac_suffix()
+        content = (
+            f'options g_ether iManufacturer="StrataSec"'
+            f' iProduct="RaspSec USB-C {suffix}"'
+            f' iSerialNumber="raspsec-{suffix}"\n'
+        )
+        logger.log(f"Writing USB gadget branding: RaspSec USB-C {suffix}")
+        write_system_file(MODPROBE_CONF, content)
 
     # ── dnsmasq (DHCP server for usb0) ──
 
@@ -156,8 +181,12 @@ class UsbGadgetService:
                 "# RaspSec usb0 (Ethernet over USB) configuration\n"
                 "interface=usb0\n"
                 "domain-needed\n"
-                f"dhcp-range={net['range_start']},{net['range_end']},{net['subnet_mask']},12h\n"
-                f"dhcp-option=6,{dns_option}\n"
+                f"dhcp-range=set:usb0net,{net['range_start']},{net['range_end']},{net['subnet_mask']},12h\n"
+                "# No default gateway — keeps existing gateways on the PC as primary\n"
+                "dhcp-option=tag:usb0net,3\n"
+                "# Route to wlan0 management network via RaspSec\n"
+                f"dhcp-option=tag:usb0net,121,172.21.255.0/24,{net['interface_ip']}\n"
+                f"dhcp-option=tag:usb0net,6,{dns_option}\n"
             )
 
         logger.log(f"Writing dnsmasq config to {DNSMASQ_CONF}")

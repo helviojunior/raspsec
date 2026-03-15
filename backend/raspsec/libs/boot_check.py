@@ -26,7 +26,7 @@ HOSTAPD_DEFAULT = "/etc/default/hostapd"
 DHCPCD_CONF = "/etc/dhcpcd.conf"
 DATA_DIR = "/app/data"
 
-REQUIRED_MODULES = ["dwc2", "g_ether"]
+REQUIRED_MODULES = ["dwc2"]  # g_ether is loaded by raspsec-usb-gadget.service
 REQUIRED_YAMLS = ["managment_ap.yml", "ethernet_over_usb.yml"]
 COUNTRY_CODE = "BR"
 

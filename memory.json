@@ -227,6 +227,15 @@
     {
       "hash": "50220b624a4a80f9a25a5627089d8e3440ceaa98",
       "message": "Add persistent file logging to SystemLogger (/var/log/raspsec/backend.log)"
+    },
+    {
+      "hash": "6f89f1602b816404db67035f1b5d415e0ed0ee8e",
+      "message": "Fix boot splash not showing by waiting for framebuffer device",
+      "skipped": true
+    },
+    {
+      "hash": "29becaa507a8914465f01e564060c1e6dedbe6d0",
+      "message": "Improve USB gadget: fix first-boot init, dynamic naming, and DHCP routing"
     }
   ]
 }
