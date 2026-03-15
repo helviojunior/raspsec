@@ -240,6 +240,10 @@
     {
       "hash": "1c8b8f834ac70663937591fdb48a218567d66f13",
       "message": "Defer startup tasks until first DB connection to fix Django warning"
+    },
+    {
+      "hash": "59fbb96710b655c0589f9af8f075764351bf9206",
+      "message": "Replace WebShell with real PTY terminal via WebSocket + xterm.js"
     }
   ]
 }

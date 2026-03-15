@@ -1,9 +1,37 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { Terminal } from "@xterm/xterm";
+import { FitAddon } from "@xterm/addon-fit";
 import { ChevronDown, X } from "lucide-react";
-import api from "lib/api";
+import { getToken } from "lib/api";
+import "@xterm/xterm/css/xterm.css";
 
 const MIN_HEIGHT = 120;
 const DEFAULT_HEIGHT = 280;
+
+/* Linux terminal colors (Tango / GNOME Terminal palette) */
+const THEME = {
+  background: "#000000",
+  foreground: "#aaaaaa",
+  cursor: "#aaaaaa",
+  cursorAccent: "#000000",
+  selectionBackground: "#ffffff40",
+  black: "#000000",
+  red: "#cc0000",
+  green: "#4e9a06",
+  yellow: "#c4a000",
+  blue: "#3465a4",
+  magenta: "#75507b",
+  cyan: "#06989a",
+  white: "#d3d7cf",
+  brightBlack: "#555753",
+  brightRed: "#ef2929",
+  brightGreen: "#8ae234",
+  brightYellow: "#fce94f",
+  brightBlue: "#729fcf",
+  brightMagenta: "#ad7fa8",
+  brightCyan: "#34e2e2",
+  brightWhite: "#eeeeec",
+};
 
 const TerminalIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -13,44 +41,17 @@ const TerminalIcon = () => (
 );
 
 export default function WebShell({ open, onToggle, onClose }) {
-  const [lines, setLines] = useState([]);
-  const [input, setInput] = useState("");
-  const [cwd, setCwd] = useState("~");
-  const [shellInfo, setShellInfo] = useState({ user: "", hostname: "" });
-  const [running, setRunning] = useState(false);
-  const [history, setHistory] = useState([]);
-  const [historyIdx, setHistoryIdx] = useState(-1);
+  const termContainerRef = useRef(null);
+  const termRef = useRef(null);
+  const fitAddonRef = useRef(null);
+  const wsRef = useRef(null);
+  const connectedRef = useRef(false);
+
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const [dragging, setDragging] = useState(false);
-  const termRef = useRef(null);
-  const inputRef = useRef(null);
+  const [status, setStatus] = useState("disconnected"); // disconnected | connecting | connected
   const dragStartY = useRef(0);
   const dragStartH = useRef(0);
-
-  const prompt = `${shellInfo.user}@${shellInfo.hostname}:${cwd}$ `;
-
-  const fetchInfo = useCallback(async () => {
-    try {
-      const { data } = await api.get("/api/shell/info/");
-      setShellInfo({ user: data.user, hostname: data.hostname });
-      setCwd(data.cwd);
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    if (open) {
-      fetchInfo();
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [open, fetchInfo]);
-
-  useEffect(() => {
-    if (termRef.current) {
-      termRef.current.scrollTop = termRef.current.scrollHeight;
-    }
-  }, [lines]);
 
   // ── Drag resize ──
   useEffect(() => {
@@ -58,9 +59,8 @@ export default function WebShell({ open, onToggle, onClose }) {
 
     const onMouseMove = (e) => {
       const delta = dragStartY.current - e.clientY;
-      const maxH = window.innerHeight - 80; // leave space for header
-      const newH = Math.min(maxH, Math.max(MIN_HEIGHT, dragStartH.current + delta));
-      setHeight(newH);
+      const maxH = window.innerHeight - 80;
+      setHeight(Math.min(maxH, Math.max(MIN_HEIGHT, dragStartH.current + delta)));
     };
 
     const onMouseUp = () => setDragging(false);
@@ -84,80 +84,149 @@ export default function WebShell({ open, onToggle, onClose }) {
     setDragging(true);
   };
 
-  const execCommand = async (cmd) => {
-    if (!cmd.trim()) {
-      setLines((prev) => [...prev, { type: "prompt", text: prompt }]);
-      return;
-    }
+  // ── Terminal + WebSocket lifecycle ──
+  const connect = useCallback(() => {
+    if (!termContainerRef.current) return;
 
-    if (cmd.trim() === "clear") {
-      setLines([]);
-      return;
-    }
+    // Create xterm instance
+    const term = new Terminal({
+      theme: THEME,
+      fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace",
+      fontSize: 13,
+      cursorBlink: true,
+      cursorStyle: "block",
+      scrollback: 10000,
+      allowTransparency: true,
+    });
 
-    setLines((prev) => [...prev, { type: "prompt", text: prompt + cmd }]);
-    setRunning(true);
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(termContainerRef.current);
 
-    try {
-      const { data } = await api.post("/api/shell/exec/", { cmd, cwd });
-      if (data.output) {
-        setLines((prev) => [...prev, { type: "output", text: data.output }]);
+    // Small delay to let the DOM settle, then fit
+    setTimeout(() => fitAddon.fit(), 50);
+
+    termRef.current = term;
+    fitAddonRef.current = fitAddon;
+
+    // Connect WebSocket
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(`${proto}//${window.location.host}/api/ws/shell`);
+    wsRef.current = ws;
+    connectedRef.current = false;
+    setStatus("connecting");
+
+    ws.binaryType = "arraybuffer";
+
+    ws.onopen = () => {
+      // Authenticate with JWE token
+      ws.send(JSON.stringify({ type: "auth", token: getToken() }));
+    };
+
+    ws.onmessage = (event) => {
+      // First message = auth response
+      if (!connectedRef.current) {
+        try {
+          const msg = JSON.parse(typeof event.data === "string" ? event.data : new TextDecoder().decode(event.data));
+          if (msg.type === "auth") {
+            if (msg.status === "ok") {
+              connectedRef.current = true;
+              setStatus("connected");
+              // Send initial terminal size
+              ws.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
+            } else {
+              term.write("\r\n\x1b[31mAuthentication failed.\x1b[0m\r\n");
+              setStatus("disconnected");
+            }
+            return;
+          }
+        } catch {
+          // Not JSON — treat as terminal data
+        }
       }
-      if (data.cwd) {
-        setCwd(data.cwd);
-      }
-    } catch (err) {
-      setLines((prev) => [
-        ...prev,
-        { type: "error", text: "Shell request failed.\n" },
-      ]);
-    } finally {
-      setRunning(false);
-    }
-  };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const cmd = input;
-      setInput("");
-      if (cmd.trim()) {
-        setHistory((prev) => [...prev, cmd]);
-      }
-      setHistoryIdx(-1);
-      execCommand(cmd);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (history.length === 0) return;
-      const newIdx = historyIdx === -1 ? history.length - 1 : Math.max(0, historyIdx - 1);
-      setHistoryIdx(newIdx);
-      setInput(history[newIdx]);
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (historyIdx === -1) return;
-      const newIdx = historyIdx + 1;
-      if (newIdx >= history.length) {
-        setHistoryIdx(-1);
-        setInput("");
+      // Terminal data
+      if (event.data instanceof ArrayBuffer) {
+        term.write(new Uint8Array(event.data));
       } else {
-        setHistoryIdx(newIdx);
-        setInput(history[newIdx]);
+        term.write(event.data);
       }
-    } else if (e.key === "c" && e.ctrlKey) {
-      e.preventDefault();
-      setLines((prev) => [...prev, { type: "prompt", text: prompt + input + "^C" }]);
-      setInput("");
+    };
+
+    ws.onclose = () => {
+      connectedRef.current = false;
+      setStatus("disconnected");
+      if (termRef.current) {
+        termRef.current.write("\r\n\x1b[31m[Disconnected]\x1b[0m\r\n");
+      }
+    };
+
+    ws.onerror = () => {
+      setStatus("disconnected");
+    };
+
+    // Terminal input → WebSocket
+    term.onData((data) => {
+      if (ws.readyState === WebSocket.OPEN && connectedRef.current) {
+        ws.send(data);
+      }
+    });
+
+    // Terminal resize → WebSocket
+    term.onResize(({ cols, rows }) => {
+      if (ws.readyState === WebSocket.OPEN && connectedRef.current) {
+        ws.send(JSON.stringify({ type: "resize", cols, rows }));
+      }
+    });
+  }, []);
+
+  // Mount / unmount
+  useEffect(() => {
+    if (!open) return;
+
+    // Small delay so the container is rendered before we open the terminal
+    const timer = setTimeout(() => connect(), 80);
+
+    return () => {
+      clearTimeout(timer);
+      wsRef.current?.close();
+      termRef.current?.dispose();
+      termRef.current = null;
+      fitAddonRef.current = null;
+      wsRef.current = null;
+      connectedRef.current = false;
+      setStatus("disconnected");
+    };
+  }, [open, connect]);
+
+  // Re-fit terminal when panel height changes
+  useEffect(() => {
+    if (open && fitAddonRef.current) {
+      setTimeout(() => fitAddonRef.current?.fit(), 50);
     }
-  };
+  }, [height, open]);
 
-  const focusInput = () => inputRef.current?.focus();
+  // Re-fit on window resize
+  useEffect(() => {
+    if (!open) return;
+    const onResize = () => fitAddonRef.current?.fit();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [open]);
 
-  if (!open) {
-    return null;
-  }
+  // Focus terminal on click
+  const focusTerminal = () => termRef.current?.focus();
+
+  if (!open) return null;
+
+  const statusColor = {
+    disconnected: "bg-red-500",
+    connecting: "bg-yellow-500",
+    connected: "bg-emerald-500",
+  }[status];
 
   return (
-    <div className="flex flex-col border-t border-border bg-[#1a1a1a]" style={{ height: `${height}px`, flexShrink: 0 }}>
+    <div className="flex flex-col border-t border-border bg-black" style={{ height: `${height}px`, flexShrink: 0 }}>
       {/* Resize handle */}
       <div
         className="h-1 bg-transparent hover:bg-primary/40 cursor-row-resize transition-colors"
@@ -167,10 +236,10 @@ export default function WebShell({ open, onToggle, onClose }) {
       {/* Title bar */}
       <div
         className="flex items-center justify-between px-3 py-1.5 bg-[#2a2a2a] border-b border-border cursor-pointer select-none"
-        onClick={focusInput}
+        onClick={focusTerminal}
       >
         <div className="flex items-center gap-2">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" />
+          <span className={`inline-block w-2.5 h-2.5 rounded-full ${statusColor}`} />
           <TerminalIcon />
           <span className="text-xs font-medium text-gray-300">Web Shell</span>
         </div>
@@ -190,42 +259,12 @@ export default function WebShell({ open, onToggle, onClose }) {
         </div>
       </div>
 
-      {/* Terminal body */}
+      {/* Terminal container — xterm.js renders here */}
       <div
-        ref={termRef}
-        className="flex-1 overflow-y-auto px-3 py-2 font-mono text-sm text-gray-200 cursor-text"
-        onClick={focusInput}
-      >
-        {lines.map((line, i) => (
-          <div key={i} className="whitespace-pre-wrap break-all">
-            {line.type === "prompt" && (
-              <span className="text-emerald-400">{line.text}</span>
-            )}
-            {line.type === "output" && (
-              <span className="text-gray-300">{line.text}</span>
-            )}
-            {line.type === "error" && (
-              <span className="text-red-400">{line.text}</span>
-            )}
-          </div>
-        ))}
-
-        {/* Active prompt */}
-        <div className="flex whitespace-pre">
-          <span className="text-emerald-400 shrink-0">{prompt}</span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={running}
-            className="flex-1 bg-transparent text-gray-200 outline-none border-none p-0 m-0 font-mono text-sm caret-gray-200"
-            spellCheck={false}
-            autoComplete="off"
-          />
-        </div>
-      </div>
+        ref={termContainerRef}
+        className="flex-1 overflow-hidden"
+        onClick={focusTerminal}
+      />
     </div>
   );
 }

@@ -54,24 +54,28 @@ class ShellExecView(APIView):
                 cwd=cwd,
                 env=env,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
+                stderr=subprocess.PIPE,
                 timeout=30,
             )
-            output = proc.stdout.decode("utf-8", errors="replace")
+            stdout = proc.stdout.decode("utf-8", errors="replace")
+            stderr = proc.stderr.decode("utf-8", errors="replace")
             return Response({
-                "output": output,
+                "output": stdout,
+                "stderr": stderr,
                 "cwd": cwd,
                 "code": proc.returncode,
             })
         except subprocess.TimeoutExpired:
             return Response({
-                "output": "Command timed out (30s limit).\n",
+                "output": "",
+                "stderr": "Command timed out (30s limit).\n",
                 "cwd": cwd,
                 "code": 124,
             })
         except Exception as e:
             return Response({
-                "output": f"Error: {str(e)}\n",
+                "output": "",
+                "stderr": f"Error: {str(e)}\n",
                 "cwd": cwd,
                 "code": 1,
             })
