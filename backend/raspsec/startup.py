@@ -212,13 +212,13 @@ def create_default_dot_env():
 
     data = {
         "SECRET_KEY": ''.join(
-                random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation)
+                random.choice(string.ascii_lowercase + string.ascii_uppercase + string.punctuation + '!@#$*()_-')
                 for _ in range(random.randint(60, 80)))
     }
 
     if not private_key_path.exists():
         data['RSA_PASSPHRASE'] = ''.join(
-                random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation)
+                random.choice(string.ascii_lowercase + string.ascii_uppercase + string.punctuation + '!@#$*()_-')
                 for _ in range(random.randint(40, 60)))
         data['RSA_KEY_PATH'] = private_key_path.name
         generate_rsa_keypair(str(private_key_path), str(public_key_path), data['RSA_PASSPHRASE'])

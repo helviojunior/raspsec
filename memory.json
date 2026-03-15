@@ -168,6 +168,30 @@
     {
       "hash": "045134e9757deeef1da8fce16efb712c0df88a52",
       "message": "Add VLAN management service with ethX.VLAN_ID naming"
+    },
+    {
+      "hash": "91e593e2b56ed76627ec4156daa1b844ac551922",
+      "message": "Fix QEMU segfault leaving python3-lib2to3 unconfigured in stage2",
+      "skipped": true
+    },
+    {
+      "hash": "387e6b6bcab4406b0404f4adf86e191f9e5bf946",
+      "message": "Handle pi-gen .zip output format when extracting .img",
+      "skipped": true
+    },
+    {
+      "hash": "21c7268950092c8c055dd4e150238131188b58fa",
+      "message": "Disable pi-gen compression to output raw .img for our own zip packaging",
+      "skipped": true
+    },
+    {
+      "hash": "14b97abe0494db8350abe3a90a2608d51a89d35d",
+      "message": "Install uwsgi from apt instead of pip to avoid QEMU segfault",
+      "skipped": true
+    },
+    {
+      "hash": "fa980ac0019ee643dd4d393747b86a57204790bd",
+      "message": "Use explicit special chars in secret key generation instead of digits"
     }
   ]
 }
