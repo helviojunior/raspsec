@@ -288,6 +288,10 @@
     {
       "hash": "49062f37703657227f2f7318829b719f466c3926",
       "message": "Fix watchdog cron using uwsgi-core instead of python3"
+    },
+    {
+      "hash": "e518dbe7a81c50c5f1c6f1fab7440479161e4277",
+      "message": "Fix startup loop, boot splash timing, and show boot messages"
     }
   ]
 }

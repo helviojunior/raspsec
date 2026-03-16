@@ -78,9 +78,8 @@ def on_startup():
         # Ensure default superadmin exists
         _ensure_superadmin()
 
-        # Ensure default services exist and reset status
+        # Ensure default services exist (status is updated by watchdog cron)
         _ensure_services()
-        _reset_service_status()
 
         # Ensure firewall defaults
         _ensure_firewall_defaults()
@@ -93,6 +92,9 @@ def on_startup():
 
         # Start watchdog cron
         _start_watchdog()
+
+        # Run watchdog immediately so services are healthy before first cron tick
+        _run_watchdog_now()
 
         from django.core.cache import cache
         cache.set("app:healthy", True, timeout=60)
@@ -210,6 +212,16 @@ def _start_watchdog():
         log.info("Watchdog cron job registered.")
     except Exception as e:
         log.warning(f"Could not register crontab: {e}")
+
+
+def _run_watchdog_now():
+    """Run watchdog immediately so services are healthy on startup."""
+    try:
+        from raspsec.cron import watchdog
+        watchdog()
+        log.info("Initial watchdog run complete.")
+    except Exception as e:
+        log.warning(f"Initial watchdog run failed: {e}")
 
 
 def create_default_dot_env():
