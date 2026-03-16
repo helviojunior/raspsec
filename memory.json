@@ -516,6 +516,10 @@
     {
       "hash": "952bafad172e02c2698c48624adb39fdb9420d57",
       "message": "Fix drag ghost alignment: capture mouseX on drag start"
+    },
+    {
+      "hash": "d148527b3931a062e50c456d4abd2e3ebcfa7738",
+      "message": "WebShell: add download button to save session log as text file"
     }
   ]
 }

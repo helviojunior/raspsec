@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, X, Download } from "lucide-react";
 import { getToken } from "lib/api";
 import "@xterm/xterm/css/xterm.css";
 import { TerminalIcon } from "components/icons";
@@ -212,6 +212,31 @@ export default function WebShell({ open, onToggle, onClose }) {
   // Focus terminal on click
   const focusTerminal = () => termRef.current?.focus();
 
+  // Save session log to file
+  const saveLog = () => {
+    const term = termRef.current;
+    if (!term) return;
+    const buf = term.buffer.active;
+    const lines = [];
+    for (let i = 0; i <= buf.length - 1; i++) {
+      const line = buf.getLine(i);
+      if (line) lines.push(line.translateToString(true));
+    }
+    // Trim trailing empty lines
+    while (lines.length > 0 && lines[lines.length - 1].trim() === "") lines.pop();
+    const text = lines.join("\n") + "\n";
+    const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `shell-session-${ts}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    a.remove();
+  };
+
   if (!open) return null;
 
   const statusColor = {
@@ -239,6 +264,13 @@ export default function WebShell({ open, onToggle, onClose }) {
           <span className="text-xs font-medium text-gray-300">Web Shell</span>
         </div>
         <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); saveLog(); }}
+            className="p-1 text-gray-400 hover:text-emerald-400 transition-colors"
+            title="Salvar log da sessão"
+          >
+            <Download size={14} />
+          </button>
           <button
             onClick={(e) => { e.stopPropagation(); onToggle(); }}
             className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
