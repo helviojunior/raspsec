@@ -474,6 +474,10 @@
     {
       "hash": "0a5acf58cd72d692b96685b9148c2c2bc92eb11e",
       "message": "Consolidate all custom SVG icons into components/icons.jsx"
+    },
+    {
+      "hash": "1527a10d5644714913b84ca81f0f38a8a152990c",
+      "message": "Prettify icons.jsx: fix JSX attributes and consistent formatting"
     }
   ]
 }
