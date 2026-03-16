@@ -15,6 +15,11 @@ from raspsec.views.firewall import FirewallConfigView, FirewallRuleView, NatRule
 from raspsec.views.vlan import VlanConfigView, VlanView, VlanApplyView
 from raspsec.views.devices import DevicesView, DeviceToggleView, DeviceMacView, DeviceChainView, DeviceDhcpClientView
 from raspsec.views.ssh_keys import SSHKeysView
+from raspsec.views.dashboard import DashboardView
+from raspsec.views.wifi_client import (
+    WifiClientScanView, WifiClientConnectView, WifiClientDisconnectView,
+    WifiClientStatusView, WifiClientProfilesView,
+)
 
 
 app_name = 'raspsec'
@@ -35,6 +40,9 @@ urlpatterns = [
 
     # Health
     path('api/health/', HealthView.as_view(), name='health'),
+
+    # Dashboard
+    path('api/dashboard/', DashboardView.as_view(), name='dashboard'),
 
     # WiFi
     path('api/wifi/config/', WifiConfigView.as_view(), name='wifi-config'),
@@ -71,6 +79,13 @@ urlpatterns = [
     path('api/network/devices/mac/', DeviceMacView.as_view(), name='device-mac'),
     path('api/network/devices/chain/', DeviceChainView.as_view(), name='device-chain'),
     path('api/network/devices/dhcp-client/', DeviceDhcpClientView.as_view(), name='device-dhcp-client'),
+
+    # WiFi Client
+    path('api/wifi-client/scan/', WifiClientScanView.as_view(), name='wifi-client-scan'),
+    path('api/wifi-client/connect/', WifiClientConnectView.as_view(), name='wifi-client-connect'),
+    path('api/wifi-client/disconnect/', WifiClientDisconnectView.as_view(), name='wifi-client-disconnect'),
+    path('api/wifi-client/status/', WifiClientStatusView.as_view(), name='wifi-client-status'),
+    path('api/wifi-client/profiles/', WifiClientProfilesView.as_view(), name='wifi-client-profiles'),
 
     # SSH Keys
     path('api/admin/ssh-keys/', SSHKeysView.as_view(), name='ssh-keys'),

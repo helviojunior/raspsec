@@ -2,6 +2,7 @@ from raspsec.libs.cmd import Exec
 from raspsec.libs.config import load_config, save_config
 from raspsec.libs.log import StrataLogger
 from raspsec.libs.network import write_dhcpcd, write_system_file
+from raspsec.dbmodels.firewall import ChainMapping
 
 CONFIG_FILE = "managment_ap.yml"
 
@@ -176,6 +177,9 @@ class WifiService:
         Exec.execute("sudo /usr/bin/systemctl start hostapd.service")
         Exec.execute("sudo /usr/bin/systemctl start dnsmasq.service")
 
+        # Auto-set wlan0 chain to 'internal' when running as AP
+        WifiService._set_wlan0_chain("internal")
+
         logger.log("Access Point started.")
 
     @staticmethod
@@ -194,3 +198,17 @@ class WifiService:
         logger.log("Restarting network services...")
         Exec.execute("sudo /usr/bin/systemctl restart dnsmasq.service", raise_error=False)
         logger.log("Network services restarted.")
+
+    @staticmethod
+    def _set_wlan0_chain(chain):
+        """Auto-set wlan0 firewall chain (internal for AP, implant for client)."""
+        try:
+            ChainMapping.objects.update_or_create(
+                interface="wlan0",
+                defaults={"chain": chain},
+            )
+            from raspsec.services.firewall import FirewallService
+            FirewallService.apply()
+            logger.log(f"Auto-set wlan0 chain to '{chain}'")
+        except Exception as e:
+            logger.log(f"Failed to set wlan0 chain: {e}")

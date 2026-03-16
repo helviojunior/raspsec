@@ -453,6 +453,15 @@
     {
       "hash": "fa51f3d929126eb47ec2e4b5129be23055aecf68",
       "message": "Highlight active menu icon in green when sidebar is collapsed"
+    },
+    {
+      "hash": "deee9c5680d334e37a7a67dc8e910756dfebd270",
+      "message": "Fix kernel logo: enable CONFIG_FB dependency chain for CONFIG_LOGO",
+      "skipped": true
+    },
+    {
+      "hash": "595c7e0ebf18097e1d18cfe405cfeea9ae809605",
+      "message": "Add network dashboard, WiFi client support, and dev environment fixes"
     }
   ]
 }

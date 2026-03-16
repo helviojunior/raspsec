@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Plus, Trash2, Save, RefreshCw, EthernetPort, Wifi, Usb,
-  Cable, CableIcon, PenLine, Shield, Power, PowerOff, Layers,
+  Cable, PenLine, Layers, Search, Lock, Unlock,
+  Signal, X, Loader2, FileText, Key, ShieldCheck, Eye, EyeOff,
 } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
@@ -29,6 +30,7 @@ const typeIcon = {
 const tabs = [
   { id: "interfaces", label: "Interfaces", icon: EthernetPort },
   { id: "vlans", label: "VLANs", icon: Layers },
+  { id: "wifi-client", label: "WiFi Client", icon: Wifi },
 ];
 
 export default function Devices() {
@@ -38,7 +40,7 @@ export default function Devices() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [editMac, setEditMac] = useState(null); // { iface, mac }
+  const [editMac, setEditMac] = useState(null);
   const [vlanForm, setVlanForm] = useState({ parent: "eth0", vlan_id: "", ip_address: "", enabled: true });
 
   const fetchData = useCallback(async () => {
@@ -97,10 +99,7 @@ export default function Devices() {
 
   const addVlan = async () => {
     try {
-      const payload = {
-        ...vlanForm,
-        vlan_id: parseInt(vlanForm.vlan_id, 10),
-      };
+      const payload = { ...vlanForm, vlan_id: parseInt(vlanForm.vlan_id, 10) };
       await api.post("/api/network/vlans/manage/", payload);
       setSuccess(`VLAN ${vlanForm.vlan_id} criada em ${vlanForm.parent}.`);
       setVlanForm({ parent: "eth0", vlan_id: "", ip_address: "", enabled: true });
@@ -117,6 +116,9 @@ export default function Devices() {
       fetchData();
     } catch { setError("Erro ao remover VLAN."); }
   };
+
+  // All wireless interfaces (including wlan0 with warning)
+  const allWirelessIfaces = interfaces.filter((i) => i.type === "wireless");
 
   if (loading) {
     return (
@@ -162,230 +164,815 @@ export default function Devices() {
       </div>
 
       {activeTab === "interfaces" && (
-        <div className="space-y-3">
-          {interfaces.map((iface) => {
-            const Icon = typeIcon[iface.type] || EthernetPort;
-            return (
-              <Card key={iface.name}>
-                <CardContent className="pt-5 pb-5">
-                  <div className="flex items-start justify-between">
-                    {/* Left: info */}
-                    <div className="flex items-start gap-4">
-                      <div className={cn(
-                        "p-2.5 rounded-lg",
-                        iface.up ? "bg-emerald-500/10 text-emerald-400" : "bg-muted text-muted-foreground"
-                      )}>
-                        <Icon size={20} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base font-semibold text-foreground">{iface.name}</h3>
-                          <span className={cn(
-                            "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded",
-                            iface.up ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"
-                          )}>
-                            {iface.state}
-                          </span>
-                          {iface.type === "physical" && (
-                            <span className={cn(
-                              "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded flex items-center gap-1",
-                              iface.carrier
-                                ? "bg-blue-500/15 text-blue-400"
-                                : "bg-muted text-muted-foreground"
-                            )}>
-                              <Cable size={10} />
-                              {iface.carrier ? "Conectado" : "Desconectado"}
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
-                          <div>IP: <span className="text-foreground font-mono">{iface.ip || "—"}</span></div>
-                          <div className="flex items-center gap-2">
-                            MAC: <span className="text-foreground font-mono">{iface.mac || "—"}</span>
-                            {iface.type !== "vlan" && (
-                              <button
-                                onClick={() => setEditMac({ iface: iface.name, mac: iface.mac })}
-                                className="text-muted-foreground hover:text-primary transition-colors"
-                                title="Alterar MAC"
-                              >
-                                <PenLine size={12} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right: actions */}
-                    <div className="flex items-center gap-3">
-                      {/* Chain selector */}
-                      <div className="text-right">
-                        <div className="text-[10px] text-muted-foreground uppercase mb-1">Chain</div>
-                        <select
-                          value={iface.chain || ""}
-                          onChange={(e) => changeChain(iface.name, e.target.value)}
-                          className={cn(
-                            "text-xs font-medium rounded px-2 py-1 border bg-transparent cursor-pointer",
-                            iface.chain ? chainColor[iface.chain] : "text-muted-foreground border-border"
-                          )}
-                        >
-                          <option value="">Nenhuma</option>
-                          {CHAINS.map((c) => (
-                            <option key={c} value={c}>{c}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* DHCP Client toggle (only for non-managed interfaces) */}
-                      {!iface.managed && (
-                        <div className="text-right">
-                          <div className="text-[10px] text-muted-foreground uppercase mb-1">DHCP</div>
-                          <Toggle
-                            checked={iface.dhcp_client}
-                            onChange={() => toggleDhcpClient(iface.name, !iface.dhcp_client)}
-                          />
-                        </div>
-                      )}
-
-                      {/* Toggle */}
-                      <Toggle
-                        checked={iface.up}
-                        onChange={() => toggleInterface(iface.name, !iface.up)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* MAC edit inline */}
-                  {editMac && editMac.iface === iface.name && (
-                    <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
-                      <Label className="text-xs whitespace-nowrap">Novo MAC:</Label>
-                      <Input
-                        value={editMac.mac}
-                        onChange={(e) => setEditMac({ ...editMac, mac: e.target.value })}
-                        placeholder="aa:bb:cc:dd:ee:ff"
-                        className="font-mono text-sm max-w-[200px] h-8"
-                      />
-                      <Button size="sm" onClick={changeMac}><Save size={13} /> Salvar</Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditMac(null)}>Cancelar</Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <InterfacesTab
+          interfaces={interfaces}
+          editMac={editMac}
+          setEditMac={setEditMac}
+          changeMac={changeMac}
+          toggleInterface={toggleInterface}
+          toggleDhcpClient={toggleDhcpClient}
+          changeChain={changeChain}
+        />
       )}
 
       {activeTab === "vlans" && (
-        <div className="space-y-4">
-          {/* Add VLAN form */}
-          <Card>
-            <CardHeader>
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Plus size={18} /> Nova VLAN
+        <VlansTab
+          vlans={vlans}
+          interfaces={interfaces}
+          vlanForm={vlanForm}
+          setVlanForm={setVlanForm}
+          addVlan={addVlan}
+          removeVlan={removeVlan}
+        />
+      )}
+
+      {activeTab === "wifi-client" && (
+        <WifiClientTab
+          wirelessInterfaces={allWirelessIfaces}
+          setError={setError}
+          setSuccess={setSuccess}
+        />
+      )}
+    </div>
+  );
+}
+
+
+// ── Interfaces Tab ──
+
+function InterfacesTab({ interfaces, editMac, setEditMac, changeMac, toggleInterface, toggleDhcpClient, changeChain }) {
+  return (
+    <div className="space-y-3">
+      {interfaces.map((iface) => {
+        const Icon = typeIcon[iface.type] || EthernetPort;
+        return (
+          <Card key={iface.name}>
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-4">
+                  <div className={cn(
+                    "p-2.5 rounded-lg",
+                    iface.up ? "bg-emerald-500/10 text-emerald-400" : "bg-muted text-muted-foreground"
+                  )}>
+                    <Icon size={20} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-semibold text-foreground">{iface.name}</h3>
+                      <span className={cn(
+                        "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded",
+                        iface.up ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"
+                      )}>
+                        {iface.state}
+                      </span>
+                      {iface.type === "physical" && (
+                        <span className={cn(
+                          "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded flex items-center gap-1",
+                          iface.carrier ? "bg-blue-500/15 text-blue-400" : "bg-muted text-muted-foreground"
+                        )}>
+                          <Cable size={10} />
+                          {iface.carrier ? "Conectado" : "Desconectado"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+                      <div>IP: <span className="text-foreground font-mono">{iface.ip || "—"}</span></div>
+                      <div className="flex items-center gap-2">
+                        MAC: <span className="text-foreground font-mono">{iface.mac || "—"}</span>
+                        {iface.type !== "vlan" && (
+                          <button
+                            onClick={() => setEditMac({ iface: iface.name, mac: iface.mac })}
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                            title="Alterar MAC"
+                          >
+                            <PenLine size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-[10px] text-muted-foreground uppercase mb-1">Chain</div>
+                    <select
+                      value={iface.chain || ""}
+                      onChange={(e) => changeChain(iface.name, e.target.value)}
+                      className={cn(
+                        "text-xs font-medium rounded px-2 py-1 border bg-transparent cursor-pointer",
+                        iface.chain ? chainColor[iface.chain] : "text-muted-foreground border-border"
+                      )}
+                    >
+                      <option value="">Nenhuma</option>
+                      {CHAINS.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {!iface.managed && (
+                    <div className="text-right">
+                      <div className="text-[10px] text-muted-foreground uppercase mb-1">DHCP</div>
+                      <Toggle
+                        checked={iface.dhcp_client}
+                        onChange={() => toggleDhcpClient(iface.name, !iface.dhcp_client)}
+                      />
+                    </div>
+                  )}
+
+                  <Toggle
+                    checked={iface.up}
+                    onChange={() => toggleInterface(iface.name, !iface.up)}
+                  />
+                </div>
+              </div>
+
+              {editMac && editMac.iface === iface.name && (
+                <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
+                  <Label className="text-xs whitespace-nowrap">Novo MAC:</Label>
+                  <Input
+                    value={editMac.mac}
+                    onChange={(e) => setEditMac({ ...editMac, mac: e.target.value })}
+                    placeholder="aa:bb:cc:dd:ee:ff"
+                    className="font-mono text-sm max-w-[200px] h-8"
+                  />
+                  <Button size="sm" onClick={changeMac}><Save size={13} /> Salvar</Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditMac(null)}>Cancelar</Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+
+// ── VLANs Tab ──
+
+function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVlan }) {
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Plus size={18} /> Nova VLAN
+          </h2>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
+            <div>
+              <Label>Interface pai</Label>
+              <select
+                value={vlanForm.parent}
+                onChange={(e) => setVlanForm({ ...vlanForm, parent: e.target.value })}
+                className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm"
+              >
+                {interfaces.filter((i) => i.type === "physical" || i.type === "wireless").map((i) => (
+                  <option key={i.name} value={i.name}>{i.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>VLAN ID</Label>
+              <Input
+                type="number" min="1" max="4094"
+                value={vlanForm.vlan_id}
+                onChange={(e) => setVlanForm({ ...vlanForm, vlan_id: e.target.value })}
+                placeholder="1-4094"
+              />
+            </div>
+            <div>
+              <Label>IP / CIDR</Label>
+              <Input
+                value={vlanForm.ip_address}
+                onChange={(e) => setVlanForm({ ...vlanForm, ip_address: e.target.value })}
+                placeholder="10.0.90.1/24"
+              />
+            </div>
+            <div className="flex items-center gap-2 pt-5">
+              <Toggle
+                checked={vlanForm.enabled}
+                onChange={() => setVlanForm({ ...vlanForm, enabled: !vlanForm.enabled })}
+              />
+              <span className="text-sm text-muted-foreground">Habilitada</span>
+            </div>
+            <div>
+              <Button onClick={addVlan} disabled={!vlanForm.vlan_id} className="w-full">
+                <Plus size={14} /> Criar VLAN
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {vlans.length === 0 ? (
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            Nenhuma VLAN configurada.
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-4 pb-2">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground text-left">
+                  <th className="pb-2 font-medium">Interface</th>
+                  <th className="pb-2 font-medium">VLAN ID</th>
+                  <th className="pb-2 font-medium">IP</th>
+                  <th className="pb-2 font-medium">Status</th>
+                  <th className="pb-2 font-medium text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vlans.map((v, i) => {
+                  const ifaceName = `${v.parent}.${v.vlan_id}`;
+                  const sysIface = interfaces.find((ifc) => ifc.name === ifaceName);
+                  return (
+                    <tr key={i} className={cn("border-b border-border/50", !v.enabled && "opacity-40")}>
+                      <td className="py-2.5 font-mono">{ifaceName}</td>
+                      <td className="py-2.5">{v.vlan_id}</td>
+                      <td className="py-2.5 font-mono">{v.ip_address || "—"}</td>
+                      <td className="py-2.5">
+                        <span className={cn(
+                          "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded",
+                          sysIface?.up ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"
+                        )}>
+                          {sysIface ? (sysIface.up ? "UP" : "DOWN") : "Não criada"}
+                        </span>
+                      </td>
+                      <td className="py-2.5 text-right">
+                        <button
+                          onClick={() => removeVlan(v.parent, v.vlan_id)}
+                          className="text-muted-foreground hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+
+// ── WiFi Client Tab ──
+
+const AUTH_TYPES = [
+  { value: "open", label: "Open (sem senha)" },
+  { value: "wpa-psk", label: "WPA / WPA2 PSK" },
+  { value: "wpa3-sae", label: "WPA3 SAE" },
+  { value: "802.1x-peap", label: "802.1X PEAP (MSCHAPv2)" },
+  { value: "802.1x-ttls", label: "802.1X TTLS" },
+  { value: "802.1x-tls", label: "802.1X TLS (certificado)" },
+];
+
+const PHASE2_OPTIONS = [
+  { value: "auth=MSCHAPV2", label: "MSCHAPv2" },
+  { value: "auth=MSCHAP", label: "MSCHAP" },
+  { value: "auth=PAP", label: "PAP" },
+  { value: "auth=CHAP", label: "CHAP" },
+  { value: "auth=GTC", label: "GTC" },
+  { value: "auth=MD5", label: "MD5" },
+];
+
+const INITIAL_FORM = {
+  ssid: "",
+  bssid: "",
+  auth_type: "wpa-psk",
+  password: "",
+  identity: "",
+  anonymous_identity: "",
+  phase2: "auth=MSCHAPV2",
+  ca_cert_content: "",
+  client_cert_content: "",
+  private_key_content: "",
+  private_key_password: "",
+  hidden: false,
+};
+
+function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
+  const [selectedIface, setSelectedIface] = useState(
+    wirelessInterfaces.length > 0 ? wirelessInterfaces[0].name : ""
+  );
+  const [networks, setNetworks] = useState([]);
+  const [scanning, setScanning] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [connStatus, setConnStatus] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ ...INITIAL_FORM });
+  const [showPassword, setShowPassword] = useState(false);
+  const [profiles, setProfiles] = useState([]);
+
+  const fetchStatus = useCallback(async () => {
+    if (!selectedIface) return;
+    try {
+      const { data } = await api.get(`/api/wifi-client/status/?interface=${selectedIface}`);
+      setConnStatus(data);
+    } catch {
+      setConnStatus(null);
+    }
+  }, [selectedIface]);
+
+  const fetchProfiles = useCallback(async () => {
+    try {
+      const { data } = await api.get("/api/wifi-client/profiles/");
+      setProfiles(data.profiles || []);
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    fetchStatus();
+    fetchProfiles();
+  }, [fetchStatus, fetchProfiles]);
+
+  const scan = async () => {
+    if (!selectedIface) return;
+    try {
+      setScanning(true);
+      const { data } = await api.get(`/api/wifi-client/scan/?interface=${selectedIface}`);
+      setNetworks(data.networks || []);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao escanear redes.");
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const selectNetwork = (network) => {
+    let authType = "wpa-psk";
+    if (network.security === "Open") authType = "open";
+    else if (network.security === "WPA3-SAE") authType = "wpa3-sae";
+    else if (network.security === "802.1X") authType = "802.1x-peap";
+
+    setForm({
+      ...INITIAL_FORM,
+      ssid: network.ssid,
+      bssid: network.bssid,
+      auth_type: authType,
+    });
+    setShowForm(true);
+  };
+
+  const connect = async () => {
+    if (!selectedIface || !form.ssid) return;
+    try {
+      setConnecting(true);
+      await api.post("/api/wifi-client/connect/", {
+        interface: selectedIface,
+        profile: form,
+      });
+      setSuccess(`Conectado a ${form.ssid} via ${selectedIface}.`);
+      setShowForm(false);
+      setForm({ ...INITIAL_FORM });
+      fetchStatus();
+      fetchProfiles();
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao conectar.");
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const disconnect = async () => {
+    if (!selectedIface) return;
+    try {
+      await api.post("/api/wifi-client/disconnect/", { interface: selectedIface });
+      setSuccess(`Desconectado de ${selectedIface}.`);
+      setConnStatus(null);
+      fetchStatus();
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao desconectar.");
+    }
+  };
+
+  const deleteProfile = async (iface, ssid) => {
+    try {
+      await api.delete("/api/wifi-client/profiles/", { data: { interface: iface, ssid } });
+      setSuccess(`Perfil '${ssid}' removido.`);
+      fetchProfiles();
+    } catch {
+      setError("Erro ao remover perfil.");
+    }
+  };
+
+  const readFileContent = (field) => (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setForm((f) => ({ ...f, [field]: ev.target.result }));
+    };
+    reader.readAsText(file);
+  };
+
+  const updateForm = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+
+  const needsPassword = ["wpa-psk", "wpa3-sae", "802.1x-peap", "802.1x-ttls"].includes(form.auth_type);
+  const needsIdentity = ["802.1x-peap", "802.1x-tls", "802.1x-ttls"].includes(form.auth_type);
+  const needsPhase2 = ["802.1x-peap", "802.1x-ttls"].includes(form.auth_type);
+  const needsCaCert = ["802.1x-peap", "802.1x-tls", "802.1x-ttls"].includes(form.auth_type);
+  const needsClientCert = form.auth_type === "802.1x-tls";
+
+  const signalBars = (signal) => {
+    if (signal >= -50) return 4;
+    if (signal >= -60) return 3;
+    if (signal >= -70) return 2;
+    return 1;
+  };
+
+  const SignalIcon = ({ signal }) => {
+    const bars = signalBars(signal);
+    return (
+      <div className="flex items-end gap-0.5 h-4">
+        {[1, 2, 3, 4].map((b) => (
+          <div
+            key={b}
+            className={cn(
+              "w-1 rounded-sm transition-colors",
+              b <= bars ? "bg-emerald-400" : "bg-muted-foreground/20"
+            )}
+            style={{ height: `${b * 25}%` }}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Interface selector + status */}
+      <Card>
+        <CardContent className="pt-5 pb-5">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div>
+              <Label className="text-xs text-muted-foreground">Interface</Label>
+              <select
+                value={selectedIface}
+                onChange={(e) => { setSelectedIface(e.target.value); setNetworks([]); setConnStatus(null); }}
+                className="block h-9 rounded-md border border-border bg-background px-3 text-sm min-w-[140px]"
+              >
+                {wirelessInterfaces.length === 0 && (
+                  <option value="">Nenhuma interface wireless</option>
+                )}
+                {wirelessInterfaces.map((i) => (
+                  <option key={i.name} value={i.name}>
+                    {i.name} {i.name === "wlan0" ? "(AP)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <Button variant="outline" onClick={scan} disabled={scanning || !selectedIface}>
+              {scanning ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+              <span className="ml-1.5">Scan</span>
+            </Button>
+
+            <Button variant="outline" onClick={fetchStatus} disabled={!selectedIface}>
+              <RefreshCw size={14} />
+              <span className="ml-1.5">Status</span>
+            </Button>
+
+            {connStatus?.connected && (
+              <Button variant="destructive" size="sm" onClick={disconnect}>
+                <X size={14} />
+                <span className="ml-1.5">Desconectar</span>
+              </Button>
+            )}
+
+            <Button variant="outline" onClick={() => { setShowForm(true); setForm({ ...INITIAL_FORM }); }}>
+              <Plus size={14} />
+              <span className="ml-1.5">Manual</span>
+            </Button>
+          </div>
+
+          {/* Connection status */}
+          {connStatus && (
+            <div className={cn(
+              "mt-4 p-3 rounded-md border text-sm",
+              connStatus.connected
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                : "bg-muted border-border text-muted-foreground"
+            )}>
+              {connStatus.connected ? (
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Wifi size={16} />
+                  <span className="font-medium">Conectado a {connStatus.ssid}</span>
+                  <span className="text-xs opacity-70">BSSID: {connStatus.bssid}</span>
+                  {connStatus.ip && <span className="text-xs opacity-70">IP: {connStatus.ip}</span>}
+                  {connStatus.freq && <span className="text-xs opacity-70">{connStatus.freq} MHz</span>}
+                  <span className="text-xs opacity-70">{connStatus.key_mgmt}</span>
+                </div>
+              ) : (
+                <span>Não conectado ({connStatus.wpa_state || "DISCONNECTED"})</span>
+              )}
+            </div>
+          )}
+
+          {selectedIface === "wlan0" && (
+            <div className="mt-3 p-2.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs">
+              wlan0 é a interface do Access Point. Conectar como cliente pode conflitar com o AP.
+              Use outra interface wireless se disponível.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Scan results */}
+      {networks.length > 0 && (
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Signal size={18} /> Redes disponíveis
+              <span className="text-xs font-normal text-muted-foreground">({networks.length})</span>
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {networks.map((net, idx) => (
+                <button
+                  key={`${net.bssid}-${idx}`}
+                  onClick={() => selectNetwork(net)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
+                >
+                  <SignalIcon signal={net.signal} />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-foreground truncate block">
+                      {net.ssid || "(hidden)"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {net.bssid} · {net.frequency} MHz
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {net.security !== "Open" ? (
+                      <Lock size={12} className="text-amber-400" />
+                    ) : (
+                      <Unlock size={12} className="text-muted-foreground" />
+                    )}
+                    <span className={cn(
+                      "text-[10px] font-medium px-1.5 py-0.5 rounded",
+                      net.security === "Open"
+                        ? "bg-muted text-muted-foreground"
+                        : net.security === "802.1X"
+                        ? "bg-blue-500/15 text-blue-400"
+                        : "bg-amber-500/15 text-amber-400"
+                    )}>
+                      {net.security}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground w-12 text-right">{net.signal} dBm</span>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Connection form */}
+      {showForm && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <ShieldCheck size={18} /> Conectar à rede
               </h2>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
+              <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground">
+                <X size={18} />
+              </button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4 max-w-xl">
+              {/* SSID */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Interface pai</Label>
+                  <Label>SSID</Label>
+                  <Input
+                    value={form.ssid}
+                    onChange={(e) => updateForm("ssid", e.target.value)}
+                    placeholder="Nome da rede"
+                  />
+                </div>
+                <div>
+                  <Label>BSSID <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Input
+                    value={form.bssid}
+                    onChange={(e) => updateForm("bssid", e.target.value)}
+                    placeholder="aa:bb:cc:dd:ee:ff"
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Auth type */}
+              <div>
+                <Label>Autenticação</Label>
+                <select
+                  value={form.auth_type}
+                  onChange={(e) => updateForm("auth_type", e.target.value)}
+                  className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm"
+                >
+                  {AUTH_TYPES.map((a) => (
+                    <option key={a.value} value={a.value}>{a.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Identity (802.1X) */}
+              {needsIdentity && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Identidade (username)</Label>
+                    <Input
+                      value={form.identity}
+                      onChange={(e) => updateForm("identity", e.target.value)}
+                      placeholder="usuario@dominio.com"
+                    />
+                  </div>
+                  <div>
+                    <Label>Identidade anônima <span className="text-muted-foreground">(opcional)</span></Label>
+                    <Input
+                      value={form.anonymous_identity}
+                      onChange={(e) => updateForm("anonymous_identity", e.target.value)}
+                      placeholder="anonymous@dominio.com"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Password */}
+              {needsPassword && (
+                <div>
+                  <Label>Senha</Label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={form.password}
+                      onChange={(e) => updateForm("password", e.target.value)}
+                      placeholder="Senha da rede"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Phase 2 (PEAP / TTLS) */}
+              {needsPhase2 && (
+                <div>
+                  <Label>Phase 2 (autenticação interna)</Label>
                   <select
-                    value={vlanForm.parent}
-                    onChange={(e) => setVlanForm({ ...vlanForm, parent: e.target.value })}
-                    className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm"
+                    value={form.phase2}
+                    onChange={(e) => updateForm("phase2", e.target.value)}
+                    className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm"
                   >
-                    {interfaces.filter((i) => i.type === "physical" || i.type === "wireless").map((i) => (
-                      <option key={i.name} value={i.name}>{i.name}</option>
+                    {PHASE2_OPTIONS.map((p) => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
                     ))}
                   </select>
                 </div>
-                <div>
-                  <Label>VLAN ID</Label>
-                  <Input
-                    type="number" min="1" max="4094"
-                    value={vlanForm.vlan_id}
-                    onChange={(e) => setVlanForm({ ...vlanForm, vlan_id: e.target.value })}
-                    placeholder="1-4094"
-                  />
-                </div>
-                <div>
-                  <Label>IP / CIDR</Label>
-                  <Input
-                    value={vlanForm.ip_address}
-                    onChange={(e) => setVlanForm({ ...vlanForm, ip_address: e.target.value })}
-                    placeholder="10.0.90.1/24"
-                  />
-                </div>
-                <div className="flex items-center gap-2 pt-5">
-                  <Toggle
-                    checked={vlanForm.enabled}
-                    onChange={() => setVlanForm({ ...vlanForm, enabled: !vlanForm.enabled })}
-                  />
-                  <span className="text-sm text-muted-foreground">Habilitada</span>
-                </div>
-                <div>
-                  <Button onClick={addVlan} disabled={!vlanForm.vlan_id} className="w-full">
-                    <Plus size={14} /> Criar VLAN
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              )}
 
-          {/* VLAN list */}
-          {vlans.length === 0 ? (
-            <Card>
-              <CardContent className="py-10 text-center text-muted-foreground">
-                Nenhuma VLAN configurada.
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="pt-4 pb-2">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-muted-foreground text-left">
-                      <th className="pb-2 font-medium">Interface</th>
-                      <th className="pb-2 font-medium">VLAN ID</th>
-                      <th className="pb-2 font-medium">IP</th>
-                      <th className="pb-2 font-medium">Status</th>
-                      <th className="pb-2 font-medium text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {vlans.map((v, i) => {
-                      const ifaceName = `${v.parent}.${v.vlan_id}`;
-                      const sysIface = interfaces.find((ifc) => ifc.name === ifaceName);
-                      return (
-                        <tr key={i} className={cn("border-b border-border/50", !v.enabled && "opacity-40")}>
-                          <td className="py-2.5 font-mono">{ifaceName}</td>
-                          <td className="py-2.5">{v.vlan_id}</td>
-                          <td className="py-2.5 font-mono">{v.ip_address || "—"}</td>
-                          <td className="py-2.5">
-                            <span className={cn(
-                              "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded",
-                              sysIface?.up ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"
-                            )}>
-                              {sysIface ? (sysIface.up ? "UP" : "DOWN") : "Não criada"}
-                            </span>
-                          </td>
-                          <td className="py-2.5 text-right">
-                            <button
-                              onClick={() => removeVlan(v.parent, v.vlan_id)}
-                              className="text-muted-foreground hover:text-red-500 transition-colors"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              {/* CA Certificate */}
+              {needsCaCert && (
+                <div>
+                  <Label className="flex items-center gap-1.5">
+                    <FileText size={14} /> Certificado CA <span className="text-muted-foreground">(opcional)</span>
+                  </Label>
+                  <input
+                    type="file"
+                    accept=".pem,.crt,.cer,.der"
+                    onChange={readFileContent("ca_cert_content")}
+                    className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-border file:bg-background file:text-sm file:font-medium file:text-foreground hover:file:bg-accent file:cursor-pointer file:transition-colors"
+                  />
+                  {form.ca_cert_content && (
+                    <span className="text-[10px] text-emerald-400 mt-1 block">Certificado CA carregado</span>
+                  )}
+                </div>
+              )}
+
+              {/* Client Certificate (TLS) */}
+              {needsClientCert && (
+                <>
+                  <div>
+                    <Label className="flex items-center gap-1.5">
+                      <FileText size={14} /> Certificado do cliente
+                    </Label>
+                    <input
+                      type="file"
+                      accept=".pem,.crt,.cer,.p12"
+                      onChange={readFileContent("client_cert_content")}
+                      className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-border file:bg-background file:text-sm file:font-medium file:text-foreground hover:file:bg-accent file:cursor-pointer file:transition-colors"
+                    />
+                    {form.client_cert_content && (
+                      <span className="text-[10px] text-emerald-400 mt-1 block">Certificado do cliente carregado</span>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="flex items-center gap-1.5">
+                      <Key size={14} /> Chave privada
+                    </Label>
+                    <input
+                      type="file"
+                      accept=".pem,.key,.p12"
+                      onChange={readFileContent("private_key_content")}
+                      className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-border file:bg-background file:text-sm file:font-medium file:text-foreground hover:file:bg-accent file:cursor-pointer file:transition-colors"
+                    />
+                    {form.private_key_content && (
+                      <span className="text-[10px] text-emerald-400 mt-1 block">Chave privada carregada</span>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Senha da chave privada <span className="text-muted-foreground">(opcional)</span></Label>
+                    <Input
+                      type="password"
+                      value={form.private_key_password}
+                      onChange={(e) => updateForm("private_key_password", e.target.value)}
+                      placeholder="Senha da chave privada"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Hidden network */}
+              <div className="flex items-center gap-2">
+                <Toggle
+                  checked={form.hidden}
+                  onChange={(v) => updateForm("hidden", v)}
+                />
+                <Label className="cursor-pointer">Rede oculta (hidden SSID)</Label>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <Button onClick={connect} disabled={connecting || !form.ssid}>
+                  {connecting ? <Loader2 size={14} className="animate-spin" /> : <Wifi size={14} />}
+                  <span className="ml-1.5">Conectar</span>
+                </Button>
+                <Button variant="outline" onClick={() => setShowForm(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Saved profiles */}
+      {profiles.length > 0 && (
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Key size={18} /> Perfis salvos
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {profiles.map((p, idx) => (
+                <div
+                  key={`${p.interface}-${p.ssid}-${idx}`}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-accent transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Wifi size={14} className="text-muted-foreground" />
+                    <div>
+                      <span className="text-sm font-medium text-foreground">{p.ssid}</span>
+                      <span className="text-[10px] text-muted-foreground ml-2">{p.interface}</span>
+                    </div>
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                      {p.auth_type}
+                    </span>
+                    {p.identity && (
+                      <span className="text-[10px] text-muted-foreground">{p.identity}</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => deleteProfile(p.interface, p.ssid)}
+                    className="text-muted-foreground hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
