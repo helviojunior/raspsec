@@ -43,8 +43,8 @@ const menuStructure = [
     label: "Networking",
     children: [
       { id: "net-status", path: "/network/status", label: "General", icon: MonitorCheck },
-      { id: "wifi", path: "/network/wifi", label: "WiFi", icon: Wifi },
-      { id: "usb-gadget", path: "/network/usb-gadget", label: "USB Gadget Mode", icon: Usb },
+      { id: "wifi", path: "/network/wifi", label: "Networking", icon: Network },
+      { id: "usb-gadget", path: "/network/usb-gadget", label: "Network", icon: Usb },
       { id: "firewall", path: "/network/firewall", label: "Firewall", icon: ShieldCheck },
     ],
   },

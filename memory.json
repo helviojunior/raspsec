@@ -309,6 +309,10 @@
     {
       "hash": "0a49fb69b64e6fe3316cbe106eaf4e99d66b3c9a",
       "message": "Change network status icon from Activity to MonitorCheck"
+    },
+    {
+      "hash": "6e093d92524c4eb2b1415fbffeee088c3a3a2ff6",
+      "message": "Rename sidebar menu labels: WiFi -> Networking, USB Gadget Mode -> Network"
     }
   ]
 }
