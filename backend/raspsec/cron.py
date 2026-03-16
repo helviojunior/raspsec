@@ -242,7 +242,8 @@ def _check_frontend(Exec, ServiceStatus):
 
 
 def _check_firewall(ServiceStatus):
-    """Check if iptables custom chains exist and have rules loaded."""
+    """Check if iptables custom chains exist — report only, never re-apply.
+    Firewall is applied on boot (startup.py) or manually via the UI."""
     from raspsec.libs.cmd import Exec as ExecCmd
 
     try:
@@ -250,7 +251,6 @@ def _check_firewall(ServiceStatus):
     except ServiceStatus.DoesNotExist:
         return
 
-    # Verify our custom chains exist
     ret, out = ExecCmd.execute(
         "sudo /usr/sbin/iptables -L RASPSEC_INTERNAL -n 2>/dev/null | /usr/bin/head -1",
         raise_error=False,
@@ -260,14 +260,6 @@ def _check_firewall(ServiceStatus):
         svc.message = "Firewall operacional."
     else:
         svc.status = ServiceStatus.Status.UNHEALTHY
-        svc.message = "Chains do firewall nao encontradas."
-        # Try to re-apply
-        try:
-            from raspsec.services.firewall import FirewallService
-            FirewallService.apply()
-            svc.status = ServiceStatus.Status.HEALTHY
-            svc.message = "Firewall reaplicado pelo watchdog."
-        except Exception:
-            pass
+        svc.message = "Chains do firewall não encontradas."
 
     svc.save(update_fields=["status", "message", "updated"])

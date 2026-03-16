@@ -30,7 +30,8 @@ const actionColor = {
 // ── Reusable Drag & Drop Hook (pfSense style) ──
 
 function useDragReorder({ items, onReorder, canDrag = () => true }) {
-  const [dragState, setDragState] = useState(null); // { index, id, mouseY, startY, rowHeight, ghostTop }
+  const [dragState, setDragState] = useState(null);
+  const [reordering, setReordering] = useState(false);
   const tableRef = useRef(null);
   const rowRefs = useRef([]);
 
@@ -64,19 +65,22 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
           items.length - 1,
           prev.origIndex + Math.round(deltaY / prev.rowHeight)
         ));
-        return { ...prev, mouseY: e.clientY, index: newIndex };
+        return { ...prev, mouseY: e.clientY, mouseX: e.clientX, index: newIndex };
       });
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = async () => {
       if (dragState) {
         const fromIndex = dragState.origIndex;
         const toIndex = dragState.index;
+        setDragState(null);
         if (fromIndex !== toIndex) {
-          onReorder(fromIndex, toIndex);
+          setReordering(true);
+          try { await onReorder(fromIndex, toIndex); } finally { setReordering(false); }
         }
+      } else {
+        setDragState(null);
       }
-      setDragState(null);
     };
 
     document.addEventListener("mousemove", handleMouseMove);
@@ -106,12 +110,13 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
   const isDragging = !!dragState;
   const dragId = dragState?.id;
 
-  // Ghost position (follows mouse, aligned to click offset)
+  // Ghost position (follows mouse, fixed width, 50px left of cursor)
+  const GHOST_WIDTH = 1100;
   const ghostStyle = dragState ? {
     position: "fixed",
     top: dragState.mouseY - (dragState.offsetY || 0),
-    left: tableRef.current?.getBoundingClientRect().left || 0,
-    width: tableRef.current?.getBoundingClientRect().width || "100%",
+    left: (dragState.mouseX || 0) - 50,
+    width: GHOST_WIDTH,
     zIndex: 9999,
     pointerEvents: "none",
     opacity: 0.9,
@@ -127,6 +132,7 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
     getDropIndex,
     ghostStyle,
     dragState,
+    reordering,
   };
 }
 
@@ -284,7 +290,7 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
 
   const {
     tableRef, rowRefs, handleMouseDown,
-    isDragging, dragId, getDragIndex, getDropIndex, ghostStyle, dragState,
+    isDragging, dragId, getDragIndex, getDropIndex, ghostStyle, dragState, reordering,
   } = useDragReorder({
     items: userRules,
     onReorder: handleReorder,
@@ -388,7 +394,14 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
           Chain {chain}
         </h2>
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative">
+        {/* Reordering overlay */}
+        {reordering && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/80 rounded-md backdrop-blur-sm">
+            <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+          </div>
+        )}
+
         <table className="w-full text-sm" ref={tableRef}>
           <thead>
             <tr className="border-b border-border text-muted-foreground">
@@ -402,9 +415,7 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
             </tr>
           </thead>
           <tbody>
-            {/* System rules first (not draggable) */}
             {systemRules.map((rule, i) => renderRow(rule, i))}
-            {/* User rules with drag support */}
             {renderUserRows()}
             {chainRules.length === 0 && (
               <tr>
@@ -416,7 +427,6 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
           </tbody>
         </table>
 
-        {/* Ghost row (floating, follows cursor) */}
         {isDragging && dragState && userRules[dragState.origIndex] && (
           <div style={ghostStyle}>
             <table className="w-full text-sm border border-primary/30 rounded-md bg-card shadow-xl shadow-primary/20">
@@ -573,7 +583,7 @@ function NatTab() {
 
   const {
     tableRef, rowRefs, handleMouseDown,
-    isDragging, dragId, getDragIndex, getDropIndex, ghostStyle, dragState,
+    isDragging, dragId, getDragIndex, getDropIndex, ghostStyle, dragState, reordering,
   } = useDragReorder({
     items: natRules,
     onReorder: handleReorder,
@@ -676,7 +686,13 @@ function NatTab() {
         <CardHeader>
           <h2 className="text-lg font-semibold">NAT Rules</h2>
         </CardHeader>
-        <CardContent>
+        <CardContent className="relative">
+          {reordering && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/80 rounded-md backdrop-blur-sm">
+              <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+            </div>
+          )}
+
           <table className="w-full text-sm" ref={tableRef}>
             <thead>
               <tr className="border-b border-border text-muted-foreground">

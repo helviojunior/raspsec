@@ -20,6 +20,10 @@ from raspsec.views.wifi_client import (
     WifiClientScanView, WifiClientConnectView, WifiClientDisconnectView,
     WifiClientStatusView, WifiClientProfilesView,
 )
+from raspsec.views.tools import (
+    DeviceStatusView, PingView, DnsCheckView, HttpCheckView, TracerouteView,
+    CaptureStartView, CaptureStatusView, CaptureStopView,
+)
 
 
 app_name = 'raspsec'
@@ -93,5 +97,15 @@ urlpatterns = [
     # Shell
     path('api/shell/info/', ShellInfoView.as_view(), name='shell-info'),
     path('api/shell/exec/', ShellExecView.as_view(), name='shell-exec'),
+
+    # Tools
+    path('api/tools/device-status/', DeviceStatusView.as_view(), name='tools-device-status'),
+    path('api/tools/ping/', PingView.as_view(), name='tools-ping'),
+    path('api/tools/dns-check/', DnsCheckView.as_view(), name='tools-dns-check'),
+    path('api/tools/http-check/', HttpCheckView.as_view(), name='tools-http-check'),
+    path('api/tools/traceroute/', TracerouteView.as_view(), name='tools-traceroute'),
+    path('api/tools/capture/start/', CaptureStartView.as_view(), name='tools-capture-start'),
+    path('api/tools/capture/status/', CaptureStatusView.as_view(), name='tools-capture-status'),
+    path('api/tools/capture/stop/', CaptureStopView.as_view(), name='tools-capture-stop'),
 
 ]

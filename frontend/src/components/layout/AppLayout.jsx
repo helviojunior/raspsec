@@ -18,6 +18,9 @@ import {
   ChevronRight,
   ChevronDown,
   LogOut,
+  Monitor,
+  Radar,
+  Scan,
 } from "lucide-react";
 import { useAuth } from "contexts/AuthContext";
 import { cn } from "lib/utils";
@@ -58,6 +61,9 @@ const menuStructure = [
     icon: Wrench,
     label: "Tools",
     children: [
+      { id: "device-status", path: "/tools/device-status", label: "Device Status", icon: Monitor },
+      { id: "connectivity", path: "/tools/connectivity", label: "Connectivity", icon: Radar },
+      { id: "packet-capture", path: "/tools/packet-capture", label: "Packet Capture", icon: Scan },
       { id: "webshell", action: "webshell", label: "Web Shell", icon: WebShellIcon },
     ],
   },
@@ -69,9 +75,9 @@ const findActiveMenu = (pathname) => {
       return { menuId: menu.id, subMenuId: null };
     }
     if (menu.children) {
-      const sortedChildren = [...menu.children].sort(
-        (a, b) => b.path.length - a.path.length
-      );
+      const sortedChildren = [...menu.children]
+        .filter((c) => c.path)
+        .sort((a, b) => b.path.length - a.path.length);
       for (const child of sortedChildren) {
         if (pathname === child.path || pathname.startsWith(child.path + "/")) {
           return { menuId: menu.id, subMenuId: child.id };
