@@ -14,6 +14,7 @@ from raspsec.views.dns import DnsConfigView, DnsSyncView, DnsServersView
 from raspsec.views.firewall import FirewallConfigView, FirewallRuleView, NatRuleView, FirewallReorderView, FirewallApplyView
 from raspsec.views.vlan import VlanConfigView, VlanView, VlanApplyView
 from raspsec.views.devices import DevicesView, DeviceToggleView, DeviceMacView, DeviceChainView, DeviceDhcpClientView
+from raspsec.views.ssh_keys import SSHKeysView
 
 
 app_name = 'raspsec'
@@ -70,6 +71,9 @@ urlpatterns = [
     path('api/network/devices/mac/', DeviceMacView.as_view(), name='device-mac'),
     path('api/network/devices/chain/', DeviceChainView.as_view(), name='device-chain'),
     path('api/network/devices/dhcp-client/', DeviceDhcpClientView.as_view(), name='device-dhcp-client'),
+
+    # SSH Keys
+    path('api/admin/ssh-keys/', SSHKeysView.as_view(), name='ssh-keys'),
 
     # Shell
     path('api/shell/info/', ShellInfoView.as_view(), name='shell-info'),

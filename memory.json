@@ -424,6 +424,10 @@
     {
       "hash": "b41b79e03576ec006a768b09aafdde397425abba",
       "message": "Firewall: drag & drop reorder, anti-lockout rules, firewall chain"
+    },
+    {
+      "hash": "b3dd5a59e98c7a8b5a0b61dd07d9d2543687dc5e",
+      "message": "Add SSH keys management in Settings"
     }
   ]
 }
