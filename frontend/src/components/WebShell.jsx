@@ -226,7 +226,7 @@ export default function WebShell({ open, onToggle, onClose }) {
   }[status];
 
   return (
-    <div className="flex flex-col border-t border-border bg-black" style={{ height: `${height}px`, flexShrink: 0 }}>
+    <div className="fixed bottom-0 left-0 right-0 flex flex-col border-t border-border bg-black z-50" style={{ height: `${height}px` }}>
       {/* Resize handle */}
       <div
         className="h-1 bg-transparent hover:bg-primary/40 cursor-row-resize transition-colors"

@@ -49,20 +49,20 @@ const menuStructure = [
     ],
   },
   {
-    id: "tools",
-    icon: Wrench,
-    label: "Tools",
-    children: [
-      { id: "webshell", action: "webshell", label: "Web Shell", icon: WebShellIcon },
-    ],
-  },
-  {
     id: "admin",
     icon: Shield,
     label: "Admin",
     adminOnly: true,
     children: [
       { id: "settings", path: "/admin/settings", label: "Configurações", icon: Settings },
+    ],
+  },
+  {
+    id: "tools",
+    icon: Wrench,
+    label: "Tools",
+    children: [
+      { id: "webshell", action: "webshell", label: "Web Shell", icon: WebShellIcon },
     ],
   },
 ];
@@ -424,18 +424,22 @@ export default function AppLayout({ darkMode, setDarkMode }) {
           </div>
         </aside>
 
-        {/* Page Content + Shell */}
+        {/* Page Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <main className="flex-1 overflow-y-auto p-6 bg-background relative">
+          <main className="flex-1 overflow-y-auto p-6 bg-background relative"
+            style={shellOpen ? { paddingBottom: undefined } : undefined}
+          >
             <Outlet />
           </main>
-          <WebShell
-            open={shellOpen}
-            onToggle={() => setShellOpen(false)}
-            onClose={() => setShellOpen(false)}
-          />
         </div>
       </div>
+
+      {/* WebShell — fixed to bottom, full width over sidebar */}
+      <WebShell
+        open={shellOpen}
+        onToggle={() => setShellOpen(false)}
+        onClose={() => setShellOpen(false)}
+      />
     </div>
   );
 }

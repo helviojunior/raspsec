@@ -244,6 +244,25 @@
     {
       "hash": "59fbb96710b655c0589f9af8f075764351bf9206",
       "message": "Replace WebShell with real PTY terminal via WebSocket + xterm.js"
+    },
+    {
+      "hash": "e8e232fe36e4733565d0c1636e0b823eff5dcced",
+      "message": "Fix USB gadget not starting on first boot (Pi 4 firmware quirk)",
+      "skipped": true
+    },
+    {
+      "hash": "b0824b3230e1b308a8210be204a119fe69676d48",
+      "message": "Force HDMI hotplug so boot splash works without a monitor",
+      "skipped": true
+    },
+    {
+      "hash": "ca8137c3f68728546f0f74dbc75b217e6cd7b9ee",
+      "message": "Rename all raspap references to raspsec",
+      "skipped": true
+    },
+    {
+      "hash": "0ebc7bdeb587ed16cb688af257ad8fc323337394",
+      "message": "Make WebShell span full width and reorder sidebar menus"
     }
   ]
 }
