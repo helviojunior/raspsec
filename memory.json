@@ -437,6 +437,10 @@
     {
       "hash": "4c0fd5135dc43b6b262fb991a16beee5ce89fe4d",
       "message": "Fix startup/dashboard loop and update WebShell font"
+    },
+    {
+      "hash": "e99e4f93b927b41ea68660c9806d88c98a9bad54",
+      "message": "Rename sidebar labels: Networking -> WiFi, Network -> USB Gadget"
     }
   ]
 }
