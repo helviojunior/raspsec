@@ -94,7 +94,8 @@ for key, val in (_env or {}).items():
         continue
     #if key in globals():  # já definido acima? respeita o já definido
     #    continue
-    if key == "RSA_PASSPHRASE":
+    if key in ("RSA_PASSPHRASE", "SECRET_KEY"):
+        globals()[key] = val
         continue
     if key in os.environ:
         continue  # SO manda mais que o .env

@@ -292,6 +292,15 @@
     {
       "hash": "e518dbe7a81c50c5f1c6f1fab7440479161e4277",
       "message": "Fix startup loop, boot splash timing, and show boot messages"
+    },
+    {
+      "hash": "2374af144b77b7be016e1bb77d73cb13d0348073",
+      "message": "Add deploy.sh script for manual deployment to Raspberry Pi",
+      "skipped": true
+    },
+    {
+      "hash": "d7b8e80dcf81d58e68e0d3e8badecda4c3689f9a",
+      "message": "Fix SECRET_KEY parsed as list when it contains commas"
     }
   ]
 }
