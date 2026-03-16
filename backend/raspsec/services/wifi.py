@@ -139,16 +139,15 @@ class WifiService:
         if not net.get("dhcp_enabled"):
             content = "# RaspSec wlan0 - DHCP disabled\ninterface=wlan0\n"
         else:
-            dns_option = "9.9.9.9,1.1.1.1"
-            if net.get("dns_mode") == "custom" and net.get("dns_servers"):
-                dns_option = ",".join(net["dns_servers"])
-
+            gw = net.get("interface_ip", "172.21.255.1")
             content = (
                 "# RaspSec wlan0 configuration\n"
                 "interface=wlan0\n"
                 "domain-needed\n"
-                f"dhcp-range={net['range_start']},{net['range_end']},{net['subnet_mask']},12h\n"
-                f"dhcp-option=6,{dns_option}\n"
+                f"dhcp-range=set:wlan0net,{net['range_start']},{net['range_end']},{net['subnet_mask']},12h\n"
+                "# Routes to all IANA private networks via RaspSec\n"
+                f"dhcp-option=tag:wlan0net,121,10.0.0.0/8,{gw},172.16.0.0/12,{gw},192.168.0.0/16,{gw}\n"
+                f"dhcp-option=tag:wlan0net,6,{gw}\n"
             )
 
         logger.log(f"Writing dnsmasq config to {DNSMASQ_CONF}")

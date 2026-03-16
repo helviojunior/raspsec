@@ -275,6 +275,10 @@
     {
       "hash": "f257ecf9c7f9d756a096cf21751eed1bd71e9449",
       "message": "Use theme color variables on login page for dark/light mode support"
+    },
+    {
+      "hash": "c77250d4c5ea6393783b2379bff688709f778203",
+      "message": "Set RaspSec as DNS server and add private network routes via DHCP"
     }
   ]
 }

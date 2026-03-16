@@ -170,10 +170,7 @@ class UsbGadgetService:
         if not net.get("dhcp_enabled"):
             content = "# RaspSec usb0 - DHCP disabled\ninterface=usb0\n"
         else:
-            dns_option = "9.9.9.9,1.1.1.1"
-            if net.get("dns_mode") == "custom" and net.get("dns_servers"):
-                dns_option = ",".join(net["dns_servers"])
-
+            gw = net["interface_ip"]
             content = (
                 "# RaspSec usb0 (Ethernet over USB) configuration\n"
                 "interface=usb0\n"
@@ -181,9 +178,9 @@ class UsbGadgetService:
                 f"dhcp-range=set:usb0net,{net['range_start']},{net['range_end']},{net['subnet_mask']},12h\n"
                 "# No default gateway — keeps existing gateways on the PC as primary\n"
                 "dhcp-option=tag:usb0net,3\n"
-                "# Route to wlan0 management network via RaspSec\n"
-                f"dhcp-option=tag:usb0net,121,172.21.255.0/24,{net['interface_ip']}\n"
-                f"dhcp-option=tag:usb0net,6,{dns_option}\n"
+                "# Routes to all IANA private networks via RaspSec\n"
+                f"dhcp-option=tag:usb0net,121,10.0.0.0/8,{gw},172.16.0.0/12,{gw},192.168.0.0/16,{gw}\n"
+                f"dhcp-option=tag:usb0net,6,{gw}\n"
             )
 
         logger.log(f"Writing dnsmasq config to {DNSMASQ_CONF}")
