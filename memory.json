@@ -348,6 +348,50 @@
     {
       "hash": "7b551d03129338428c52fc7cdc36902e49b5fb63",
       "message": "Replace firmware rainbow splash with StrataSec logo"
+    },
+    {
+      "hash": "016296752fff0feb1c22e10ebb2ef1db49aacb0d",
+      "message": "Use version-derived hex serial for USB gadget RNDIS name",
+      "skipped": true
+    },
+    {
+      "hash": "8ea37021f3d16a8ee2188ceaae2f0e3d7df7cd55",
+      "message": "Disable kernel logo patching until CLUT detection is fixed",
+      "skipped": true
+    },
+    {
+      "hash": "fe05a35bbff2d9f480d73ac5aecf840b4c2c170c",
+      "message": "Fix kernel logo patching with dynamic detection",
+      "skipped": true
+    },
+    {
+      "hash": "ef7fa934fe1a21df4dcb371369879dfeca5c6a6f",
+      "message": "Build custom kernel with StrataSec logo instead of binary patching",
+      "skipped": true
+    },
+    {
+      "hash": "aabf102cb80e18487a8a66c5a1091e818e345928",
+      "message": "Separate kernel build into independent cached Docker image",
+      "skipped": true
+    },
+    {
+      "hash": "99995d89d1ffb86d11275ceabb154cb66c0fdeeb",
+      "message": "Remove firmware splash.png (not supported by RPi firmware)",
+      "skipped": true
+    },
+    {
+      "hash": "fbd53e1f70492437776d2c93e91a84ff6bf0770b",
+      "message": "Fix Dockerfile.kernel: move Python logo generator to separate script",
+      "skipped": true
+    },
+    {
+      "hash": "4ce4ca61a078cb17df959cefe0994c9073d0506c",
+      "message": "Add native gcc to kernel build (needed for host tools like fixdep)",
+      "skipped": true
+    },
+    {
+      "hash": "f5064aee91273f5a9d67a5fadec7cbbc95e892a3",
+      "message": "Add left padding to WebShell terminal container"
     }
   ]
 }

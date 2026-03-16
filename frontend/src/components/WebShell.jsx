@@ -263,7 +263,7 @@ export default function WebShell({ open, onToggle, onClose }) {
       {/* Terminal container — xterm.js renders here */}
       <div
         ref={termContainerRef}
-        className="flex-1 overflow-hidden"
+        className="flex-1 overflow-hidden pl-2"
         onClick={focusTerminal}
       />
     </div>
