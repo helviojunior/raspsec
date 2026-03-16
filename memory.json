@@ -416,6 +416,10 @@
     {
       "hash": "e6cc73c6aa8906c14df0f50b6e34f163a58c4d4f",
       "message": "Firewall: use Pencil icon for edit, confirm before delete"
+    },
+    {
+      "hash": "23af8ab599e6c33d0509dc4481457ed3408f33e9",
+      "message": "Add default NAT masquerade rules (Internal→Outside, Internal→Implant)"
     }
   ]
 }

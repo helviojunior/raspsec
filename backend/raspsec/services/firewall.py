@@ -17,6 +17,11 @@ DEFAULT_RULES = [
     {"chain": "implant", "protocol": "any", "port": "", "source_ip": "", "action": "deny", "priority": 0, "description": "Deny all from Implant"},
 ]
 
+DEFAULT_NAT_RULES = [
+    {"source_chain": "internal", "dest_chain": "outside", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 0, "description": "NAT Internal → Outside", "enabled": True},
+    {"source_chain": "internal", "dest_chain": "implant", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 1, "description": "NAT Internal → Implant", "enabled": True},
+]
+
 
 class FirewallService:
 
@@ -36,6 +41,12 @@ class FirewallService:
         if not FirewallRule.objects.exists():
             for rule in DEFAULT_RULES:
                 FirewallRule.objects.create(**rule)
+
+        # Default NAT rules
+        from raspsec.dbmodels.firewall import NatRule
+        if not NatRule.objects.exists():
+            for rule in DEFAULT_NAT_RULES:
+                NatRule.objects.create(**rule)
 
     @staticmethod
     def get_chain_mappings():
