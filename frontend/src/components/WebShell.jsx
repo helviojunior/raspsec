@@ -4,6 +4,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import { ChevronDown, X } from "lucide-react";
 import { getToken } from "lib/api";
 import "@xterm/xterm/css/xterm.css";
+import { TerminalIcon } from "components/icons";
 
 const MIN_HEIGHT = 120;
 const DEFAULT_HEIGHT = 280;
@@ -32,13 +33,6 @@ const THEME = {
   brightCyan: "#34e2e2",
   brightWhite: "#eeeeec",
 };
-
-const TerminalIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="m20,19l0,-12l-16,0l0,12l16,0m0,-16a2,2 0 0 1 2,2l0,14a2,2 0 0 1 -2,2l-16,0a2,2 0 0 1 -2,-2l0,-14c0,-1.11 0.9,-2 2,-2l16,0m-7,14l0,-2l5,0l0,2l-5,0m-3.42,-4l-4.01,-4l2.83,0l3.3,3.3c0.39,0.39 0.39,1.03 0,1.42l-3.28,3.28l-2.83,0l3.99,-4z"/>
-    <rect x="2.088" y="24.25" width="19.949" height="2.111"/>
-  </svg>
-);
 
 export default function WebShell({ open, onToggle, onClose }) {
   const termContainerRef = useRef(null);

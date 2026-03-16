@@ -3,101 +3,12 @@ import { RefreshCw } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
-
-// ── SVG Icons ──
-
-const EthernetIcon = ({ className = "w-5 h-5" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
-    <path d="M80-200v-80h400v80H80Zm0-200v-80h200v80H80Zm0-200v-80h200v80H80Zm760 400-36-120H664l-36 120h-84l144-440h92l144 440h-84ZM684-400h152l-74-246h-4l-74 246Z"/>
-  </svg>
-);
-
-const WifiIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 20h.01" /><path d="M2 8.82a15 15 0 0 1 20 0" />
-    <path d="M5 12.859a10 10 0 0 1 14 0" /><path d="M8.5 16.429a5 5 0 0 1 7 0" />
-  </svg>
-);
-
-const TetherIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="7" y="2" width="10" height="20" rx="2" />
-    <path d="M12 18h.01" />
-    <path d="M11 6h2" />
-  </svg>
-);
-
-const CellularIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="17" width="4" height="5" rx="1" /><rect x="7" y="13" width="4" height="9" rx="1" />
-    <rect x="12" y="9" width="4" height="13" rx="1" /><rect x="17" y="4" width="4" height="18" rx="1" />
-  </svg>
-);
-
-const VlanIcon = EthernetIcon;
-
-const LaptopWifiIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="12" rx="2" /><path d="M2 20h20" /><path d="M12 12h.01" /><path d="M9 10a3.5 3.5 0 0 1 6 0" />
-  </svg>
-);
-
-const LaptopEthIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="12" rx="2" /><path d="M2 20h20" /><path d="M9 9v2" /><path d="M12 9v2" /><path d="M15 9v2" />
-  </svg>
-);
-
-const ApIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <circle cx="12" cy="12" r="3" /><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" strokeWidth="1.5" />
-    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-  </svg>
-);
-
-const FirewallIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-    <path d="M9 12l2 2 4-4" />
-  </svg>
-);
-
-const VpnIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-  </svg>
-);
-
-const UsbIcon = ({ className = "w-5 h-5" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
-    <path d="M480-80q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM360-200v-80h240v80H360Zm-30-120q-71-53-110.5-124.5T180-600q0-133 93.5-226.5T500-920q17 0 28.5 11.5T540-880q0 17-11.5 28.5T500-840q-100 0-170 70t-70 170q0 72 34.5 127.5T390-388l30 28v40h120v-40l30-28q61-59 95.5-114.5T700-630h-60v-80h80q0-17-3-33.5T708-776l57-57q14 26 22 54.5t10 58.5h43v80h-43q-7 73-43 137T660-388v68H330Z"/>
-  </svg>
-);
-
-// ── Device Illustration ──
-
-const DeviceIllustration = () => (
-  <svg viewBox="0 0 200 140" className="w-44 h-auto" fill="none">
-    <rect x="20" y="15" width="160" height="110" rx="8" className="fill-emerald-500/10 stroke-emerald-500" strokeWidth="2" />
-    <rect x="75" y="45" width="50" height="50" rx="4" className="fill-emerald-500/20 stroke-emerald-500" strokeWidth="1.5" />
-    <text x="100" y="74" textAnchor="middle" className="fill-emerald-500 text-[9px] font-bold">CPU</text>
-    <g className="stroke-emerald-500/60" strokeWidth="1">
-      {[30,38,46,54,62,70,78,86,94,102].map(x => <line key={x} x1={x} y1="20" x2={x} y2="10" />)}
-    </g>
-    <rect x="155" y="25" width="25" height="20" rx="2" className="fill-emerald-500/15 stroke-emerald-500" strokeWidth="1" />
-    <text x="167" y="38" textAnchor="middle" className="fill-emerald-500/70 text-[6px]">ETH</text>
-    <rect x="155" y="55" width="25" height="15" rx="2" className="fill-emerald-500/15 stroke-emerald-500" strokeWidth="1" />
-    <rect x="155" y="75" width="25" height="15" rx="2" className="fill-emerald-500/15 stroke-emerald-500" strokeWidth="1" />
-    <text x="167" y="65" textAnchor="middle" className="fill-emerald-500/70 text-[6px]">USB</text>
-    <text x="167" y="85" textAnchor="middle" className="fill-emerald-500/70 text-[6px]">USB</text>
-    <rect x="25" y="100" width="18" height="10" rx="2" className="fill-emerald-500/15 stroke-emerald-500" strokeWidth="1" />
-    <text x="34" y="108" textAnchor="middle" className="fill-emerald-500/70 text-[5px]">PWR</text>
-    <rect x="55" y="115" width="15" height="10" rx="1" className="fill-emerald-500/15 stroke-emerald-500" strokeWidth="1" />
-    <circle cx="50" cy="70" r="12" className="fill-emerald-500/10 stroke-emerald-500/50" strokeWidth="1" strokeDasharray="3 2" />
-    <text x="50" y="73" textAnchor="middle" className="fill-emerald-500/60 text-[6px]">WiFi</text>
-    {[[28,23],[172,23],[28,117],[172,117]].map(([cx,cy]) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="3" className="stroke-emerald-500/40" strokeWidth="1" fill="none" />)}
-  </svg>
-);
+import {
+  EthernetIcon, WifiIcon, TetherIcon, CellularIcon, VlanIcon, UsbIcon,
+  LaptopWifiIcon, LaptopEthIcon,
+  ApIcon, FirewallStatusIcon, VpnIcon,
+  DeviceIllustration,
+} from "components/icons";
 
 // ── Helpers ──
 
@@ -316,7 +227,7 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-4 mt-5">
               <StatusBadge icon={ApIcon} label="AP" active={services.ap} />
-              <StatusBadge icon={FirewallIcon} label="Firewall" active={services.firewall} />
+              <StatusBadge icon={FirewallStatusIcon} label="Firewall" active={services.firewall} />
               <StatusBadge icon={VpnIcon} label="VPN" active={services.vpn} />
               <StatusBadge icon={UsbIcon} label="USB" active={services.usb_gadget} />
             </div>

@@ -6,18 +6,7 @@ import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Toggle } from "components/ui/toggle";
-
-const RouterIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
-    <path d="M160-120q-33 0-56.5-23.5T80-200v-160q0-33 23.5-56.5T160-440h640q33 0 56.5 23.5T880-360v160q0 33-23.5 56.5T800-120H160Zm0-80h640v-160H160v160Zm560-40q17 0 28.5-11.5T760-280q0-17-11.5-28.5T720-320q-17 0-28.5 11.5T680-280q0 17 11.5 28.5T720-240Zm-120 0q17 0 28.5-11.5T640-280q0-17-11.5-28.5T600-320q-17 0-28.5 11.5T560-280q0 17 11.5 28.5T600-240ZM480-520q-42 0-73-26t-40-64H160v-80h207q9-38 40-64t73-26q42 0 73 26t40 64h207v80H553q-9 38-40 64t-73 26Zm0-80q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Z"/>
-  </svg>
-);
-
-const NetworkIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
-    <path d="M80-200v-80h400v80H80Zm0-200v-80h200v80H80Zm0-200v-80h200v80H80Zm760 400-36-120H664l-36 120h-84l144-440h92l144 440h-84ZM684-400h152l-74-246h-4l-74 246Z"/>
-  </svg>
-);
+import { RouterIcon, NetworkStatusIcon as NetworkIcon } from "components/icons";
 
 export default function Wifi() {
   const [activeTab, setActiveTab] = useState("ap");

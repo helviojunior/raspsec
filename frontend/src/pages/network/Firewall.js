@@ -7,6 +7,7 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Toggle } from "components/ui/toggle";
 import { cn } from "lib/utils";
+import { RulesIcon, NatIcon } from "components/icons";
 
 const CHAINS = ["internal", "implant", "outside", "firewall"];
 const PROTOCOLS = ["any", "tcp", "udp", "icmp"];
@@ -24,18 +25,6 @@ const actionColor = {
   allow: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   deny: "bg-red-500/15 text-red-400 border-red-500/30",
 };
-
-const RulesIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
-    <path d="M480-80q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q97-30 162-118.5T718-480H480v-315l-240 90v207q0 7 2 18h238v336Z"/>
-  </svg>
-);
-
-const NatIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
-    <path d="M280-120v-80h160v-124q-49-11-87.5-41.5T296-442q-75-9-125.5-65.5T120-640v-40q0-33 23.5-56.5T200-760h80v-80h400v80h80q33 0 56.5 23.5T840-680v40q0 76-50.5 132.5T664-442q-18 46-56.5 76.5T520-324v124h160v80H280Zm0-408v-152h-80v40q0 38 22 68t58 44Zm400 0q36-14 58-44t22-68v-40h-80v152Z"/>
-  </svg>
-);
 
 
 // ── Reusable Drag & Drop Hook (pfSense style) ──
