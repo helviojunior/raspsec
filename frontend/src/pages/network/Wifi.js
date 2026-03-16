@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Save, Plus, Trash2 } from "lucide-react";
+import { Save, Plus, Trash2, Eye, EyeOff } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -25,6 +25,7 @@ export default function Wifi() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // AP state
   const [ap, setAp] = useState({
@@ -181,13 +182,24 @@ export default function Wifi() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={ap.password}
-                  onChange={(e) => setAp({ ...ap, password: e.target.value })}
-                  placeholder="Senha do Access Point"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={ap.password}
+                    onChange={(e) => setAp({ ...ap, password: e.target.value })}
+                    placeholder="Senha do Access Point"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center justify-between py-2">

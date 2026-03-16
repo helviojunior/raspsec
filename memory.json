@@ -330,6 +330,15 @@
     {
       "hash": "1698904c808dd17d54ad24750d3c31d590be29d4",
       "message": "Replace kernel boot logo with StrataSec icon via binary patching"
+    },
+    {
+      "hash": "d3f305df29e784734c069fcd3094e4c636775e7a",
+      "message": "Move kernel logo patching to pi-gen base build (stages 0-2)",
+      "skipped": true
+    },
+    {
+      "hash": "a774bd8dd302c89817b7fd2cc8aaed4e52551aa0",
+      "message": "Add user profile settings, password toggle on WiFi, fix input ring offset"
     }
   ]
 }
