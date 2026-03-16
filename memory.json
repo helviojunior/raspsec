@@ -392,6 +392,30 @@
     {
       "hash": "f5064aee91273f5a9d67a5fadec7cbbc95e892a3",
       "message": "Add left padding to WebShell terminal container"
+    },
+    {
+      "hash": "a9bc90a498589ea68468d4601f3052ee321cf407",
+      "message": "Fix kernel build: add missing deps (libelf, cpio, g++) and show errors",
+      "skipped": true
+    },
+    {
+      "hash": "efa047609ce9b702546ccc341205507b0cc6e0f2",
+      "message": "Fix kernel logo PPM: use ASCII P3 format (pnmtologo requires it)",
+      "skipped": true
+    },
+    {
+      "hash": "9f0fadc3ccd87d8af9dfeb2480560416bab589a6",
+      "message": "Fix COPY --from with ARG: use FROM stage alias as workaround",
+      "skipped": true
+    },
+    {
+      "hash": "fed1c13dc07f251b2daceb9cb70e491f4998ef41",
+      "message": "Build kernel with modules to fix boot failure",
+      "skipped": true
+    },
+    {
+      "hash": "e6cc73c6aa8906c14df0f50b6e34f163a58c4d4f",
+      "message": "Firewall: use Pencil icon for edit, confirm before delete"
     }
   ]
 }

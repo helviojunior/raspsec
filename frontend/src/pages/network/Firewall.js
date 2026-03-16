@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Save, RefreshCw, Shield, ArrowRightLeft } from "lucide-react";
+import { Plus, Trash2, Save, RefreshCw, Shield, ArrowRightLeft, Pencil } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -181,10 +181,10 @@ function RulesTab() {
                           className="p-1 text-muted-foreground hover:text-foreground transition-colors"
                           title="Editar"
                         >
-                          <Save size={13} />
+                          <Pencil size={13} />
                         </button>
                         <button
-                          onClick={() => deleteRule(rule.id)}
+                          onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) deleteRule(rule.id); }}
                           className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
                           title="Remover"
                         >
@@ -421,12 +421,14 @@ function NatTab() {
                       <button
                         onClick={() => { setEditRule(rule); setShowForm(true); }}
                         className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                        title="Editar"
                       >
-                        <Save size={13} />
+                        <Pencil size={13} />
                       </button>
                       <button
-                        onClick={() => deleteRule(rule.id)}
+                        onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) deleteRule(rule.id); }}
                         className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
+                        title="Remover"
                       >
                         <Trash2 size={13} />
                       </button>
