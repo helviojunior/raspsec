@@ -317,6 +317,10 @@
     {
       "hash": "d1f94cf520d868056ad8adbbcffbebc039c17ac6",
       "message": "Add Devices page for network interface management"
+    },
+    {
+      "hash": "03485ba5166dd546c2bb889fb77145139a3af13e",
+      "message": "Auto-focus WebShell on open and add custom shell prompt"
     }
   ]
 }

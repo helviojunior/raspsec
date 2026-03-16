@@ -134,6 +134,7 @@ export default function WebShell({ open, onToggle, onClose }) {
               setStatus("connected");
               // Send initial terminal size
               ws.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
+              term.focus();
             } else {
               term.write("\r\n\x1b[31mAuthentication failed.\x1b[0m\r\n");
               setStatus("disconnected");
