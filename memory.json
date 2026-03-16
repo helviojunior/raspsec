@@ -520,6 +520,30 @@
     {
       "hash": "d148527b3931a062e50c456d4abd2e3ebcfa7738",
       "message": "WebShell: add download button to save session log as text file"
+    },
+    {
+      "hash": "ce0c7ebd252db90b4830acf07dfbe8704425ae97",
+      "message": "Force CONFIG_LOGO=y by appending to .config before olddefconfig",
+      "skipped": true
+    },
+    {
+      "hash": "88ee1b856384e9e4030c7c5947d9591edb73e827",
+      "message": "Skip invalid CIDR masks >32 in network info banner",
+      "skipped": true
+    },
+    {
+      "hash": "e427860e9436aa0671dbe0531210f7f549b899ba",
+      "message": "Center network info banner title dynamically",
+      "skipped": true
+    },
+    {
+      "hash": "94cd0a8d42f9209cf8a33fc5f870dc6dc66ff36d",
+      "message": "Increase kernel logo to 200x200 for high-res displays",
+      "skipped": true
+    },
+    {
+      "hash": "28471c7804ff3329a75cf9552cd1f6848f2e135b",
+      "message": "Fix tree trunk visibility: use div+background instead of CSS border"
     }
   ]
 }

@@ -37,50 +37,62 @@ const CHAIN_COLORS = { implant: "text-amber-400", outside: "text-red-400", inter
 const ACTIVE_BORDER = "border-emerald-500 border-solid";
 const INACTIVE_BORDER = "border-zinc-700 border-dashed";
 
+// Left tree: each row is [horizontal branch] with a vertical trunk on the right side.
+// The trunk uses a 2px wide div instead of border to guarantee visibility.
 const TreeBranchLeft = ({ active, isFirst, isLast, isOnly }) => {
-  const hb = active ? ACTIVE_BORDER : INACTIVE_BORDER; // horizontal branch
-  const vb = INACTIVE_BORDER; // trunk is always dashed for continuity
+  const hColor = active ? "bg-emerald-500" : "bg-zinc-700";
+  const hStyle = active ? "" : "style-dashed-h";
+  const vColor = "bg-zinc-700";
   return (
-    <div className="relative w-10 self-stretch flex items-center">
-      {/* Horizontal: label → trunk */}
-      <div className={`absolute left-0 right-0 top-1/2 border-t-2 ${hb}`} />
-      {/* Trunk: top half (always present except first) */}
-      {!isFirst && !isOnly && <div className={`absolute right-0 top-0 bottom-1/2 border-r-2 ${vb}`} />}
-      {/* Trunk: bottom half (always present except last) */}
-      {!isLast && !isOnly && <div className={`absolute right-0 top-1/2 bottom-0 border-r-2 ${vb}`} />}
+    <div className="relative w-12 self-stretch flex items-center">
+      {/* Horizontal branch: full width, centered vertically */}
+      <div className={`absolute left-0 right-0 h-0.5 top-1/2 -translate-y-px ${hColor}`}
+        style={active ? {} : { backgroundImage: "repeating-linear-gradient(to right, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)", backgroundColor: "transparent" }} />
+      {/* Vertical trunk: 2px wide strip on the right edge */}
+      {!isFirst && !isOnly && (
+        <div className={`absolute w-0.5 top-0 bottom-1/2`} style={{ right: 0, backgroundImage: "repeating-linear-gradient(to bottom, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)" }} />
+      )}
+      {!isLast && !isOnly && (
+        <div className={`absolute w-0.5 top-1/2 bottom-0`} style={{ right: 0, backgroundImage: "repeating-linear-gradient(to bottom, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)" }} />
+      )}
     </div>
   );
 };
 
 const TreeArmLeft = ({ anyActive }) => {
-  const b = anyActive ? ACTIVE_BORDER : INACTIVE_BORDER;
+  const color = anyActive ? "bg-emerald-500" : "bg-zinc-700";
   return (
-    <div className="relative w-12 self-center flex items-center" style={{ height: 2 }}>
-      <div className={`absolute left-0 right-0 top-0 border-t-2 ${b}`} />
+    <div className="relative w-10 flex items-center" style={{ height: 2 }}>
+      <div className={`w-full h-0.5 ${color}`}
+        style={anyActive ? {} : { backgroundImage: "repeating-linear-gradient(to right, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)", backgroundColor: "transparent" }} />
     </div>
   );
 };
 
 const TreeBranchRight = ({ active, isFirst, isLast, isOnly }) => {
-  const hb = active ? ACTIVE_BORDER : INACTIVE_BORDER;
-  const vb = INACTIVE_BORDER;
+  const hColor = active ? "bg-emerald-500" : "bg-zinc-700";
   return (
-    <div className="relative w-10 self-stretch flex items-center">
-      {/* Horizontal: trunk → label */}
-      <div className={`absolute left-0 right-0 top-1/2 border-t-2 ${hb}`} />
-      {/* Trunk: top half */}
-      {!isFirst && !isOnly && <div className={`absolute left-0 top-0 bottom-1/2 border-l-2 ${vb}`} />}
-      {/* Trunk: bottom half */}
-      {!isLast && !isOnly && <div className={`absolute left-0 top-1/2 bottom-0 border-l-2 ${vb}`} />}
+    <div className="relative w-12 self-stretch flex items-center">
+      {/* Horizontal branch */}
+      <div className={`absolute left-0 right-0 h-0.5 top-1/2 -translate-y-px ${hColor}`}
+        style={active ? {} : { backgroundImage: "repeating-linear-gradient(to right, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)", backgroundColor: "transparent" }} />
+      {/* Vertical trunk on left edge */}
+      {!isFirst && !isOnly && (
+        <div className="absolute w-0.5 top-0 bottom-1/2" style={{ left: 0, backgroundImage: "repeating-linear-gradient(to bottom, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)" }} />
+      )}
+      {!isLast && !isOnly && (
+        <div className="absolute w-0.5 top-1/2 bottom-0" style={{ left: 0, backgroundImage: "repeating-linear-gradient(to bottom, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)" }} />
+      )}
     </div>
   );
 };
 
 const TreeArmRight = ({ anyActive }) => {
-  const b = anyActive ? ACTIVE_BORDER : INACTIVE_BORDER;
+  const color = anyActive ? "bg-emerald-500" : "bg-zinc-700";
   return (
-    <div className="relative w-12 self-center flex items-center" style={{ height: 2 }}>
-      <div className={`absolute left-0 right-0 top-0 border-t-2 ${b}`} />
+    <div className="relative w-10 flex items-center" style={{ height: 2 }}>
+      <div className={`w-full h-0.5 ${color}`}
+        style={anyActive ? {} : { backgroundImage: "repeating-linear-gradient(to right, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)", backgroundColor: "transparent" }} />
     </div>
   );
 };
