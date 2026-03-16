@@ -37,17 +37,17 @@ function LoginForm({ onSuccess }) {
   return (
     <div className="animate-fade-in">
       <CardHeader className="text-center pb-2">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Acessar o sistema
         </h1>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-muted-foreground mt-2">
           Entre com suas credenciais para continuar.
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username" className="text-gray-700">Usuário</Label>
+            <Label htmlFor="username">Usuário</Label>
             <Input
               id="username"
               type="text"
@@ -58,11 +58,10 @@ function LoginForm({ onSuccess }) {
               required
               autoFocus
               autoComplete="username"
-              className="bg-white text-gray-900 border-gray-300 placeholder:text-gray-400"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-gray-700">Senha</Label>
+            <Label htmlFor="password">Senha</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -73,12 +72,12 @@ function LoginForm({ onSuccess }) {
                 error={!!error}
                 required
                 autoComplete="current-password"
-                className="pr-10 bg-white text-gray-900 border-gray-300 placeholder:text-gray-400"
+                className="pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -145,17 +144,17 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
   return (
     <div className="animate-fade-in">
       <CardHeader className="text-center pb-2">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Alterar Senha
         </h1>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-muted-foreground mt-2">
           Sua senha precisa ser alterada antes de continuar.
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="new-password" className="text-gray-700">Nova Senha</Label>
+            <Label htmlFor="new-password">Nova Senha</Label>
             <div className="relative">
               <Input
                 id="new-password"
@@ -166,12 +165,12 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
                 required
                 autoFocus
                 autoComplete="new-password"
-                className="pr-10 bg-white text-gray-900 border-gray-300 placeholder:text-gray-400"
+                className="pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowNew(!showNew)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
               >
                 {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -180,7 +179,7 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm-password" className="text-gray-700">Confirmar Nova Senha</Label>
+            <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
             <div className="relative">
               <Input
                 id="confirm-password"
@@ -190,12 +189,12 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="pr-10 bg-white text-gray-900 border-gray-300 placeholder:text-gray-400"
+                className="pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
               >
                 {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -210,9 +209,9 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
                   {check.ok ? (
                     <Check className="h-3.5 w-3.5 text-emerald-500" />
                   ) : (
-                    <X className="h-3.5 w-3.5 text-gray-300" />
+                    <X className="h-3.5 w-3.5 text-muted-foreground/50" />
                   )}
-                  <span className={check.ok ? "text-emerald-500" : "text-gray-400"}>
+                  <span className={check.ok ? "text-emerald-500" : "text-muted-foreground/60"}>
                     {check.label}
                   </span>
                 </div>
@@ -268,9 +267,9 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f7] px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-[420px]">
-        <Card className="shadow-lg border-0 bg-white rounded-2xl">
+        <Card className="shadow-lg border border-border rounded-2xl">
           {mustChangePassword ? (
             <ChangePasswordStep
               tempToken={tempToken}
