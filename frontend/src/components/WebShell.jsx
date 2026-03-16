@@ -91,8 +91,8 @@ export default function WebShell({ open, onToggle, onClose }) {
     // Create xterm instance
     const term = new Terminal({
       theme: THEME,
-      fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace",
-      fontSize: 13,
+      fontFamily: "'Ubuntu Mono', 'Hack', 'DejaVu Sans Mono', 'Liberation Mono', 'Consolas', monospace",
+      fontSize: 14,
       cursorBlink: true,
       cursorStyle: "block",
       scrollback: 10000,

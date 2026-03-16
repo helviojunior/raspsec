@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "contexts/AuthContext";
 import { Card, CardContent } from "components/ui/card";
 
 const POLL_MS = 500;
@@ -22,18 +23,21 @@ const statusLabel = {
 export default function Startup() {
   const [services, setServices] = useState([]);
   const navigate = useNavigate();
+  const { checkHealth } = useAuth();
 
   const fetchHealth = useCallback(async () => {
     try {
       const { data } = await axios.get("/api/health/");
       setServices(data.services || []);
       if (data.ready) {
+        // Update the context's servicesReady state before navigating
+        await checkHealth();
         navigate("/dashboard", { replace: true });
       }
     } catch {
       // backend not ready yet
     }
-  }, [navigate]);
+  }, [navigate, checkHealth]);
 
   useEffect(() => {
     fetchHealth();

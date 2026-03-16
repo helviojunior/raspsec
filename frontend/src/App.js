@@ -14,9 +14,11 @@ import Devices from "pages/network/Devices";
 import "./App.css";
 
 function RequireHealthy({ children }) {
-  const { servicesReady, loading } = useAuth();
+  const { servicesReady, loading, user } = useAuth();
   if (loading) return null;
-  if (!servicesReady) return <Navigate to="/startup" replace />;
+  // Only redirect to startup if services are not ready AND user is logged in.
+  // If user is not logged in, AppLayout will redirect to /login instead.
+  if (!servicesReady && user) return <Navigate to="/startup" replace />;
   return children;
 }
 

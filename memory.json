@@ -428,6 +428,15 @@
     {
       "hash": "b3dd5a59e98c7a8b5a0b61dd07d9d2543687dc5e",
       "message": "Add SSH keys management in Settings"
+    },
+    {
+      "hash": "e6ba210fec9fd5db835883400ffd756d93374e56",
+      "message": "Change shell prompt symbol from Ⓢ to →",
+      "skipped": true
+    },
+    {
+      "hash": "4c0fd5135dc43b6b262fb991a16beee5ce89fe4d",
+      "message": "Fix startup/dashboard loop and update WebShell font"
     }
   ]
 }
