@@ -38,21 +38,21 @@ const ACTIVE_BORDER = "border-emerald-500 border-solid";
 const INACTIVE_BORDER = "border-zinc-700 border-dashed";
 
 const TreeBranchLeft = ({ active, isFirst, isLast, isOnly }) => {
-  const b = active ? ACTIVE_BORDER : INACTIVE_BORDER;
+  const hb = active ? ACTIVE_BORDER : INACTIVE_BORDER; // horizontal branch
+  const vb = INACTIVE_BORDER; // trunk is always dashed for continuity
   return (
     <div className="relative w-10 self-stretch flex items-center">
       {/* Horizontal: label → trunk */}
-      <div className={`absolute left-0 right-0 top-1/2 border-t-2 ${b}`} />
-      {/* Trunk: top half */}
-      {!isFirst && !isOnly && <div className={`absolute right-0 top-0 bottom-1/2 border-r-2 ${b}`} />}
-      {/* Trunk: bottom half */}
-      {!isLast && !isOnly && <div className={`absolute right-0 top-1/2 bottom-0 border-r-2 ${b}`} />}
+      <div className={`absolute left-0 right-0 top-1/2 border-t-2 ${hb}`} />
+      {/* Trunk: top half (always present except first) */}
+      {!isFirst && !isOnly && <div className={`absolute right-0 top-0 bottom-1/2 border-r-2 ${vb}`} />}
+      {/* Trunk: bottom half (always present except last) */}
+      {!isLast && !isOnly && <div className={`absolute right-0 top-1/2 bottom-0 border-r-2 ${vb}`} />}
     </div>
   );
 };
 
 const TreeArmLeft = ({ anyActive }) => {
-  // Horizontal arm from trunk into device — uses the "most active" style
   const b = anyActive ? ACTIVE_BORDER : INACTIVE_BORDER;
   return (
     <div className="relative w-12 self-center flex items-center" style={{ height: 2 }}>
@@ -62,15 +62,16 @@ const TreeArmLeft = ({ anyActive }) => {
 };
 
 const TreeBranchRight = ({ active, isFirst, isLast, isOnly }) => {
-  const b = active ? ACTIVE_BORDER : INACTIVE_BORDER;
+  const hb = active ? ACTIVE_BORDER : INACTIVE_BORDER;
+  const vb = INACTIVE_BORDER;
   return (
     <div className="relative w-10 self-stretch flex items-center">
       {/* Horizontal: trunk → label */}
-      <div className={`absolute left-0 right-0 top-1/2 border-t-2 ${b}`} />
+      <div className={`absolute left-0 right-0 top-1/2 border-t-2 ${hb}`} />
       {/* Trunk: top half */}
-      {!isFirst && !isOnly && <div className={`absolute left-0 top-0 bottom-1/2 border-l-2 ${b}`} />}
+      {!isFirst && !isOnly && <div className={`absolute left-0 top-0 bottom-1/2 border-l-2 ${vb}`} />}
       {/* Trunk: bottom half */}
-      {!isLast && !isOnly && <div className={`absolute left-0 top-1/2 bottom-0 border-l-2 ${b}`} />}
+      {!isLast && !isOnly && <div className={`absolute left-0 top-1/2 bottom-0 border-l-2 ${vb}`} />}
     </div>
   );
 };

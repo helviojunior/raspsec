@@ -495,6 +495,15 @@
     {
       "hash": "f918cd8c7da24e8cf5fd9b6f5c7f7bc08fe26964",
       "message": "Fix WebShell crash on number keys: guard JSON parse in ws_to_pty"
+    },
+    {
+      "hash": "ad430e4e764649afc8d81105c9763f0a3f4fa0d5",
+      "message": "Suppress IPv6 addresses from console login banner",
+      "skipped": true
+    },
+    {
+      "hash": "27965439b76bfa74d658b73b4d8d37ecac82dbf7",
+      "message": "Fix dashboard tree: continuous dashed trunk regardless of branch state"
     }
   ]
 }
