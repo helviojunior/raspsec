@@ -67,7 +67,14 @@ class PingView(APIView):
             return Response({"output": "Host inválido.\n", "code": 1}, status=400)
 
         count = min(int(request.data.get("count", 4)), 20)
-        result = _run(f"/bin/ping -c {count} -W 3 {host}", timeout=count * 5 + 10)
+        interface = _safe_host(request.data.get("interface", ""))
+
+        cmd = f"/bin/ping -c {count} -W 3"
+        if interface:
+            cmd += f" -I {interface}"
+        cmd += f" {host}"
+
+        result = _run(cmd, timeout=count * 5 + 10)
         return Response(result)
 
 
@@ -85,9 +92,23 @@ class DnsCheckView(APIView):
             record_type = "A"
 
         server = _safe_host(request.data.get("server", ""))
-        cmd = f"/usr/bin/nslookup -type={record_type} {host}"
-        if server:
-            cmd += f" {server}"
+
+        # Try dig first, fall back to nslookup, then host
+        if os.path.isfile("/usr/bin/dig"):
+            cmd = f"/usr/bin/dig {host} {record_type}"
+            if server:
+                cmd += f" @{server}"
+            cmd += " +short +noall +answer +authority"
+        elif os.path.isfile("/usr/bin/nslookup"):
+            cmd = f"/usr/bin/nslookup -type={record_type} {host}"
+            if server:
+                cmd += f" {server}"
+        elif os.path.isfile("/usr/bin/host"):
+            cmd = f"/usr/bin/host -t {record_type} {host}"
+            if server:
+                cmd += f" {server}"
+        else:
+            return Response({"output": "Nenhuma ferramenta DNS encontrada (dig/nslookup/host).\n", "code": 1})
 
         result = _run(cmd, timeout=15)
         return Response(result)
@@ -141,10 +162,18 @@ class TracerouteView(APIView):
             return Response({"output": "Host inválido.\n", "code": 1}, status=400)
 
         max_hops = min(int(request.data.get("max_hops", 20)), 30)
-        result = _run(
-            f"sudo /usr/sbin/traceroute -n -m {max_hops} -w 3 {host}",
-            timeout=max_hops * 5 + 10,
-        )
+
+        # Use traceroute if available, otherwise fall back to tracepath
+        if os.path.isfile("/usr/sbin/traceroute"):
+            cmd = f"sudo /usr/sbin/traceroute -n -m {max_hops} -w 3 {host}"
+        elif os.path.isfile("/usr/bin/traceroute"):
+            cmd = f"sudo /usr/bin/traceroute -n -m {max_hops} -w 3 {host}"
+        elif os.path.isfile("/usr/bin/tracepath"):
+            cmd = f"/usr/bin/tracepath -n -m {max_hops} {host}"
+        else:
+            return Response({"output": "Nenhuma ferramenta de traceroute encontrada.\n", "code": 1})
+
+        result = _run(cmd, timeout=max_hops * 5 + 10)
         return Response(result)
 
 

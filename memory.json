@@ -504,6 +504,10 @@
     {
       "hash": "27965439b76bfa74d658b73b4d8d37ecac82dbf7",
       "message": "Fix dashboard tree: continuous dashed trunk regardless of branch state"
+    },
+    {
+      "hash": "f48d5041872edbafdb9647cc7b992106cc976059",
+      "message": "Fix missing tools: fallback commands, interface selector, install packages"
     }
   ]
 }

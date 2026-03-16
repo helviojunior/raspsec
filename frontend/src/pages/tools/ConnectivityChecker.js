@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Play, Loader2 } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
@@ -97,14 +97,24 @@ function OutputBox({ output, running }) {
 function PingTab() {
   const [host, setHost] = useState("8.8.8.8");
   const [count, setCount] = useState(4);
+  const [iface, setIface] = useState("");
+  const [interfaces, setInterfaces] = useState([]);
   const [output, setOutput] = useState("");
   const [running, setRunning] = useState(false);
+
+  useEffect(() => {
+    api.get("/api/network/devices/").then(({ data }) => {
+      setInterfaces((data.interfaces || []).map(i => i.name));
+    }).catch(() => {});
+  }, []);
 
   const run = async () => {
     setRunning(true);
     setOutput("");
     try {
-      const { data } = await api.post("/api/tools/ping/", { host, count });
+      const payload = { host, count };
+      if (iface) payload.interface = iface;
+      const { data } = await api.post("/api/tools/ping/", payload);
       setOutput(data.output || "Sem resposta.");
     } catch (err) {
       setOutput(err.response?.data?.output || "Erro ao executar ping.");
@@ -134,6 +144,17 @@ function PingTab() {
                 value={count}
                 onChange={(e) => setCount(parseInt(e.target.value) || 4)}
               />
+            </div>
+            <div className="w-32">
+              <Label>Interface <span className="text-muted-foreground">(opt)</span></Label>
+              <select
+                value={iface}
+                onChange={(e) => setIface(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm"
+              >
+                <option value="">Auto</option>
+                {interfaces.map(i => <option key={i} value={i}>{i}</option>)}
+              </select>
             </div>
             <Button onClick={run} disabled={running || !host}>
               {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
