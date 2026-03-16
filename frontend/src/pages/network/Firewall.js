@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Save, RefreshCw, Shield, ArrowRightLeft, Pencil, GripVertical, Lock } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Plus, Trash2, Save, RefreshCw, ArrowRightLeft, Pencil, GripVertical, Lock } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -36,6 +36,109 @@ const NatIcon = () => (
     <path d="M280-120v-80h160v-124q-49-11-87.5-41.5T296-442q-75-9-125.5-65.5T120-640v-40q0-33 23.5-56.5T200-760h80v-80h400v80h80q33 0 56.5 23.5T840-680v40q0 76-50.5 132.5T664-442q-18 46-56.5 76.5T520-324v124h160v80H280Zm0-408v-152h-80v40q0 38 22 68t58 44Zm400 0q36-14 58-44t22-68v-40h-80v152Z"/>
   </svg>
 );
+
+
+// ── Reusable Drag & Drop Hook (pfSense style) ──
+
+function useDragReorder({ items, onReorder, canDrag = () => true }) {
+  const [dragState, setDragState] = useState(null); // { index, id, mouseY, startY, rowHeight, ghostTop }
+  const tableRef = useRef(null);
+  const rowRefs = useRef([]);
+
+  const handleMouseDown = useCallback((e, index, id) => {
+    if (!canDrag(items[index])) return;
+    e.preventDefault();
+    const row = rowRefs.current[index];
+    if (!row) return;
+    const rect = row.getBoundingClientRect();
+    setDragState({
+      index,
+      id,
+      mouseY: e.clientY,
+      startY: e.clientY,
+      rowHeight: rect.height,
+      ghostTop: rect.top,
+      origIndex: index,
+    });
+  }, [items, canDrag]);
+
+  useEffect(() => {
+    if (!dragState) return;
+
+    const handleMouseMove = (e) => {
+      setDragState(prev => {
+        if (!prev) return null;
+        const deltaY = e.clientY - prev.startY;
+        const newIndex = Math.max(0, Math.min(
+          items.length - 1,
+          prev.origIndex + Math.round(deltaY / prev.rowHeight)
+        ));
+        return { ...prev, mouseY: e.clientY, index: newIndex };
+      });
+    };
+
+    const handleMouseUp = () => {
+      if (dragState) {
+        const fromIndex = dragState.origIndex;
+        const toIndex = dragState.index;
+        if (fromIndex !== toIndex) {
+          onReorder(fromIndex, toIndex);
+        }
+      }
+      setDragState(null);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    document.body.style.cursor = "grabbing";
+    document.body.style.userSelect = "none";
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [dragState, items.length, onReorder]);
+
+  // Compute the visual order for rendering
+  const getDropIndex = () => {
+    if (!dragState) return -1;
+    return dragState.index;
+  };
+
+  const getDragIndex = () => {
+    if (!dragState) return -1;
+    return dragState.origIndex;
+  };
+
+  const isDragging = !!dragState;
+  const dragId = dragState?.id;
+
+  // Ghost position (follows mouse)
+  const ghostStyle = dragState ? {
+    position: "fixed",
+    top: dragState.mouseY - dragState.rowHeight / 2,
+    left: tableRef.current?.getBoundingClientRect().left || 0,
+    width: tableRef.current?.getBoundingClientRect().width || "100%",
+    zIndex: 9999,
+    pointerEvents: "none",
+    opacity: 0.9,
+  } : null;
+
+  return {
+    tableRef,
+    rowRefs,
+    handleMouseDown,
+    isDragging,
+    dragId,
+    getDragIndex,
+    getDropIndex,
+    ghostStyle,
+    dragState,
+  };
+}
+
 
 export default function Firewall() {
   const [activeTab, setActiveTab] = useState("rules");
@@ -109,36 +212,6 @@ function RulesTab() {
     fetchRules();
   };
 
-  const [dragId, setDragId] = useState(null);
-
-  const handleDragStart = (id) => setDragId(id);
-  const handleDragOver = (e) => e.preventDefault();
-  const handleDrop = async (chain) => {
-    if (!dragId) return;
-    const chainRules = rules.filter((r) => r.chain === chain);
-    const dragIdx = chainRules.findIndex((r) => r.id === dragId);
-    if (dragIdx < 0) return;
-    // Find drop target from mouse position (handled by drop on specific row)
-  };
-
-  const handleDropOnRow = async (targetId, chain) => {
-    if (!dragId || dragId === targetId) { setDragId(null); return; }
-    const chainRules = rules.filter((r) => r.chain === chain);
-    const systemRules = chainRules.filter((r) => r.is_system);
-    const userRules = chainRules.filter((r) => !r.is_system);
-    const dragIdx = userRules.findIndex((r) => r.id === dragId);
-    const dropIdx = userRules.findIndex((r) => r.id === targetId);
-    if (dragIdx < 0 || dropIdx < 0) { setDragId(null); return; }
-    const reordered = [...userRules];
-    const [moved] = reordered.splice(dragIdx, 1);
-    reordered.splice(dropIdx, 0, moved);
-    // System rules keep their order, user rules are reordered after them
-    const allIds = [...systemRules.map((r) => r.id), ...reordered.map((r) => r.id)];
-    await api.put("/api/firewall/reorder/", { type: "rule", ordered_ids: allIds });
-    setDragId(null);
-    fetchRules();
-  };
-
   const grouped = CHAINS.map((chain) => ({
     chain,
     rules: rules.filter((r) => r.chain === chain),
@@ -164,100 +237,175 @@ function RulesTab() {
       )}
 
       {grouped.map(({ chain, rules: chainRules }) => (
-        <Card key={chain}>
-          <CardHeader>
-            <h2 className={cn("text-lg font-semibold capitalize", chainColor[chain])}>
-              Chain {chain}
-            </h2>
-          </CardHeader>
-          <CardContent>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-muted-foreground">
-                  <th className="w-8"></th>
-                  <th className="text-left py-2 px-3 font-medium">Protocol</th>
-                  <th className="text-left py-2 px-3 font-medium">Port</th>
-                  <th className="text-left py-2 px-3 font-medium">Source</th>
-                  <th className="text-center py-2 px-3 font-medium">Action</th>
-                  <th className="text-left py-2 px-3 font-medium">Description</th>
-                  <th className="text-center py-2 px-3 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {chainRules.map((rule) => (
-                  <tr
-                    key={rule.id}
-                    draggable={!rule.is_system}
-                    onDragStart={() => handleDragStart(rule.id)}
-                    onDragOver={handleDragOver}
-                    onDrop={() => handleDropOnRow(rule.id, chain)}
-                    className={cn(
-                      "border-b border-border/50 hover:bg-muted/20 transition-colors",
-                      !rule.enabled && "opacity-40",
-                      dragId === rule.id && "opacity-30",
-                      rule.is_system && "bg-blue-500/5"
-                    )}
-                  >
-                    <td className="py-2 px-1 text-center">
-                      {rule.is_system ? (
-                        <Lock size={12} className="text-blue-400 mx-auto" title="Regra do sistema" />
-                      ) : (
-                        <GripVertical size={14} className="text-muted-foreground/50 cursor-grab mx-auto" />
-                      )}
-                    </td>
-                    <td className="py-2 px-3 text-foreground uppercase">{rule.protocol}</td>
-                    <td className="py-2 px-3 text-foreground font-mono">{rule.port || "ALL"}</td>
-                    <td className="py-2 px-3 text-foreground font-mono">{rule.source_ip || "ANY"}</td>
-                    <td className="py-2 px-3 text-center">
-                      <span className={cn("px-2 py-0.5 rounded text-xs font-medium border", actionColor[rule.action])}>
-                        {rule.action.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 text-muted-foreground">{rule.description}</td>
-                    <td className="py-2 px-3">
-                      <div className="flex items-center justify-center gap-1">
-                        {!rule.is_system && (
-                          <>
-                            <Toggle
-                              checked={rule.enabled}
-                              onChange={() => toggleRule(rule)}
-                              className="scale-75"
-                            />
-                            <button
-                              onClick={() => { setEditRule(rule); setShowForm(true); }}
-                              className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                              title="Editar"
-                            >
-                              <Pencil size={13} />
-                            </button>
-                            <button
-                              onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) deleteRule(rule.id); }}
-                              className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
-                              title="Remover"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {chainRules.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="py-4 text-center text-muted-foreground text-xs">
-                      Nenhuma regra nesta chain.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+        <RulesChainTable
+          key={chain}
+          chain={chain}
+          chainRules={chainRules}
+          allRules={rules}
+          onToggle={toggleRule}
+          onEdit={(rule) => { setEditRule(rule); setShowForm(true); }}
+          onDelete={deleteRule}
+          onReorderDone={fetchRules}
+        />
       ))}
     </div>
   );
 }
+
+function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDelete, onReorderDone }) {
+  const systemRules = chainRules.filter(r => r.is_system);
+  const userRules = chainRules.filter(r => !r.is_system);
+
+  const handleReorder = useCallback(async (fromIndex, toIndex) => {
+    const reordered = [...userRules];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    const allIds = [...systemRules.map(r => r.id), ...reordered.map(r => r.id)];
+    await api.put("/api/firewall/reorder/", { type: "rule", ordered_ids: allIds });
+    onReorderDone();
+  }, [userRules, systemRules, onReorderDone]);
+
+  const {
+    tableRef, rowRefs, handleMouseDown,
+    isDragging, dragId, getDragIndex, getDropIndex, ghostStyle, dragState,
+  } = useDragReorder({
+    items: userRules,
+    onReorder: handleReorder,
+    canDrag: (item) => item && !item.is_system,
+  });
+
+  const dragIdx = getDragIndex();
+  const dropIdx = getDropIndex();
+
+  const renderRow = (rule, i, isGhost = false) => (
+    <tr
+      key={isGhost ? `ghost-${rule.id}` : rule.id}
+      ref={isGhost ? undefined : (el) => { if (!rule.is_system) { rowRefs.current[userRules.indexOf(rule)] = el; } }}
+      className={cn(
+        "border-b border-border/50 transition-all",
+        !rule.enabled && "opacity-40",
+        rule.is_system && "bg-blue-500/5",
+        isGhost && "bg-primary/10 border-primary/30 shadow-lg shadow-primary/10 rounded",
+        !isGhost && isDragging && dragId === rule.id && "opacity-0 h-0 overflow-hidden border-none",
+        !isGhost && !isDragging && "hover:bg-muted/20",
+      )}
+    >
+      <td className="py-2 px-1 text-center">
+        {rule.is_system ? (
+          <Lock size={12} className="text-blue-400 mx-auto" title="Regra do sistema" />
+        ) : (
+          <GripVertical
+            size={14}
+            className={cn("mx-auto transition-colors", isDragging && dragId === rule.id ? "text-primary cursor-grabbing" : "text-muted-foreground/50 cursor-grab")}
+            onMouseDown={(e) => handleMouseDown(e, userRules.indexOf(rule), rule.id)}
+          />
+        )}
+      </td>
+      <td className="py-2 px-3 text-foreground uppercase">{rule.protocol}</td>
+      <td className="py-2 px-3 text-foreground font-mono">{rule.port || "ALL"}</td>
+      <td className="py-2 px-3 text-foreground font-mono">{rule.source_ip || "ANY"}</td>
+      <td className="py-2 px-3 text-center">
+        <span className={cn("px-2 py-0.5 rounded text-xs font-medium border", actionColor[rule.action])}>
+          {rule.action.toUpperCase()}
+        </span>
+      </td>
+      <td className="py-2 px-3 text-muted-foreground">{rule.description}</td>
+      <td className="py-2 px-3">
+        {!isGhost && (
+          <div className="flex items-center justify-center gap-1">
+            {!rule.is_system && (
+              <>
+                <Toggle checked={rule.enabled} onChange={() => onToggle(rule)} className="scale-75" />
+                <button onClick={() => onEdit(rule)} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Editar"><Pencil size={13} /></button>
+                <button onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) onDelete(rule.id); }} className="p-1 text-muted-foreground hover:text-red-500 transition-colors" title="Remover"><Trash2 size={13} /></button>
+              </>
+            )}
+          </div>
+        )}
+      </td>
+    </tr>
+  );
+
+  // Drop indicator row
+  const DropIndicator = () => (
+    <tr><td colSpan={7} className="p-0">
+      <div className="h-1 bg-primary rounded-full mx-2 my-0.5 shadow-sm shadow-primary/50" />
+    </td></tr>
+  );
+
+  // Build visual order for user rules with drop indicator
+  const renderUserRows = () => {
+    if (!isDragging) {
+      return userRules.map((rule, i) => renderRow(rule, i));
+    }
+
+    const rows = [];
+    for (let i = 0; i < userRules.length; i++) {
+      // Insert drop indicator at target position
+      if (i === dropIdx && dragIdx > dropIdx) {
+        rows.push(<DropIndicator key="drop-indicator" />);
+      }
+      rows.push(renderRow(userRules[i], i));
+      if (i === dropIdx && dragIdx < dropIdx) {
+        rows.push(<DropIndicator key="drop-indicator" />);
+      }
+      if (i === dropIdx && dragIdx === dropIdx) {
+        // Same position, no indicator needed
+      }
+    }
+    return rows;
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className={cn("text-lg font-semibold capitalize", chainColor[chain])}>
+          Chain {chain}
+        </h2>
+      </CardHeader>
+      <CardContent>
+        <table className="w-full text-sm" ref={tableRef}>
+          <thead>
+            <tr className="border-b border-border text-muted-foreground">
+              <th className="w-8"></th>
+              <th className="text-left py-2 px-3 font-medium">Protocol</th>
+              <th className="text-left py-2 px-3 font-medium">Port</th>
+              <th className="text-left py-2 px-3 font-medium">Source</th>
+              <th className="text-center py-2 px-3 font-medium">Action</th>
+              <th className="text-left py-2 px-3 font-medium">Description</th>
+              <th className="text-center py-2 px-3 font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* System rules first (not draggable) */}
+            {systemRules.map((rule, i) => renderRow(rule, i))}
+            {/* User rules with drag support */}
+            {renderUserRows()}
+            {chainRules.length === 0 && (
+              <tr>
+                <td colSpan={7} className="py-4 text-center text-muted-foreground text-xs">
+                  Nenhuma regra nesta chain.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* Ghost row (floating, follows cursor) */}
+        {isDragging && dragState && userRules[dragState.origIndex] && (
+          <div style={ghostStyle}>
+            <table className="w-full text-sm border border-primary/30 rounded-md bg-card shadow-xl shadow-primary/20">
+              <tbody>
+                {renderRow(userRules[dragState.origIndex], dragState.origIndex, true)}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 
 function RuleForm({ rule, onSave, onCancel }) {
   const [form, setForm] = useState({
@@ -293,70 +441,41 @@ function RuleForm({ rule, onSave, onCancel }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Chain</Label>
-            <select
-              value={form.chain}
-              onChange={(e) => setForm({ ...form, chain: e.target.value })}
-              className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm"
-            >
+            <select value={form.chain} onChange={(e) => setForm({ ...form, chain: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">
               {CHAINS.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div className="space-y-2">
             <Label>Protocol</Label>
-            <select
-              value={form.protocol}
-              onChange={(e) => setForm({ ...form, protocol: e.target.value })}
-              className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm"
-            >
+            <select value={form.protocol} onChange={(e) => setForm({ ...form, protocol: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">
               {PROTOCOLS.map((p) => <option key={p} value={p}>{p.toUpperCase()}</option>)}
             </select>
           </div>
           <div className="space-y-2">
             <Label>Port</Label>
-            <Input
-              value={form.port}
-              onChange={(e) => setForm({ ...form, port: e.target.value })}
-              placeholder="All"
-            />
+            <Input value={form.port} onChange={(e) => setForm({ ...form, port: e.target.value })} placeholder="All" />
           </div>
           <div className="space-y-2">
             <Label>Action</Label>
-            <select
-              value={form.action}
-              onChange={(e) => setForm({ ...form, action: e.target.value })}
-              className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm"
-            >
+            <select value={form.action} onChange={(e) => setForm({ ...form, action: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">
               {ACTIONS.map((a) => <option key={a} value={a}>{a.toUpperCase()}</option>)}
             </select>
           </div>
           <div className="space-y-2">
             <Label>Source IP</Label>
-            <Input
-              value={form.source_ip}
-              onChange={(e) => setForm({ ...form, source_ip: e.target.value })}
-              placeholder="Any"
-            />
+            <Input value={form.source_ip} onChange={(e) => setForm({ ...form, source_ip: e.target.value })} placeholder="Any" />
           </div>
           <div className="space-y-2">
             <Label>Priority</Label>
-            <Input
-              type="number"
-              value={form.priority}
-              onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) || 0 })}
-            />
+            <Input type="number" value={form.priority} onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) || 0 })} />
           </div>
           <div className="space-y-2 col-span-2">
             <Label>Description</Label>
-            <Input
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-            />
+            <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
         </div>
         <div className="flex gap-2 mt-4">
-          <Button onClick={handleSave} loading={saving} size="sm">
-            <Save size={14} /> {form.id ? "Atualizar" : "Criar"}
-          </Button>
+          <Button onClick={handleSave} loading={saving} size="sm"><Save size={14} /> {form.id ? "Atualizar" : "Criar"}</Button>
           <Button variant="outline" size="sm" onClick={onCancel}>Cancelar</Button>
         </div>
       </CardContent>
@@ -401,21 +520,80 @@ function NatTab() {
     fetchNat();
   };
 
-  const [dragId, setDragId] = useState(null);
-
-  const handleDragStart = (id) => setDragId(id);
-  const handleDragOver = (e) => e.preventDefault();
-  const handleDropOnRow = async (targetId) => {
-    if (!dragId || dragId === targetId) { setDragId(null); return; }
-    const dragIdx = natRules.findIndex((r) => r.id === dragId);
-    const dropIdx = natRules.findIndex((r) => r.id === targetId);
-    if (dragIdx < 0 || dropIdx < 0) { setDragId(null); return; }
+  const handleReorder = useCallback(async (fromIndex, toIndex) => {
     const reordered = [...natRules];
-    const [moved] = reordered.splice(dragIdx, 1);
-    reordered.splice(dropIdx, 0, moved);
-    await api.put("/api/firewall/reorder/", { type: "nat", ordered_ids: reordered.map((r) => r.id) });
-    setDragId(null);
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    await api.put("/api/firewall/reorder/", { type: "nat", ordered_ids: reordered.map(r => r.id) });
     fetchNat();
+  }, [natRules, fetchNat]);
+
+  const {
+    tableRef, rowRefs, handleMouseDown,
+    isDragging, dragId, getDragIndex, getDropIndex, ghostStyle, dragState,
+  } = useDragReorder({
+    items: natRules,
+    onReorder: handleReorder,
+  });
+
+  const dragIdx = getDragIndex();
+  const dropIdx = getDropIndex();
+
+  const renderRow = (rule, i, isGhost = false) => (
+    <tr
+      key={isGhost ? `ghost-${rule.id}` : rule.id}
+      ref={isGhost ? undefined : (el) => { rowRefs.current[i] = el; }}
+      className={cn(
+        "border-b border-border/50 transition-all",
+        !rule.enabled && "opacity-40",
+        isGhost && "bg-primary/10 border-primary/30 shadow-lg shadow-primary/10 rounded",
+        !isGhost && isDragging && dragId === rule.id && "opacity-0 h-0 overflow-hidden border-none",
+        !isGhost && !isDragging && "hover:bg-muted/20",
+      )}
+    >
+      <td className="py-2 px-1 text-center">
+        <GripVertical
+          size={14}
+          className={cn("mx-auto transition-colors", isDragging && dragId === rule.id ? "text-primary cursor-grabbing" : "text-muted-foreground/50 cursor-grab")}
+          onMouseDown={(e) => handleMouseDown(e, i, rule.id)}
+        />
+      </td>
+      <td className={cn("py-2 px-3 font-medium capitalize", chainColor[rule.source_chain])}>{rule.source_chain}</td>
+      <td className="py-2 px-3 text-muted-foreground text-center"><ArrowRightLeft size={14} className="inline" /></td>
+      <td className={cn("py-2 px-3 font-medium capitalize", chainColor[rule.dest_chain])}>{rule.dest_chain}</td>
+      <td className="py-2 px-3 text-foreground uppercase text-xs">{rule.nat_type}</td>
+      <td className="py-2 px-3 text-foreground uppercase">{rule.protocol}</td>
+      <td className="py-2 px-3 text-foreground font-mono">{rule.port || "ALL"}</td>
+      <td className="py-2 px-3 text-muted-foreground">{rule.description}</td>
+      <td className="py-2 px-3">
+        {!isGhost && (
+          <div className="flex items-center justify-center gap-1">
+            <Toggle checked={rule.enabled} onChange={() => toggleRule(rule)} className="scale-75" />
+            <button onClick={() => { setEditRule(rule); setShowForm(true); }} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Editar"><Pencil size={13} /></button>
+            <button onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) deleteRule(rule.id); }} className="p-1 text-muted-foreground hover:text-red-500 transition-colors" title="Remover"><Trash2 size={13} /></button>
+          </div>
+        )}
+      </td>
+    </tr>
+  );
+
+  const DropIndicator = () => (
+    <tr><td colSpan={9} className="p-0">
+      <div className="h-1 bg-primary rounded-full mx-2 my-0.5 shadow-sm shadow-primary/50" />
+    </td></tr>
+  );
+
+  const renderRows = () => {
+    if (!isDragging) {
+      return natRules.map((rule, i) => renderRow(rule, i));
+    }
+    const rows = [];
+    for (let i = 0; i < natRules.length; i++) {
+      if (i === dropIdx && dragIdx > dropIdx) rows.push(<DropIndicator key="drop-indicator" />);
+      rows.push(renderRow(natRules[i], i));
+      if (i === dropIdx && dragIdx < dropIdx) rows.push(<DropIndicator key="drop-indicator" />);
+    }
+    return rows;
   };
 
   return (
@@ -442,7 +620,7 @@ function NatTab() {
           <h2 className="text-lg font-semibold">NAT Rules</h2>
         </CardHeader>
         <CardContent>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" ref={tableRef}>
             <thead>
               <tr className="border-b border-border text-muted-foreground">
                 <th className="w-8"></th>
@@ -457,69 +635,26 @@ function NatTab() {
               </tr>
             </thead>
             <tbody>
-              {natRules.map((rule) => (
-                <tr
-                  key={rule.id}
-                  draggable
-                  onDragStart={() => handleDragStart(rule.id)}
-                  onDragOver={handleDragOver}
-                  onDrop={() => handleDropOnRow(rule.id)}
-                  className={cn(
-                    "border-b border-border/50 hover:bg-muted/20 transition-colors",
-                    !rule.enabled && "opacity-40",
-                    dragId === rule.id && "opacity-30"
-                  )}
-                >
-                  <td className="py-2 px-1 text-center">
-                    <GripVertical size={14} className="text-muted-foreground/50 cursor-grab mx-auto" />
-                  </td>
-                  <td className={cn("py-2 px-3 font-medium capitalize", chainColor[rule.source_chain])}>
-                    {rule.source_chain}
-                  </td>
-                  <td className="py-2 px-3 text-muted-foreground text-center">
-                    <ArrowRightLeft size={14} className="inline" />
-                  </td>
-                  <td className={cn("py-2 px-3 font-medium capitalize", chainColor[rule.dest_chain])}>
-                    {rule.dest_chain}
-                  </td>
-                  <td className="py-2 px-3 text-foreground uppercase text-xs">{rule.nat_type}</td>
-                  <td className="py-2 px-3 text-foreground uppercase">{rule.protocol}</td>
-                  <td className="py-2 px-3 text-foreground font-mono">{rule.port || "ALL"}</td>
-                  <td className="py-2 px-3 text-muted-foreground">{rule.description}</td>
-                  <td className="py-2 px-3">
-                    <div className="flex items-center justify-center gap-1">
-                      <Toggle
-                        checked={rule.enabled}
-                        onChange={() => toggleRule(rule)}
-                        className="scale-75"
-                      />
-                      <button
-                        onClick={() => { setEditRule(rule); setShowForm(true); }}
-                        className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                        title="Editar"
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      <button
-                        onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) deleteRule(rule.id); }}
-                        className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
-                        title="Remover"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {renderRows()}
               {natRules.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={8} className="py-6 text-center text-muted-foreground">
+                  <td colSpan={9} className="py-6 text-center text-muted-foreground">
                     Nenhuma regra NAT configurada.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+
+          {isDragging && dragState && natRules[dragState.origIndex] && (
+            <div style={ghostStyle}>
+              <table className="w-full text-sm border border-primary/30 rounded-md bg-card shadow-xl shadow-primary/20">
+                <tbody>
+                  {renderRow(natRules[dragState.origIndex], dragState.origIndex, true)}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -562,41 +697,25 @@ function NatForm({ rule, onSave, onCancel }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Source Chain</Label>
-            <select
-              value={form.source_chain}
-              onChange={(e) => setForm({ ...form, source_chain: e.target.value })}
-              className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm"
-            >
+            <select value={form.source_chain} onChange={(e) => setForm({ ...form, source_chain: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">
               {CHAINS.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div className="space-y-2">
             <Label>Dest Chain</Label>
-            <select
-              value={form.dest_chain}
-              onChange={(e) => setForm({ ...form, dest_chain: e.target.value })}
-              className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm"
-            >
+            <select value={form.dest_chain} onChange={(e) => setForm({ ...form, dest_chain: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">
               {CHAINS.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div className="space-y-2">
             <Label>NAT Type</Label>
-            <select
-              value={form.nat_type}
-              onChange={(e) => setForm({ ...form, nat_type: e.target.value })}
-              className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm"
-            >
+            <select value={form.nat_type} onChange={(e) => setForm({ ...form, nat_type: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">
               {NAT_TYPES.map((t) => <option key={t} value={t}>{t.toUpperCase()}</option>)}
             </select>
           </div>
           <div className="space-y-2">
             <Label>Protocol</Label>
-            <select
-              value={form.protocol}
-              onChange={(e) => setForm({ ...form, protocol: e.target.value })}
-              className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm"
-            >
+            <select value={form.protocol} onChange={(e) => setForm({ ...form, protocol: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">
               {["any", "tcp", "udp"].map((p) => <option key={p} value={p}>{p.toUpperCase()}</option>)}
             </select>
           </div>
@@ -622,9 +741,7 @@ function NatForm({ rule, onSave, onCancel }) {
           </div>
         </div>
         <div className="flex gap-2 mt-4">
-          <Button onClick={handleSave} loading={saving} size="sm">
-            <Save size={14} /> {form.id ? "Atualizar" : "Criar"}
-          </Button>
+          <Button onClick={handleSave} loading={saving} size="sm"><Save size={14} /> {form.id ? "Atualizar" : "Criar"}</Button>
           <Button variant="outline" size="sm" onClick={onCancel}>Cancelar</Button>
         </div>
       </CardContent>

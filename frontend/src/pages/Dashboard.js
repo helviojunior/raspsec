@@ -74,13 +74,12 @@ const VpnIcon = ({ className = "w-5 h-5" }) => (
 
 const UsbIcon = ({ className = "w-5 h-5" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    {/* USB trident symbol */}
-    <path d="M12 22v-18" />
-    <path d="M12 4l-3-3" /><path d="M12 4l3-3" />
-    <circle cx="12" cy="10" r="0" />
-    <path d="M12 10l5 4" /><circle cx="17" cy="14" r="1.5" />
-    <path d="M12 14l-5 4" /><rect x="5" y="17" width="4" height="3" rx="0.5" />
-    <circle cx="12" cy="20" r="2" />
+    <circle cx="10" cy="7" r="1" /><circle cx="4" cy="20" r="1" />
+    <path d="M4.7 19.3 8 16" /><path d="m8 16-3-3 5-5" />
+    <circle cx="14" cy="15" r="1" />
+    <path d="M10 6V3h4l2 2-2 2h-4" />
+    <path d="m14 14 5-5" /><path d="m18 11 1-1-1-1" />
+    <path d="M10 8v7c0 .6.4 1 1 1h3" />
   </svg>
 );
 

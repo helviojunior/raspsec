@@ -462,6 +462,10 @@
     {
       "hash": "595c7e0ebf18097e1d18cfe405cfeea9ae809605",
       "message": "Add network dashboard, WiFi client support, and dev environment fixes"
+    },
+    {
+      "hash": "7dadc813cf25885ac98604d83123c9e6051f8ebe",
+      "message": "Improve dashboard icons, memory stats, and pfSense-style drag & drop"
     }
   ]
 }
