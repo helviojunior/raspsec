@@ -321,6 +321,15 @@
     {
       "hash": "03485ba5166dd546c2bb889fb77145139a3af13e",
       "message": "Auto-focus WebShell on open and add custom shell prompt"
+    },
+    {
+      "hash": "69d98540602739545598d311510e50a830990f16",
+      "message": "Persistent boot logo like Raspberry Pi kernel logo",
+      "skipped": true
+    },
+    {
+      "hash": "1698904c808dd17d54ad24750d3c31d590be29d4",
+      "message": "Replace kernel boot logo with StrataSec icon via binary patching"
     }
   ]
 }
