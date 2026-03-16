@@ -445,6 +445,10 @@
     {
       "hash": "b0f8fb7525a74defbcfd811f17623ddd0db9bed7",
       "message": "Rename Firewall to Firewall/NAT in sidebar"
+    },
+    {
+      "hash": "e077a55db1703d30838c94b73abc0d76dbe53121",
+      "message": "Reorder Networking submenu: General, Devices, Firewall/NAT, WiFi, USB Gadget"
     }
   ]
 }
