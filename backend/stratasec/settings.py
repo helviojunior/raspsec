@@ -287,3 +287,6 @@ CRONJOBS = [
     # em produção mudar para * * * * *
     ('* * * * *', 'raspsec.cron.watchdog'),
 ]
+
+# Force python3 for crontab (uWSGI sets sys.executable to uwsgi-core)
+CRONTAB_PYTHON_EXECUTABLE = '/usr/bin/python3'

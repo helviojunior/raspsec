@@ -279,6 +279,15 @@
     {
       "hash": "c77250d4c5ea6393783b2379bff688709f778203",
       "message": "Set RaspSec as DNS server and add private network routes via DHCP"
+    },
+    {
+      "hash": "de1bf2b89725e8679a42bd11055665439ee8d64e",
+      "message": "Fix USB gadget name by moving modprobe to external script",
+      "skipped": true
+    },
+    {
+      "hash": "49062f37703657227f2f7318829b719f466c3926",
+      "message": "Fix watchdog cron using uwsgi-core instead of python3"
     }
   ]
 }
