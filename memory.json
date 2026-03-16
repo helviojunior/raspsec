@@ -301,6 +301,10 @@
     {
       "hash": "d7b8e80dcf81d58e68e0d3e8badecda4c3689f9a",
       "message": "Fix SECRET_KEY parsed as list when it contains commas"
+    },
+    {
+      "hash": "c71ab579a5ca832cada426ba44a4324cb3cb50dd",
+      "message": "Fix route command path (/usr/sbin/route not /usr/bin/route)"
     }
   ]
 }

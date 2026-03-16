@@ -75,7 +75,7 @@ def _get_interfaces():
 
 def _get_routes():
     """Parse `route -n` to get routing table."""
-    ret, out = Exec.execute("/usr/bin/route -n", raise_error=False)
+    ret, out = Exec.execute("/usr/sbin/route -n", raise_error=False)
     if ret != 0:
         return []
 
