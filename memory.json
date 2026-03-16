@@ -305,6 +305,10 @@
     {
       "hash": "c71ab579a5ca832cada426ba44a4324cb3cb50dd",
       "message": "Fix route command path (/usr/sbin/route not /usr/bin/route)"
+    },
+    {
+      "hash": "0a49fb69b64e6fe3316cbe106eaf4e99d66b3c9a",
+      "message": "Change network status icon from Activity to MonitorCheck"
     }
   ]
 }
