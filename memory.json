@@ -491,6 +491,10 @@
     {
       "hash": "878a8b8fefe824e86e314e926e788c1533d90071",
       "message": "Dashboard: add tree arms into device, VLAN carrier/chain inheritance"
+    },
+    {
+      "hash": "f918cd8c7da24e8cf5fd9b6f5c7f7bc08fe26964",
+      "message": "Fix WebShell crash on number keys: guard JSON parse in ws_to_pty"
     }
   ]
 }

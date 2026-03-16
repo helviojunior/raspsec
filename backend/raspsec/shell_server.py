@@ -106,14 +106,15 @@ async def shell_handler(websocket):
         """Forward WebSocket input to PTY."""
         async for message in websocket:
             if isinstance(message, str):
-                # Check for control messages (resize)
-                try:
-                    ctrl = json.loads(message)
-                    if ctrl.get("type") == "resize":
-                        _set_winsize(master_fd, ctrl["rows"], ctrl["cols"])
-                        continue
-                except (json.JSONDecodeError, KeyError):
-                    pass
+                # Check for control messages (resize) — only if it looks like JSON object
+                if message.startswith("{"):
+                    try:
+                        ctrl = json.loads(message)
+                        if isinstance(ctrl, dict) and ctrl.get("type") == "resize":
+                            _set_winsize(master_fd, ctrl["rows"], ctrl["cols"])
+                            continue
+                    except (json.JSONDecodeError, KeyError, TypeError):
+                        pass
                 os.write(master_fd, message.encode("utf-8"))
             else:
                 os.write(master_fd, message)
