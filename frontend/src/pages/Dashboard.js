@@ -29,46 +29,57 @@ function isIfaceActive(iface) {
 
 const CHAIN_COLORS = { implant: "text-amber-400", outside: "text-red-400", internal: "text-blue-400" };
 
-// ── Tree branch row (CSS-based, perfectly aligned) ──
+// ── Tree connectors (label → trunk → horizontal arm into device) ──
+// Left: [label + icon] [branch: horiz from label to trunk] [arm: horiz from trunk to device]
+// The trunk is a vertical line on the right edge of the branch column.
+// The arm extends from the trunk into the device center.
+
+const ACTIVE_BORDER = "border-emerald-500 border-solid";
+const INACTIVE_BORDER = "border-zinc-700 border-dashed";
 
 const TreeBranchLeft = ({ active, isFirst, isLast, isOnly }) => {
-  const solidColor = "border-emerald-500";
-  const dashedColor = "border-zinc-700";
-  const color = active ? solidColor : dashedColor;
-  const style = active ? "border-solid" : "border-dashed";
+  const b = active ? ACTIVE_BORDER : INACTIVE_BORDER;
   return (
-    <div className="relative w-16 self-stretch flex items-center">
-      {/* Horizontal branch */}
-      <div className={`absolute left-0 right-0 top-1/2 border-t-2 ${color} ${style}`} />
-      {/* Vertical trunk segment: top half (not for first item) */}
-      {!isFirst && !isOnly && (
-        <div className={`absolute right-0 top-0 bottom-1/2 border-r-2 ${color} ${style}`} />
-      )}
-      {/* Vertical trunk segment: bottom half (not for last item) */}
-      {!isLast && !isOnly && (
-        <div className={`absolute right-0 top-1/2 bottom-0 border-r-2 ${color} ${style}`} />
-      )}
+    <div className="relative w-10 self-stretch flex items-center">
+      {/* Horizontal: label → trunk */}
+      <div className={`absolute left-0 right-0 top-1/2 border-t-2 ${b}`} />
+      {/* Trunk: top half */}
+      {!isFirst && !isOnly && <div className={`absolute right-0 top-0 bottom-1/2 border-r-2 ${b}`} />}
+      {/* Trunk: bottom half */}
+      {!isLast && !isOnly && <div className={`absolute right-0 top-1/2 bottom-0 border-r-2 ${b}`} />}
+    </div>
+  );
+};
+
+const TreeArmLeft = ({ anyActive }) => {
+  // Horizontal arm from trunk into device — uses the "most active" style
+  const b = anyActive ? ACTIVE_BORDER : INACTIVE_BORDER;
+  return (
+    <div className="relative w-12 self-center flex items-center" style={{ height: 2 }}>
+      <div className={`absolute left-0 right-0 top-0 border-t-2 ${b}`} />
     </div>
   );
 };
 
 const TreeBranchRight = ({ active, isFirst, isLast, isOnly }) => {
-  const solidColor = "border-emerald-500";
-  const dashedColor = "border-zinc-700";
-  const color = active ? solidColor : dashedColor;
-  const style = active ? "border-solid" : "border-dashed";
+  const b = active ? ACTIVE_BORDER : INACTIVE_BORDER;
   return (
-    <div className="relative w-16 self-stretch flex items-center">
-      {/* Horizontal branch */}
-      <div className={`absolute left-0 right-0 top-1/2 border-t-2 ${color} ${style}`} />
-      {/* Vertical trunk: top half */}
-      {!isFirst && !isOnly && (
-        <div className={`absolute left-0 top-0 bottom-1/2 border-l-2 ${color} ${style}`} />
-      )}
-      {/* Vertical trunk: bottom half */}
-      {!isLast && !isOnly && (
-        <div className={`absolute left-0 top-1/2 bottom-0 border-l-2 ${color} ${style}`} />
-      )}
+    <div className="relative w-10 self-stretch flex items-center">
+      {/* Horizontal: trunk → label */}
+      <div className={`absolute left-0 right-0 top-1/2 border-t-2 ${b}`} />
+      {/* Trunk: top half */}
+      {!isFirst && !isOnly && <div className={`absolute left-0 top-0 bottom-1/2 border-l-2 ${b}`} />}
+      {/* Trunk: bottom half */}
+      {!isLast && !isOnly && <div className={`absolute left-0 top-1/2 bottom-0 border-l-2 ${b}`} />}
+    </div>
+  );
+};
+
+const TreeArmRight = ({ anyActive }) => {
+  const b = anyActive ? ACTIVE_BORDER : INACTIVE_BORDER;
+  return (
+    <div className="relative w-12 self-center flex items-center" style={{ height: 2 }}>
+      <div className={`absolute left-0 right-0 top-0 border-t-2 ${b}`} />
     </div>
   );
 };
@@ -187,14 +198,13 @@ export default function Dashboard() {
 
         <div className="flex items-center justify-center max-w-5xl mx-auto">
 
-          {/* ── LEFT: connection types ── */}
+          {/* ── LEFT: connection types + tree ── */}
           <div className="shrink-0">
             {leftRows.map((row, i) => {
               const Icon = row.icon;
               const chainColor = CHAIN_COLORS[row.chain] || "";
               return (
                 <div key={row.key} className="flex items-center">
-                  {/* Label + Icon */}
                   <div className={`flex items-center gap-2 justify-end transition-colors py-3 ${row.active ? "text-emerald-400" : "text-muted-foreground/40"}`}>
                     <div className="text-right min-w-[80px]">
                       <span className="text-xs font-medium block">{row.label}</span>
@@ -203,12 +213,14 @@ export default function Dashboard() {
                     </div>
                     <Icon className="w-5 h-5 shrink-0" />
                   </div>
-                  {/* Tree branch */}
                   <TreeBranchLeft active={row.active} isFirst={i === 0} isLast={i === leftCount - 1} isOnly={leftCount === 1} />
                 </div>
               );
             })}
           </div>
+
+          {/* Left arm: horizontal line from trunk into device */}
+          <TreeArmLeft anyActive={leftRows.some(r => r.active)} />
 
           {/* ── CENTER: Device ── */}
           <div className="flex flex-col items-center justify-center flex-1 min-w-[240px] max-w-[360px] py-4">
@@ -236,6 +248,9 @@ export default function Dashboard() {
               <BandBadge label="2.4G" active={frequency_bands["2.4G"]} />
             </div>
           </div>
+
+          {/* Right arm: horizontal line from device into trunk */}
+          <TreeArmRight anyActive={rightRows.some(r => r.active)} />
 
           {/* ── RIGHT: clients ── */}
           <div className="shrink-0">

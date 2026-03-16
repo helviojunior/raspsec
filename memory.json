@@ -482,6 +482,15 @@
     {
       "hash": "483288bb992bd01efdb5191b6bcf8822f8c7049c",
       "message": "Add tools (Device Status, Connectivity, Packet Capture), console banner, and fixes"
+    },
+    {
+      "hash": "13b60b3088913f8d4a6894cbe3286cc292485bd3",
+      "message": "Show network info banner on pre-login screen (not after login)",
+      "skipped": true
+    },
+    {
+      "hash": "878a8b8fefe824e86e314e926e788c1533d90071",
+      "message": "Dashboard: add tree arms into device, VLAN carrier/chain inheritance"
     }
   ]
 }

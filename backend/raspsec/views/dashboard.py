@@ -145,6 +145,13 @@ def _get_interfaces_summary():
                 if name in iface_data and not iface_data[name]["ip"]:
                     iface_data[name]["ip"] = parts[3]
 
+    # VLAN carrier follows parent interface carrier
+    for name, data in iface_data.items():
+        if data["type"] == "vlan" and "." in name:
+            parent = name.split(".")[0]
+            if parent in iface_data:
+                data["carrier"] = iface_data[parent]["carrier"]
+
     # Add chain mappings
     chain_map = {cm.interface: cm.chain for cm in ChainMapping.objects.all()}
     for name, data in iface_data.items():

@@ -3,6 +3,7 @@ import re
 from raspsec.libs.cmd import Exec
 from raspsec.libs.config import load_config, save_config
 from raspsec.libs.log import StrataLogger
+from raspsec.dbmodels.firewall import ChainMapping
 
 CONFIG_FILE = "vlans.yml"
 
@@ -81,6 +82,10 @@ class VlanService:
         save_config(CONFIG_FILE, {"vlans": vlans})
         VlanService._create_vlan(data)
 
+        # Inherit chain from parent interface
+        iface = VlanService._iface_name(data["parent"], data["vlan_id"])
+        VlanService._inherit_parent_chain(data["parent"], iface)
+
     @staticmethod
     def remove_vlan(parent, vlan_id):
         """Remove a VLAN by parent and VLAN ID."""
@@ -155,6 +160,20 @@ class VlanService:
             raise ValueError(f"Invalid parent interface: {parent}")
         if vlan_id is None or not isinstance(vlan_id, int) or vlan_id < 1 or vlan_id > 4094:
             raise ValueError(f"vlan_id must be between 1 and 4094, got: {vlan_id}")
+
+    @staticmethod
+    def _inherit_parent_chain(parent, vlan_iface):
+        """Copy the firewall chain from the parent interface to the VLAN."""
+        try:
+            parent_chain = ChainMapping.objects.filter(interface=parent).values_list("chain", flat=True).first()
+            if parent_chain:
+                ChainMapping.objects.update_or_create(
+                    interface=vlan_iface,
+                    defaults={"chain": parent_chain},
+                )
+                logger.log(f"VLAN {vlan_iface} inherited chain '{parent_chain}' from {parent}")
+        except Exception as e:
+            logger.log(f"Failed to inherit chain for {vlan_iface}: {e}")
 
     @staticmethod
     def apply_on_boot():
