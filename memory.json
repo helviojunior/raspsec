@@ -339,6 +339,15 @@
     {
       "hash": "a774bd8dd302c89817b7fd2cc8aaed4e52551aa0",
       "message": "Add user profile settings, password toggle on WiFi, fix input ring offset"
+    },
+    {
+      "hash": "c71cbd0448e9c8d7bf8422f5c3620938104b3453",
+      "message": "Use static version in USB gadget RNDIS name instead of MAC",
+      "skipped": true
+    },
+    {
+      "hash": "7b551d03129338428c52fc7cdc36902e49b5fb63",
+      "message": "Replace firmware rainbow splash with StrataSec logo"
     }
   ]
 }
