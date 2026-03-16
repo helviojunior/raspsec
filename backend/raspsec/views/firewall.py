@@ -66,6 +66,21 @@ class NatRuleView(APIView):
         return Response({"detail": "Regra NAT removida com sucesso."})
 
 
+class FirewallReorderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        rule_type = request.data.get("type", "rule")
+        ordered_ids = request.data.get("ordered_ids", [])
+        if not ordered_ids:
+            return Response({"detail": "Lista de IDs é obrigatória."}, status=400)
+        if rule_type == "nat":
+            FirewallService.reorder_nat_rules(ordered_ids)
+        else:
+            FirewallService.reorder_rules(ordered_ids)
+        return Response({"detail": "Ordem atualizada com sucesso."})
+
+
 class FirewallApplyView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -1,9 +1,10 @@
+from django.db import models
 from raspsec.libs.cmd import Exec
 from raspsec.libs.log import StrataLogger
 
 logger = StrataLogger("FirewallService")
 
-CHAINS = ["RASPSEC_IMPLANT", "RASPSEC_INTERNAL", "RASPSEC_OUTSIDE"]
+CHAINS = ["RASPSEC_IMPLANT", "RASPSEC_INTERNAL", "RASPSEC_OUTSIDE", "RASPSEC_FIREWALL"]
 
 DEFAULT_CHAIN_MAPPINGS = {
     "eth0": "implant",
@@ -11,15 +12,21 @@ DEFAULT_CHAIN_MAPPINGS = {
     "usb0": "internal",
 }
 
+ANTI_LOCKOUT_RULES = [
+    {"chain": "internal", "protocol": "tcp", "port": "443", "source_ip": "", "action": "allow", "priority": -2, "description": "Anti-lockout: HTTPS", "is_system": True},
+    {"chain": "internal", "protocol": "tcp", "port": "22", "source_ip": "", "action": "allow", "priority": -1, "description": "Anti-lockout: SSH", "is_system": True},
+]
+
 DEFAULT_RULES = [
-    {"chain": "internal", "protocol": "any", "port": "", "source_ip": "", "action": "allow", "priority": 0, "description": "Allow all from Internal"},
-    {"chain": "outside", "protocol": "any", "port": "", "source_ip": "", "action": "deny", "priority": 0, "description": "Deny all from Outside"},
-    {"chain": "implant", "protocol": "any", "port": "", "source_ip": "", "action": "deny", "priority": 0, "description": "Deny all from Implant"},
+    {"chain": "internal", "protocol": "any", "port": "", "source_ip": "", "action": "allow", "priority": 10, "description": "Allow all from Internal"},
+    {"chain": "outside", "protocol": "any", "port": "", "source_ip": "", "action": "deny", "priority": 10, "description": "Deny all from Outside"},
+    {"chain": "implant", "protocol": "any", "port": "", "source_ip": "", "action": "deny", "priority": 10, "description": "Deny all from Implant"},
 ]
 
 DEFAULT_NAT_RULES = [
     {"source_chain": "internal", "dest_chain": "outside", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 0, "description": "NAT Internal → Outside", "enabled": True},
     {"source_chain": "internal", "dest_chain": "implant", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 1, "description": "NAT Internal → Implant", "enabled": True},
+    {"source_chain": "firewall", "dest_chain": "implant", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 2, "description": "NAT Firewall → Implant", "enabled": True},
 ]
 
 
@@ -37,8 +44,16 @@ class FirewallService:
                 defaults={"chain": chain},
             )
 
+        # Anti-lockout rules (always recreated if missing)
+        for rule in ANTI_LOCKOUT_RULES:
+            FirewallRule.objects.get_or_create(
+                is_system=True,
+                description=rule["description"],
+                defaults=rule,
+            )
+
         # Default rules
-        if not FirewallRule.objects.exists():
+        if FirewallRule.objects.filter(is_system=False).count() == 0:
             for rule in DEFAULT_RULES:
                 FirewallRule.objects.create(**rule)
 
@@ -59,7 +74,7 @@ class FirewallService:
         return list(
             FirewallRule.objects.all()
             .order_by("chain", "priority")
-            .values("id", "chain", "protocol", "port", "source_ip", "action", "priority", "description", "enabled")
+            .values("id", "chain", "protocol", "port", "source_ip", "action", "priority", "description", "enabled", "is_system")
         )
 
     @staticmethod
@@ -88,13 +103,26 @@ class FirewallService:
         if rule_id:
             FirewallRule.objects.filter(id=rule_id).update(**fields)
         else:
+            # New rules go to the top (priority 0, shift others down)
+            FirewallRule.objects.filter(chain=fields["chain"]).update(
+                priority=models.F("priority") + 1
+            )
+            fields["priority"] = 0
             FirewallRule.objects.create(**fields)
         FirewallService.apply()
 
     @staticmethod
     def delete_rule(rule_id):
         from raspsec.dbmodels.firewall import FirewallRule
-        FirewallRule.objects.filter(id=rule_id).delete()
+        FirewallRule.objects.filter(id=rule_id, is_system=False).delete()
+        FirewallService.apply()
+
+    @staticmethod
+    def reorder_rules(ordered_ids):
+        """Reorder rules by a list of IDs (first = priority 0)."""
+        from raspsec.dbmodels.firewall import FirewallRule
+        for i, rule_id in enumerate(ordered_ids):
+            FirewallRule.objects.filter(id=rule_id).update(priority=i)
         FirewallService.apply()
 
     @staticmethod
@@ -116,6 +144,9 @@ class FirewallService:
         if rule_id:
             NatRule.objects.filter(id=rule_id).update(**fields)
         else:
+            # New NAT rules go to the top
+            NatRule.objects.all().update(priority=models.F("priority") + 1)
+            fields["priority"] = 0
             NatRule.objects.create(**fields)
         FirewallService.apply()
 
@@ -123,6 +154,14 @@ class FirewallService:
     def delete_nat_rule(rule_id):
         from raspsec.dbmodels.firewall import NatRule
         NatRule.objects.filter(id=rule_id).delete()
+        FirewallService.apply()
+
+    @staticmethod
+    def reorder_nat_rules(ordered_ids):
+        """Reorder NAT rules by a list of IDs (first = priority 0)."""
+        from raspsec.dbmodels.firewall import NatRule
+        for i, rule_id in enumerate(ordered_ids):
+            NatRule.objects.filter(id=rule_id).update(priority=i)
         FirewallService.apply()
 
     @staticmethod

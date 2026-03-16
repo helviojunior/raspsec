@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Save, RefreshCw, Shield, ArrowRightLeft, Pencil } from "lucide-react";
+import { Plus, Trash2, Save, RefreshCw, Shield, ArrowRightLeft, Pencil, GripVertical, Lock } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -8,7 +8,7 @@ import { Label } from "components/ui/label";
 import { Toggle } from "components/ui/toggle";
 import { cn } from "lib/utils";
 
-const CHAINS = ["internal", "implant", "outside"];
+const CHAINS = ["internal", "implant", "outside", "firewall"];
 const PROTOCOLS = ["any", "tcp", "udp", "icmp"];
 const ACTIONS = ["allow", "deny"];
 const NAT_TYPES = ["masquerade", "snat", "dnat"];
@@ -17,6 +17,7 @@ const chainColor = {
   internal: "text-emerald-400",
   implant: "text-amber-400",
   outside: "text-red-400",
+  firewall: "text-blue-400",
 };
 
 const actionColor = {
@@ -108,6 +109,36 @@ function RulesTab() {
     fetchRules();
   };
 
+  const [dragId, setDragId] = useState(null);
+
+  const handleDragStart = (id) => setDragId(id);
+  const handleDragOver = (e) => e.preventDefault();
+  const handleDrop = async (chain) => {
+    if (!dragId) return;
+    const chainRules = rules.filter((r) => r.chain === chain);
+    const dragIdx = chainRules.findIndex((r) => r.id === dragId);
+    if (dragIdx < 0) return;
+    // Find drop target from mouse position (handled by drop on specific row)
+  };
+
+  const handleDropOnRow = async (targetId, chain) => {
+    if (!dragId || dragId === targetId) { setDragId(null); return; }
+    const chainRules = rules.filter((r) => r.chain === chain);
+    const systemRules = chainRules.filter((r) => r.is_system);
+    const userRules = chainRules.filter((r) => !r.is_system);
+    const dragIdx = userRules.findIndex((r) => r.id === dragId);
+    const dropIdx = userRules.findIndex((r) => r.id === targetId);
+    if (dragIdx < 0 || dropIdx < 0) { setDragId(null); return; }
+    const reordered = [...userRules];
+    const [moved] = reordered.splice(dragIdx, 1);
+    reordered.splice(dropIdx, 0, moved);
+    // System rules keep their order, user rules are reordered after them
+    const allIds = [...systemRules.map((r) => r.id), ...reordered.map((r) => r.id)];
+    await api.put("/api/firewall/reorder/", { type: "rule", ordered_ids: allIds });
+    setDragId(null);
+    fetchRules();
+  };
+
   const grouped = CHAINS.map((chain) => ({
     chain,
     rules: rules.filter((r) => r.chain === chain),
@@ -143,6 +174,7 @@ function RulesTab() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
+                  <th className="w-8"></th>
                   <th className="text-left py-2 px-3 font-medium">Protocol</th>
                   <th className="text-left py-2 px-3 font-medium">Port</th>
                   <th className="text-left py-2 px-3 font-medium">Source</th>
@@ -155,11 +187,24 @@ function RulesTab() {
                 {chainRules.map((rule) => (
                   <tr
                     key={rule.id}
+                    draggable={!rule.is_system}
+                    onDragStart={() => handleDragStart(rule.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDropOnRow(rule.id, chain)}
                     className={cn(
                       "border-b border-border/50 hover:bg-muted/20 transition-colors",
-                      !rule.enabled && "opacity-40"
+                      !rule.enabled && "opacity-40",
+                      dragId === rule.id && "opacity-30",
+                      rule.is_system && "bg-blue-500/5"
                     )}
                   >
+                    <td className="py-2 px-1 text-center">
+                      {rule.is_system ? (
+                        <Lock size={12} className="text-blue-400 mx-auto" title="Regra do sistema" />
+                      ) : (
+                        <GripVertical size={14} className="text-muted-foreground/50 cursor-grab mx-auto" />
+                      )}
+                    </td>
                     <td className="py-2 px-3 text-foreground uppercase">{rule.protocol}</td>
                     <td className="py-2 px-3 text-foreground font-mono">{rule.port || "ALL"}</td>
                     <td className="py-2 px-3 text-foreground font-mono">{rule.source_ip || "ANY"}</td>
@@ -171,25 +216,29 @@ function RulesTab() {
                     <td className="py-2 px-3 text-muted-foreground">{rule.description}</td>
                     <td className="py-2 px-3">
                       <div className="flex items-center justify-center gap-1">
-                        <Toggle
-                          checked={rule.enabled}
-                          onChange={() => toggleRule(rule)}
-                          className="scale-75"
-                        />
-                        <button
-                          onClick={() => { setEditRule(rule); setShowForm(true); }}
-                          className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                          title="Editar"
-                        >
-                          <Pencil size={13} />
-                        </button>
-                        <button
-                          onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) deleteRule(rule.id); }}
-                          className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
-                          title="Remover"
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                        {!rule.is_system && (
+                          <>
+                            <Toggle
+                              checked={rule.enabled}
+                              onChange={() => toggleRule(rule)}
+                              className="scale-75"
+                            />
+                            <button
+                              onClick={() => { setEditRule(rule); setShowForm(true); }}
+                              className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                              title="Editar"
+                            >
+                              <Pencil size={13} />
+                            </button>
+                            <button
+                              onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) deleteRule(rule.id); }}
+                              className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
+                              title="Remover"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -352,6 +401,23 @@ function NatTab() {
     fetchNat();
   };
 
+  const [dragId, setDragId] = useState(null);
+
+  const handleDragStart = (id) => setDragId(id);
+  const handleDragOver = (e) => e.preventDefault();
+  const handleDropOnRow = async (targetId) => {
+    if (!dragId || dragId === targetId) { setDragId(null); return; }
+    const dragIdx = natRules.findIndex((r) => r.id === dragId);
+    const dropIdx = natRules.findIndex((r) => r.id === targetId);
+    if (dragIdx < 0 || dropIdx < 0) { setDragId(null); return; }
+    const reordered = [...natRules];
+    const [moved] = reordered.splice(dragIdx, 1);
+    reordered.splice(dropIdx, 0, moved);
+    await api.put("/api/firewall/reorder/", { type: "nat", ordered_ids: reordered.map((r) => r.id) });
+    setDragId(null);
+    fetchNat();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end gap-2">
@@ -379,6 +445,7 @@ function NatTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-muted-foreground">
+                <th className="w-8"></th>
                 <th className="text-left py-2 px-3 font-medium">Source</th>
                 <th className="text-center py-2 px-3 font-medium"></th>
                 <th className="text-left py-2 px-3 font-medium">Destination</th>
@@ -393,11 +460,19 @@ function NatTab() {
               {natRules.map((rule) => (
                 <tr
                   key={rule.id}
+                  draggable
+                  onDragStart={() => handleDragStart(rule.id)}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDropOnRow(rule.id)}
                   className={cn(
                     "border-b border-border/50 hover:bg-muted/20 transition-colors",
-                    !rule.enabled && "opacity-40"
+                    !rule.enabled && "opacity-40",
+                    dragId === rule.id && "opacity-30"
                   )}
                 >
+                  <td className="py-2 px-1 text-center">
+                    <GripVertical size={14} className="text-muted-foreground/50 cursor-grab mx-auto" />
+                  </td>
                   <td className={cn("py-2 px-3 font-medium capitalize", chainColor[rule.source_chain])}>
                     {rule.source_chain}
                   </td>

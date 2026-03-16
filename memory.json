@@ -420,6 +420,10 @@
     {
       "hash": "23af8ab599e6c33d0509dc4481457ed3408f33e9",
       "message": "Add default NAT masquerade rules (Internal→Outside, Internal→Implant)"
+    },
+    {
+      "hash": "b41b79e03576ec006a768b09aafdde397425abba",
+      "message": "Firewall: drag & drop reorder, anti-lockout rules, firewall chain"
     }
   ]
 }

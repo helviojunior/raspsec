@@ -8,6 +8,7 @@ class FirewallRule(Base):
         INTERNAL = "internal", "Internal"
         IMPLANT = "implant", "Implant"
         OUTSIDE = "outside", "Outside"
+        FIREWALL = "firewall", "Firewall (Self)"
 
     class Protocol(models.TextChoices):
         ANY = "any", "ANY"
@@ -26,6 +27,7 @@ class FirewallRule(Base):
     action = models.CharField(max_length=10, choices=Action.choices)
     priority = models.IntegerField(default=100)
     description = models.CharField(max_length=200, blank=True, default="")
+    is_system = models.BooleanField(default=False, help_text="System rules cannot be deleted or reordered.")
 
     class Meta:
         db_table = "raspsec_firewall_rule"
@@ -43,6 +45,7 @@ class NatRule(Base):
         INTERNAL = "internal", "Internal"
         IMPLANT = "implant", "Implant"
         OUTSIDE = "outside", "Outside"
+        FIREWALL = "firewall", "Firewall (Self)"
 
     class NatType(models.TextChoices):
         MASQUERADE = "masquerade", "Masquerade"
@@ -81,6 +84,7 @@ class ChainMapping(Base):
         INTERNAL = "internal", "Internal"
         IMPLANT = "implant", "Implant"
         OUTSIDE = "outside", "Outside"
+        FIREWALL = "firewall", "Firewall (Self)"
 
     interface = models.CharField(max_length=50, unique=True)
     chain = models.CharField(max_length=20, choices=Chain.choices)
