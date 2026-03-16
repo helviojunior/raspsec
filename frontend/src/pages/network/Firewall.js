@@ -46,6 +46,7 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
     setDragState({
       index,
       id,
+      mouseX: e.clientX,
       mouseY: e.clientY,
       startY: e.clientY,
       rowHeight: rect.height,

@@ -512,6 +512,10 @@
     {
       "hash": "d93719723fe50cb6a5936f6de9bc557c64fb513c",
       "message": "Fix packet capture dying immediately and cron re-applying all configs"
+    },
+    {
+      "hash": "952bafad172e02c2698c48624adb39fdb9420d57",
+      "message": "Fix drag ghost alignment: capture mouseX on drag start"
     }
   ]
 }
