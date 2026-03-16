@@ -449,6 +449,10 @@
     {
       "hash": "e077a55db1703d30838c94b73abc0d76dbe53121",
       "message": "Reorder Networking submenu: General, Devices, Firewall/NAT, WiFi, USB Gadget"
+    },
+    {
+      "hash": "fa51f3d929126eb47ec2e4b5129be23055aecf68",
+      "message": "Highlight active menu icon in green when sidebar is collapsed"
     }
   ]
 }

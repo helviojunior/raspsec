@@ -205,7 +205,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
               ? "justify-center p-2.5"
               : "justify-between px-4 py-2.5",
             isActive
-              ? "text-foreground"
+              ? effectiveCollapsed ? "text-emerald-400" : "text-foreground"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
           )}
         >
