@@ -263,6 +263,10 @@
     {
       "hash": "0ebc7bdeb587ed16cb688af257ad8fc323337394",
       "message": "Make WebShell span full width and reorder sidebar menus"
+    },
+    {
+      "hash": "06d76dcbaa5000dee44b02b3ab7df90e1ddc0d31",
+      "message": "Set default superadmin name to StrataSec Admin"
     }
   ]
 }

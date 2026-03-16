@@ -47,6 +47,8 @@ def _ensure_superadmin():
         User.objects.create_superuser(
             username='stratasec',
             password='@Pass123',
+            first_name='StrataSec',
+            last_name='Admin',
         )
         log.info("Default superadmin 'stratasec' created.")
 
