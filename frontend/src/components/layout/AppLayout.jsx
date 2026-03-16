@@ -47,7 +47,7 @@ const menuStructure = [
       { id: "wifi", path: "/network/wifi", label: "WiFi", icon: Network },
       { id: "usb-gadget", path: "/network/usb-gadget", label: "USB Gadget", icon: Usb },
       { id: "devices", path: "/network/devices", label: "Devices", icon: EthernetPort },
-      { id: "firewall", path: "/network/firewall", label: "Firewall", icon: ShieldCheck },
+      { id: "firewall", path: "/network/firewall", label: "Firewall/NAT", icon: ShieldCheck },
     ],
   },
   {

@@ -441,6 +441,10 @@
     {
       "hash": "e99e4f93b927b41ea68660c9806d88c98a9bad54",
       "message": "Rename sidebar labels: Networking -> WiFi, Network -> USB Gadget"
+    },
+    {
+      "hash": "b0f8fb7525a74defbcfd811f17623ddd0db9bed7",
+      "message": "Rename Firewall to Firewall/NAT in sidebar"
     }
   ]
 }
