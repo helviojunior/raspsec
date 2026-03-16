@@ -65,6 +65,31 @@ def write_dhcpcd():
         unet = usb.get("networking", _USB_NET_DEFAULTS)
         content += _interface_section("usb0", unet)
 
+    # Add DHCP client interfaces (e.g., eth0 when user enables DHCP)
+    dhcp_cfg = load_config("dhcp_clients.yml", {"interfaces": {}})
+    dhcp_ifaces = dhcp_cfg.get("interfaces", {})
+
+    # Build deny list: interfaces that are NOT DHCP clients
+    deny_list = []
+    for iface_name, enabled in dhcp_ifaces.items():
+        if not enabled:
+            continue
+    # eth0 gets DHCP client only if explicitly enabled
+    if not dhcp_ifaces.get("eth0", False):
+        # Already denied above in the base config
+        pass
+    else:
+        # Remove the denyinterfaces eth0 line since user wants DHCP client
+        content = content.replace("denyinterfaces eth0\n", "")
+
+    # Add any other DHCP-client-enabled interfaces (VLANs, etc.)
+    for iface_name, enabled in dhcp_ifaces.items():
+        if enabled and iface_name != "eth0":
+            content += (
+                f"\n# DHCP client on {iface_name}\n"
+                f"interface {iface_name}\n"
+            )
+
     logger.log(f"Writing dhcpcd config to {DHCPCD_CONF}")
     write_system_file(DHCPCD_CONF, content)
 

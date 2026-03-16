@@ -13,6 +13,7 @@ from raspsec.views.netstat import NetworkStatusView, GatewayConfigView
 from raspsec.views.dns import DnsConfigView, DnsSyncView, DnsServersView
 from raspsec.views.firewall import FirewallConfigView, FirewallRuleView, NatRuleView, FirewallApplyView
 from raspsec.views.vlan import VlanConfigView, VlanView, VlanApplyView
+from raspsec.views.devices import DevicesView, DeviceToggleView, DeviceMacView, DeviceChainView, DeviceDhcpClientView
 
 
 app_name = 'raspsec'
@@ -61,6 +62,13 @@ urlpatterns = [
     path('api/network/vlans/', VlanConfigView.as_view(), name='vlan-config'),
     path('api/network/vlans/manage/', VlanView.as_view(), name='vlan-manage'),
     path('api/network/vlans/apply/', VlanApplyView.as_view(), name='vlan-apply'),
+
+    # Devices (interfaces)
+    path('api/network/devices/', DevicesView.as_view(), name='devices'),
+    path('api/network/devices/toggle/', DeviceToggleView.as_view(), name='device-toggle'),
+    path('api/network/devices/mac/', DeviceMacView.as_view(), name='device-mac'),
+    path('api/network/devices/chain/', DeviceChainView.as_view(), name='device-chain'),
+    path('api/network/devices/dhcp-client/', DeviceDhcpClientView.as_view(), name='device-dhcp-client'),
 
     # Shell
     path('api/shell/info/', ShellInfoView.as_view(), name='shell-info'),

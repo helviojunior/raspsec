@@ -10,6 +10,7 @@ import Wifi from "pages/network/Wifi";
 import UsbGadget from "pages/network/UsbGadget";
 import NetworkStatus from "pages/network/Status";
 import Firewall from "pages/network/Firewall";
+import Devices from "pages/network/Devices";
 import "./App.css";
 
 function RequireHealthy({ children }) {
@@ -49,6 +50,7 @@ function App() {
               <Route path="/network/usb-gadget" element={<UsbGadget />} />
               <Route path="/network/status" element={<NetworkStatus />} />
               <Route path="/network/firewall" element={<Firewall />} />
+              <Route path="/network/devices" element={<Devices />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
             </Route>
 

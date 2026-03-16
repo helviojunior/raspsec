@@ -313,6 +313,10 @@
     {
       "hash": "6e093d92524c4eb2b1415fbffeee088c3a3a2ff6",
       "message": "Rename sidebar menu labels: WiFi -> Networking, USB Gadget Mode -> Network"
+    },
+    {
+      "hash": "d1f94cf520d868056ad8adbbcffbebc039c17ac6",
+      "message": "Add Devices page for network interface management"
     }
   ]
 }
