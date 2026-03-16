@@ -220,36 +220,52 @@ class CaptureStartView(APIView):
         # Create capture directory
         os.makedirs(CAPTURE_DIR, exist_ok=True)
 
-        # Generate unique pcap filename
+        # Generate unique pcap filename and pidfile
         ts = time.strftime("%Y%m%d_%H%M%S")
         pcap_path = os.path.join(CAPTURE_DIR, f"capture_{interface}_{ts}.pcap")
+        pid_path = os.path.join(CAPTURE_DIR, f"capture_{interface}_{ts}.pid")
 
-        # Build tcpdump command
-        cmd = f"sudo /usr/sbin/tcpdump -i {interface} -w {pcap_path}"
+        # Build tcpdump command — write PID to file so we can track the real process
+        cmd = f"sudo /usr/sbin/tcpdump -i {interface} -w {pcap_path} -Z root"
         if max_packets > 0:
             cmd += f" -c {max_packets}"
         if bpf_filter:
             cmd += f" {bpf_filter}"
 
-        env = os.environ.copy()
-        env["PATH"] = (
-            "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"
-            + env.get("PATH", "")
+        # Launch in background with nohup, write PID
+        # Using bash -c to get the PID of the actual tcpdump process
+        launch_cmd = (
+            f"nohup {cmd} > /dev/null 2>&1 & "
+            f"echo $! > {pid_path}"
         )
 
-        try:
-            proc = subprocess.Popen(
-                cmd, shell=True, cwd="/tmp", env=env,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            )
-        except Exception as e:
-            return Response({"detail": f"Erro ao iniciar tcpdump: {e}"}, status=500)
+        ret = subprocess.run(
+            launch_cmd, shell=True, cwd="/tmp",
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            timeout=10,
+        )
 
-        session_id = str(proc.pid)
+        if ret.returncode != 0:
+            return Response({"detail": f"Erro ao iniciar tcpdump: {ret.stderr.decode()}"}, status=500)
+
+        # Read PID (small delay for file write)
+        time.sleep(0.3)
+        tcpdump_pid = 0
+        try:
+            with open(pid_path) as f:
+                tcpdump_pid = int(f.read().strip())
+        except (OSError, ValueError):
+            return Response({"detail": "Erro ao obter PID do tcpdump."}, status=500)
+
+        # Verify process is actually running
+        if not _pid_alive(tcpdump_pid):
+            return Response({"detail": "tcpdump não iniciou corretamente."}, status=500)
+
+        session_id = str(tcpdump_pid)
         _active_captures[session_id] = {
-            "pid": proc.pid,
-            "proc": proc,
+            "pid": tcpdump_pid,
             "pcap_path": pcap_path,
+            "pid_path": pid_path,
             "interface": interface,
             "filter": bpf_filter,
             "started": time.time(),
@@ -276,20 +292,9 @@ class CaptureStatusView(APIView):
         session_id, cap = next(iter(_active_captures.items()))
         elapsed = time.time() - cap["started"]
 
-        # Get file size
         pcap_size = 0
         if os.path.isfile(cap["pcap_path"]):
             pcap_size = os.path.getsize(cap["pcap_path"])
-
-        # Get packet count from stderr (tcpdump prints stats there)
-        packets = 0
-        proc = cap.get("proc")
-        if proc and proc.poll() is not None:
-            # Process ended — read stderr for stats
-            stderr = proc.stderr.read().decode("utf-8", errors="replace") if proc.stderr else ""
-            match = re.search(r"(\d+) packets captured", stderr)
-            if match:
-                packets = int(match.group(1))
 
         return Response({
             "active": True,
@@ -298,7 +303,6 @@ class CaptureStatusView(APIView):
             "filter": cap["filter"],
             "elapsed": round(elapsed, 1),
             "pcap_size": pcap_size,
-            "packets": packets,
         })
 
 
@@ -307,33 +311,32 @@ class CaptureStopView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        _cleanup_dead_captures()
-
         if not _active_captures:
             return Response({"detail": "Nenhuma captura ativa."}, status=404)
 
         session_id, cap = next(iter(_active_captures.items()))
         pcap_path = cap["pcap_path"]
-        proc = cap.get("proc")
+        pid = cap["pid"]
 
-        # Send SIGTERM to tcpdump (needs to go to the sudo child)
-        try:
-            subprocess.run(
-                f"sudo /bin/kill {cap['pid']}",
-                shell=True, timeout=5,
-            )
-        except Exception:
-            pass
+        # Send SIGTERM to tcpdump via sudo kill
+        subprocess.run(f"sudo /bin/kill -TERM {pid}", shell=True, timeout=5,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-        # Wait for process to finish
-        if proc:
-            try:
-                proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                proc.kill()
+        # Wait for process to exit
+        for _ in range(20):
+            if not _pid_alive(pid):
+                break
+            time.sleep(0.25)
+        else:
+            # Force kill
+            subprocess.run(f"sudo /bin/kill -9 {pid}", shell=True, timeout=5,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(0.5)
 
-        # Small delay for file flush
-        time.sleep(0.5)
+        # Clean up pidfile
+        pid_path = cap.get("pid_path", "")
+        if pid_path and os.path.isfile(pid_path):
+            os.unlink(pid_path)
 
         # Remove from active
         del _active_captures[session_id]
@@ -341,17 +344,13 @@ class CaptureStopView(APIView):
         # Return pcap file
         if os.path.isfile(pcap_path) and os.path.getsize(pcap_path) > 0:
             filename = os.path.basename(pcap_path)
-            response = FileResponse(
+            return FileResponse(
                 open(pcap_path, "rb"),
                 content_type="application/vnd.tcpdump.pcap",
                 as_attachment=True,
                 filename=filename,
             )
-            # Schedule cleanup after response is sent
-            response._pcap_cleanup_path = pcap_path
-            return response
         else:
-            # Clean up empty file
             if os.path.isfile(pcap_path):
                 os.unlink(pcap_path)
             return Response(
@@ -360,12 +359,24 @@ class CaptureStopView(APIView):
             )
 
 
+def _pid_alive(pid):
+    """Check if a process is running."""
+    try:
+        os.kill(pid, 0)
+        return True
+    except (OSError, ProcessLookupError):
+        return False
+
+
 def _cleanup_dead_captures():
-    """Remove captures whose process has exited."""
+    """Remove captures whose tcpdump process has exited."""
     dead = []
     for sid, cap in _active_captures.items():
-        proc = cap.get("proc")
-        if proc and proc.poll() is not None:
+        if not _pid_alive(cap["pid"]):
             dead.append(sid)
     for sid in dead:
+        # Clean up pidfile
+        pid_path = _active_captures[sid].get("pid_path", "")
+        if pid_path and os.path.isfile(pid_path):
+            os.unlink(pid_path)
         del _active_captures[sid]

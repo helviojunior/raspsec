@@ -508,6 +508,10 @@
     {
       "hash": "f48d5041872edbafdb9647cc7b992106cc976059",
       "message": "Fix missing tools: fallback commands, interface selector, install packages"
+    },
+    {
+      "hash": "d93719723fe50cb6a5936f6de9bc557c64fb513c",
+      "message": "Fix packet capture dying immediately and cron re-applying all configs"
     }
   ]
 }

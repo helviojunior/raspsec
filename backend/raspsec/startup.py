@@ -18,6 +18,7 @@ _SKIP_COMMANDS = {
     "check", "shell", "dbshell", "inspectdb", "flush",
     "createsuperuser", "changepassword", "compilemessages",
     "makemessages", "squashmigrations", "test", "sendtestemail",
+    "crontab",
 }
 
 
