@@ -7,12 +7,8 @@ import { Button } from "components/ui/button";
 // ── SVG Icons ──
 
 const EthernetIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="7" width="20" height="10" rx="3" />
-    <circle cx="7" cy="12" r="1" fill="currentColor" stroke="none" />
-    <circle cx="10.5" cy="12" r="1" fill="currentColor" stroke="none" />
-    <circle cx="14" cy="12" r="1" fill="currentColor" stroke="none" />
-    <circle cx="17.5" cy="12" r="1" fill="currentColor" stroke="none" />
+  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
+    <path d="M80-200v-80h400v80H80Zm0-200v-80h200v80H80Zm0-200v-80h200v80H80Zm760 400-36-120H664l-36 120h-84l144-440h92l144 440h-84ZM684-400h152l-74-246h-4l-74 246Z"/>
   </svg>
 );
 
@@ -73,13 +69,8 @@ const VpnIcon = ({ className = "w-5 h-5" }) => (
 );
 
 const UsbIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="10" cy="7" r="1" /><circle cx="4" cy="20" r="1" />
-    <path d="M4.7 19.3 8 16" /><path d="m8 16-3-3 5-5" />
-    <circle cx="14" cy="15" r="1" />
-    <path d="M10 6V3h4l2 2-2 2h-4" />
-    <path d="m14 14 5-5" /><path d="m18 11 1-1-1-1" />
-    <path d="M10 8v7c0 .6.4 1 1 1h3" />
+  <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
+    <path d="M480-80q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM360-200v-80h240v80H360Zm-30-120q-71-53-110.5-124.5T180-600q0-133 93.5-226.5T500-920q17 0 28.5 11.5T540-880q0 17-11.5 28.5T500-840q-100 0-170 70t-70 170q0 72 34.5 127.5T390-388l30 28v40h120v-40l30-28q61-59 95.5-114.5T700-630h-60v-80h80q0-17-3-33.5T708-776l57-57q14 26 22 54.5t10 58.5h43v80h-43q-7 73-43 137T660-388v68H330Z"/>
   </svg>
 );
 

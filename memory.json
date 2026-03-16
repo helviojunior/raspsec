@@ -466,6 +466,10 @@
     {
       "hash": "7dadc813cf25885ac98604d83123c9e6051f8ebe",
       "message": "Improve dashboard icons, memory stats, and pfSense-style drag & drop"
+    },
+    {
+      "hash": "38885cdabae3d924b33d36ed635f14733c817a6e",
+      "message": "Firewall: full-row drag, aligned ghost, and apply-before-persist workflow"
     }
   ]
 }
