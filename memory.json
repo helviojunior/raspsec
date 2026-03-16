@@ -267,6 +267,10 @@
     {
       "hash": "06d76dcbaa5000dee44b02b3ab7df90e1ddc0d31",
       "message": "Set default superadmin name to StrataSec Admin"
+    },
+    {
+      "hash": "103a8ec08376faccd11f222c7d0f8cef716c7b94",
+      "message": "Fix USB gadget RNDIS name and ensure boot independence from backend"
     }
   ]
 }

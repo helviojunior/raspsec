@@ -75,9 +75,6 @@ class UsbGadgetService:
         # Load dwc2 overlay
         Exec.execute("sudo /sbin/modprobe dwc2", raise_error=False)
 
-        # Write modprobe config with MAC-based product name
-        UsbGadgetService._write_modprobe_conf()
-
         # Persist dtoverlay=dwc2 in peripheral mode in /boot/firmware/config.txt
         ret, out = Exec.execute(
             "/bin/grep -c 'dtoverlay=dwc2' /boot/firmware/config.txt",
