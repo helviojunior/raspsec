@@ -16,6 +16,7 @@ from raspsec.views.vlan import VlanConfigView, VlanView, VlanApplyView
 from raspsec.views.devices import (
     DevicesView, DeviceToggleView, DeviceMacView, DeviceChainView,
     DeviceDhcpClientView, DeviceWifiModeView, BridgeView,
+    DeviceDetailView, DeviceUpdateView,
 )
 from raspsec.views.ssh_keys import SSHKeysView
 from raspsec.views.dashboard import DashboardView
@@ -91,6 +92,8 @@ urlpatterns = [
     path('api/network/devices/dhcp-client/', DeviceDhcpClientView.as_view(), name='device-dhcp-client'),
     path('api/network/devices/wifi-mode/', DeviceWifiModeView.as_view(), name='device-wifi-mode'),
     path('api/network/devices/bridge/', BridgeView.as_view(), name='device-bridge'),
+    path('api/network/devices/<str:name>/', DeviceDetailView.as_view(), name='device-detail'),
+    path('api/network/devices/<str:name>/update/', DeviceUpdateView.as_view(), name='device-update'),
 
     # WiFi Client
     path('api/wifi-client/scan/', WifiClientScanView.as_view(), name='wifi-client-scan'),

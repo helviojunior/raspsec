@@ -398,10 +398,7 @@ export default function Dashboard() {
 
         <div className="mt-6 pt-4 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            {system.hostname && <>Host: <span className="text-foreground">{system.hostname}</span> · </>}
-            {system.cpu_temp > 0 && <>CPU: <span className="text-foreground">{system.cpu_temp}°C</span> · </>}
-            {system.memory_mb > 0 && <>Mem: <span className="text-foreground">{system.memory_used_mb}/{system.memory_mb} MB ({Math.round(system.memory_used_mb / system.memory_mb * 100)}%)</span> · </>}
-            {system.uptime && <>Uptime: <span className="text-foreground">{system.uptime.replace("up ", "")}</span></>}
+            {system.hostname && <>Host: <span className="text-foreground">{system.hostname}</span></>}
           </p>
         </div>
       </CardContent></Card>

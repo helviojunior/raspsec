@@ -143,6 +143,15 @@ class VlanService:
         if ip_addr:
             Exec.execute(f"sudo /sbin/ip addr add {ip_addr} dev {iface}", raise_error=False)
 
+        # Adjust MTU: VLAN MTU = parent MTU - 4 (802.1Q overhead)
+        try:
+            with open(f"/sys/class/net/{parent}/mtu") as f:
+                parent_mtu = int(f.read().strip())
+            vlan_mtu = parent_mtu - 4
+            Exec.execute(f"sudo /sbin/ip link set {iface} mtu {vlan_mtu}", raise_error=False)
+        except (OSError, IOError, ValueError):
+            pass
+
         # Bring up
         Exec.execute(f"sudo /sbin/ip link set {iface} up", raise_error=False)
 

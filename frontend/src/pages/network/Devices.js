@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Plus, Trash2, Save, RefreshCw, EthernetPort, Wifi, Usb,
   Cable, PenLine, Layers, Search, Lock, Unlock,
   Signal, X, Loader2, FileText, Key, ShieldCheck, Eye, EyeOff,
-  Unplug, Router,
+  Unplug, Router, ChevronRight,
 } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
@@ -43,7 +44,6 @@ export default function Devices() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [editMac, setEditMac] = useState(null);
   const [bridge, setBridge] = useState(null);
   const [vlanForm, setVlanForm] = useState({ parent: "eth0", vlan_id: "", ip_address: "", enabled: true });
 
@@ -63,54 +63,6 @@ export default function Devices() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { if (success) { const t = setTimeout(() => setSuccess(""), 4000); return () => clearTimeout(t); } }, [success]);
-
-  const toggleInterface = async (name, enabled) => {
-    try {
-      await api.put("/api/network/devices/toggle/", { interface: name, enabled });
-      setSuccess(`Interface ${name} ${enabled ? "habilitada" : "desabilitada"}.`);
-      fetchData();
-    } catch { setError(`Erro ao alterar ${name}.`); }
-  };
-
-  const toggleDhcpClient = async (name, enabled) => {
-    try {
-      await api.put("/api/network/devices/dhcp-client/", { interface: name, enabled });
-      setSuccess(`DHCP client ${enabled ? "habilitado" : "desabilitado"} em ${name}.`);
-      fetchData();
-    } catch (err) {
-      setError(err.response?.data?.detail || `Erro ao alterar DHCP client em ${name}.`);
-    }
-  };
-
-  const changeMac = async () => {
-    if (!editMac) return;
-    try {
-      await api.put("/api/network/devices/mac/", { interface: editMac.iface, mac: editMac.mac });
-      setSuccess(`MAC de ${editMac.iface} alterado.`);
-      setEditMac(null);
-      fetchData();
-    } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao alterar MAC.");
-    }
-  };
-
-  const changeChain = async (name, chain) => {
-    try {
-      await api.put("/api/network/devices/chain/", { interface: name, chain });
-      setSuccess(`Chain de ${name} alterada para '${chain}'.`);
-      fetchData();
-    } catch { setError("Erro ao alterar chain."); }
-  };
-
-  const changeWifiMode = async (name, mode) => {
-    try {
-      const { data } = await api.put("/api/network/devices/wifi-mode/", { interface: name, mode });
-      setSuccess(data.detail);
-      fetchData();
-    } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao alterar modo WiFi.");
-    }
-  };
 
   const addVlan = async () => {
     try {
@@ -179,16 +131,7 @@ export default function Devices() {
       </div>
 
       {activeTab === "interfaces" && (
-        <InterfacesTab
-          interfaces={interfaces}
-          editMac={editMac}
-          setEditMac={setEditMac}
-          changeMac={changeMac}
-          toggleInterface={toggleInterface}
-          toggleDhcpClient={toggleDhcpClient}
-          changeChain={changeChain}
-          changeWifiMode={changeWifiMode}
-        />
+        <InterfacesTab interfaces={interfaces} />
       )}
 
       {activeTab === "vlans" && (
@@ -226,17 +169,23 @@ export default function Devices() {
 
 // ── Interfaces Tab ──
 
-function InterfacesTab({ interfaces, editMac, setEditMac, changeMac, toggleInterface, toggleDhcpClient, changeChain, changeWifiMode }) {
+function InterfacesTab({ interfaces }) {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-3">
       {interfaces.map((iface) => {
         const Icon = typeIcon[iface.type] || EthernetPort;
         const wifiMode = iface.wifi_mode;
         return (
-          <Card key={iface.name}>
+          <Card
+            key={iface.name}
+            className="cursor-pointer hover:border-primary/40 transition-colors"
+            onClick={() => navigate(`/network/devices/${iface.name}`)}
+          >
             <CardContent className="pt-5 pb-5">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
                   <div className={cn(
                     "p-2.5 rounded-lg",
                     iface.up ? "bg-emerald-500/10 text-emerald-400" : "bg-muted text-muted-foreground"
@@ -274,94 +223,25 @@ function InterfacesTab({ interfaces, editMac, setEditMac, changeMac, toggleInter
                           {wifiMode === "ap" ? "AP" : wifiMode === "client" ? "Client" : "Idle"}
                         </span>
                       )}
-                    </div>
-                    <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
-                      <div>IP: <span className="text-foreground font-mono">{iface.ip || "—"}</span></div>
-                      <div className="flex items-center gap-2">
-                        MAC: <span className="text-foreground font-mono">{iface.mac || "—"}</span>
-                        {iface.type !== "vlan" && (
-                          <button
-                            onClick={() => setEditMac({ iface: iface.name, mac: iface.mac })}
-                            className="text-muted-foreground hover:text-primary transition-colors"
-                            title="Alterar MAC"
-                          >
-                            <PenLine size={12} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {iface.type === "wireless" && (
-                    <div className="text-right">
-                      <div className="text-[10px] text-muted-foreground uppercase mb-1">Modo</div>
-                      <select
-                        value={wifiMode || "none"}
-                        onChange={(e) => changeWifiMode(iface.name, e.target.value)}
-                        className={cn(
-                          "text-xs font-medium rounded px-2 py-1 border bg-transparent cursor-pointer",
-                          wifiMode === "ap"
-                            ? "text-violet-400 bg-violet-500/15 border-violet-500/30"
-                            : wifiMode === "client"
-                            ? "text-cyan-400 bg-cyan-500/15 border-cyan-500/30"
-                            : "text-muted-foreground border-border"
-                        )}
-                      >
-                        <option value="ap">AP</option>
-                        <option value="client">Client</option>
-                      </select>
-                    </div>
-                  )}
-
-                  <div className="text-right">
-                    <div className="text-[10px] text-muted-foreground uppercase mb-1">Chain</div>
-                    <select
-                      value={iface.chain || ""}
-                      onChange={(e) => changeChain(iface.name, e.target.value)}
-                      className={cn(
-                        "text-xs font-medium rounded px-2 py-1 border bg-transparent cursor-pointer",
-                        iface.chain ? chainColor[iface.chain] : "text-muted-foreground border-border"
+                      {iface.chain && (
+                        <span className={cn("text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border", chainColor[iface.chain])}>
+                          {iface.chain}
+                        </span>
                       )}
-                    >
-                      <option value="">Nenhuma</option>
-                      {CHAINS.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {!iface.managed && (
-                    <div className="text-right">
-                      <div className="text-[10px] text-muted-foreground uppercase mb-1">DHCP</div>
-                      <Toggle
-                        checked={iface.dhcp_client}
-                        onChange={() => toggleDhcpClient(iface.name, !iface.dhcp_client)}
-                      />
+                      {iface.dhcp_client && (
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
+                          DHCP
+                        </span>
+                      )}
                     </div>
-                  )}
-
-                  <Toggle
-                    checked={iface.up}
-                    onChange={() => toggleInterface(iface.name, !iface.up)}
-                  />
+                    <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
+                      <span>IP: <span className="text-foreground font-mono">{iface.ip || "—"}</span></span>
+                      <span>MAC: <span className="text-foreground font-mono">{iface.mac || "—"}</span></span>
+                    </div>
+                  </div>
                 </div>
+                <ChevronRight size={18} className="text-muted-foreground/50" />
               </div>
-
-              {editMac && editMac.iface === iface.name && (
-                <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
-                  <Label className="text-xs whitespace-nowrap">Novo MAC:</Label>
-                  <Input
-                    value={editMac.mac}
-                    onChange={(e) => setEditMac({ ...editMac, mac: e.target.value })}
-                    placeholder="aa:bb:cc:dd:ee:ff"
-                    className="font-mono text-sm max-w-[200px] h-8"
-                  />
-                  <Button size="sm" onClick={changeMac}><Save size={13} /> Salvar</Button>
-                  <Button size="sm" variant="outline" onClick={() => setEditMac(null)}>Cancelar</Button>
-                </div>
-              )}
             </CardContent>
           </Card>
         );

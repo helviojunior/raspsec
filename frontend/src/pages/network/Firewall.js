@@ -41,6 +41,7 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
     const row = rowRefs.current[index];
     if (!row) return;
     const rect = row.getBoundingClientRect();
+    const tableRect = tableRef.current?.getBoundingClientRect();
     // Offset from mouse click to top of row — keeps ghost aligned with cursor
     const offsetY = e.clientY - rect.top;
     setDragState({
@@ -52,6 +53,8 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
       rowHeight: rect.height,
       offsetY,
       origIndex: index,
+      tableLeft: tableRect?.left || 0,
+      tableWidth: tableRect?.width || 800,
     });
   }, [items, canDrag]);
 
@@ -111,13 +114,12 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
   const isDragging = !!dragState;
   const dragId = dragState?.id;
 
-  // Ghost position (follows mouse, fixed width, 50px left of cursor)
-  const GHOST_WIDTH = 1100;
+  // Ghost position (follows mouse vertically, aligned with table horizontally)
   const ghostStyle = dragState ? {
     position: "fixed",
     top: dragState.mouseY - (dragState.offsetY || 0),
-    left: (dragState.mouseX || 0) - 50,
-    width: GHOST_WIDTH,
+    left: dragState.tableLeft || 0,
+    width: dragState.tableWidth || 800,
     zIndex: 9999,
     pointerEvents: "none",
     opacity: 0.9,
@@ -573,48 +575,60 @@ function NatTab() {
     fetchNat().then(() => setDirty(true));
   };
 
+  const systemNatRules = natRules.filter(r => r.is_system);
+  const userNatRules = natRules.filter(r => !r.is_system);
+
   const handleReorder = useCallback(async (fromIndex, toIndex) => {
-    const reordered = [...natRules];
+    const reordered = [...userNatRules];
     const [moved] = reordered.splice(fromIndex, 1);
     reordered.splice(toIndex, 0, moved);
-    await api.put("/api/firewall/reorder/", { type: "nat", ordered_ids: reordered.map(r => r.id) });
+    const allIds = [...systemNatRules.map(r => r.id), ...reordered.map(r => r.id)];
+    await api.put("/api/firewall/reorder/", { type: "nat", ordered_ids: allIds });
     setDirty(true);
     fetchNat().then(() => setDirty(true));
-  }, [natRules, fetchNat]);
+  }, [userNatRules, systemNatRules, fetchNat]);
 
   const {
     tableRef, rowRefs, handleMouseDown,
     isDragging, dragId, getDragIndex, getDropIndex, ghostStyle, dragState, reordering,
   } = useDragReorder({
-    items: natRules,
+    items: userNatRules,
     onReorder: handleReorder,
+    canDrag: (item) => item && !item.is_system,
   });
 
   const dragIdx = getDragIndex();
   const dropIdx = getDropIndex();
 
   const renderRow = (rule, i, isGhost = false) => {
+    const idx = userNatRules.indexOf(rule);
     const startDrag = (e) => {
+      if (rule.is_system) return;
       if (e.target.closest("button, [role='switch'], input, select")) return;
-      handleMouseDown(e, i, rule.id);
+      handleMouseDown(e, idx, rule.id);
     };
     return (
     <tr
       key={isGhost ? `ghost-${rule.id}` : rule.id}
-      ref={isGhost ? undefined : (el) => { rowRefs.current[i] = el; }}
+      ref={isGhost ? undefined : (el) => { if (!rule.is_system) { rowRefs.current[idx] = el; } }}
       onMouseDown={isGhost ? undefined : startDrag}
       className={cn(
         "border-b border-border/50 transition-all",
         !rule.enabled && "opacity-40",
+        rule.is_system && "bg-blue-500/5",
         isGhost && "bg-primary/10 border-primary/30 shadow-lg shadow-primary/10 rounded",
         !isGhost && isDragging && dragId === rule.id && "opacity-0 h-0 overflow-hidden border-none",
         !isGhost && !isDragging && "hover:bg-muted/20",
-        !isGhost && !isDragging && "cursor-grab",
-        !isGhost && isDragging && "cursor-grabbing",
+        !rule.is_system && !isGhost && !isDragging && "cursor-grab",
+        !rule.is_system && !isGhost && isDragging && "cursor-grabbing",
       )}
     >
       <td className="py-2 px-1 text-center">
-        <GripVertical size={14} className={cn("mx-auto transition-colors", isDragging && dragId === rule.id ? "text-primary" : "text-muted-foreground/50")} />
+        {rule.is_system ? (
+          <Lock size={12} className="text-blue-400 mx-auto" title="Regra do sistema" />
+        ) : (
+          <GripVertical size={14} className={cn("mx-auto transition-colors", isDragging && dragId === rule.id ? "text-primary" : "text-muted-foreground/50")} />
+        )}
       </td>
       <td className={cn("py-2 px-3 font-medium capitalize", chainColor[rule.source_chain])}>{rule.source_chain}</td>
       <td className="py-2 px-3 text-muted-foreground text-center"><ArrowRightLeft size={14} className="inline" /></td>
@@ -626,9 +640,13 @@ function NatTab() {
       <td className="py-2 px-3">
         {!isGhost && (
           <div className="flex items-center justify-center gap-1">
-            <Toggle checked={rule.enabled} onChange={() => toggleRule(rule)} className="scale-75" />
-            <button onClick={() => { setEditRule(rule); setShowForm(true); }} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Editar"><Pencil size={13} /></button>
-            <button onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) deleteRule(rule.id); }} className="p-1 text-muted-foreground hover:text-red-500 transition-colors" title="Remover"><Trash2 size={13} /></button>
+            {!rule.is_system && (
+              <>
+                <Toggle checked={rule.enabled} onChange={() => toggleRule(rule)} className="scale-75" />
+                <button onClick={() => { setEditRule(rule); setShowForm(true); }} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Editar"><Pencil size={13} /></button>
+                <button onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) deleteRule(rule.id); }} className="p-1 text-muted-foreground hover:text-red-500 transition-colors" title="Remover"><Trash2 size={13} /></button>
+              </>
+            )}
           </div>
         )}
       </td>
@@ -642,14 +660,14 @@ function NatTab() {
     </td></tr>
   );
 
-  const renderRows = () => {
+  const renderUserRows = () => {
     if (!isDragging) {
-      return natRules.map((rule, i) => renderRow(rule, i));
+      return userNatRules.map((rule, i) => renderRow(rule, i));
     }
     const rows = [];
-    for (let i = 0; i < natRules.length; i++) {
+    for (let i = 0; i < userNatRules.length; i++) {
       if (i === dropIdx && dragIdx > dropIdx) rows.push(<DropIndicator key="drop-indicator" />);
-      rows.push(renderRow(natRules[i], i));
+      rows.push(renderRow(userNatRules[i], i));
       if (i === dropIdx && dragIdx < dropIdx) rows.push(<DropIndicator key="drop-indicator" />);
     }
     return rows;
@@ -709,7 +727,8 @@ function NatTab() {
               </tr>
             </thead>
             <tbody>
-              {renderRows()}
+              {systemNatRules.map((rule, i) => renderRow(rule, i))}
+              {renderUserRows()}
               {natRules.length === 0 && !loading && (
                 <tr>
                   <td colSpan={9} className="py-6 text-center text-muted-foreground">
@@ -720,11 +739,11 @@ function NatTab() {
             </tbody>
           </table>
 
-          {isDragging && dragState && natRules[dragState.origIndex] && (
+          {isDragging && dragState && userNatRules[dragState.origIndex] && (
             <div style={ghostStyle}>
               <table className="w-full text-sm border border-primary/30 rounded-md bg-card shadow-xl shadow-primary/20">
                 <tbody>
-                  {renderRow(natRules[dragState.origIndex], dragState.origIndex, true)}
+                  {renderRow(userNatRules[dragState.origIndex], dragState.origIndex, true)}
                 </tbody>
               </table>
             </div>

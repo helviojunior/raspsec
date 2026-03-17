@@ -197,6 +197,150 @@ class BridgeView(APIView):
         return Response({"detail": "Bridge br0 removida."})
 
 
+class DeviceDetailView(APIView):
+    """Get full details of a single interface for the edit page."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, name):
+        if not _valid_iface(name):
+            return Response({"detail": "Interface inválida."}, status=400)
+
+        interfaces = _get_all_interfaces()
+        iface = next((i for i in interfaces if i["name"] == name), None)
+        if not iface:
+            return Response({"detail": "Interface não encontrada."}, status=404)
+
+        chain_map = {cm.interface: cm.chain for cm in ChainMapping.objects.all()}
+        dhcp_clients = _get_dhcp_client_config()
+        iface["chain"] = chain_map.get(name, "")
+        iface["managed"] = name in MANAGED_INTERFACES
+        iface["dhcp_client"] = dhcp_clients.get(name, False)
+
+        # MTU
+        try:
+            with open(f"/sys/class/net/{name}/mtu") as f:
+                iface["mtu"] = int(f.read().strip())
+        except (OSError, IOError, ValueError):
+            iface["mtu"] = 1500
+
+        # Speed and duplex (physical only)
+        iface["speed"] = ""
+        iface["duplex"] = ""
+        if iface["type"] == "physical":
+            try:
+                with open(f"/sys/class/net/{name}/speed") as f:
+                    iface["speed"] = f.read().strip()
+            except (OSError, IOError):
+                pass
+            try:
+                with open(f"/sys/class/net/{name}/duplex") as f:
+                    iface["duplex"] = f.read().strip()
+            except (OSError, IOError):
+                pass
+
+        # Description from config
+        desc_config = load_config("interface_descriptions.yml", {"interfaces": {}})
+        iface["description"] = desc_config.get("interfaces", {}).get(name, "")
+
+        return Response(iface)
+
+
+class DeviceUpdateView(APIView):
+    """Update interface settings (enable, description, chain, MAC, MTU, DHCP, wifi mode)."""
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, name):
+        if not _valid_iface(name):
+            return Response({"detail": "Interface inválida."}, status=400)
+
+        data = request.data
+        errors = []
+
+        # Enable/disable
+        if "enabled" in data:
+            action = "up" if data["enabled"] else "down"
+            ret, out = Exec.execute(f"sudo /sbin/ip link set {name} {action}", raise_error=False)
+            if ret != 0:
+                errors.append(f"Erro ao alterar estado: {out}")
+
+        # Description
+        if "description" in data:
+            desc_config = load_config("interface_descriptions.yml", {"interfaces": {}})
+            descs = desc_config.get("interfaces", {})
+            descs[name] = data["description"]
+            save_config("interface_descriptions.yml", {"interfaces": descs})
+
+        # Chain
+        if "chain" in data:
+            chain = data["chain"]
+            if chain and chain in ("internal", "implant", "outside"):
+                ChainMapping.objects.update_or_create(interface=name, defaults={"chain": chain})
+            elif chain == "":
+                ChainMapping.objects.filter(interface=name).delete()
+            try:
+                from raspsec.services.firewall import FirewallService
+                FirewallService.apply()
+            except Exception as e:
+                errors.append(f"Erro ao aplicar firewall: {e}")
+
+        # MAC
+        if "mac" in data:
+            mac = data["mac"].strip().lower()
+            if re.match(r"^([0-9a-f]{2}:){5}[0-9a-f]{2}$", mac):
+                Exec.execute(f"sudo /sbin/ip link set {name} down", raise_error=False)
+                ret, out = Exec.execute(f"sudo /sbin/ip link set {name} address {mac}", raise_error=False)
+                Exec.execute(f"sudo /sbin/ip link set {name} up", raise_error=False)
+                if ret != 0:
+                    errors.append(f"Erro ao alterar MAC: {out}")
+            else:
+                errors.append("MAC address inválido.")
+
+        # MTU
+        if "mtu" in data:
+            mtu = int(data["mtu"]) if str(data["mtu"]).isdigit() else 0
+            if 68 <= mtu <= 9000:
+                ret, out = Exec.execute(f"sudo /sbin/ip link set {name} mtu {mtu}", raise_error=False)
+                if ret != 0:
+                    errors.append(f"Erro ao alterar MTU: {out}")
+            elif mtu != 0:
+                errors.append("MTU deve estar entre 68 e 9000.")
+
+        # DHCP client
+        if "dhcp_client" in data and name not in MANAGED_INTERFACES:
+            dhcp_clients = _get_dhcp_client_config()
+            dhcp_clients[name] = bool(data["dhcp_client"])
+            save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
+            _apply_dhcp_client_config()
+
+        # WiFi mode
+        if "wifi_mode" in data:
+            mode = data["wifi_mode"]
+            if mode in ("ap", "client"):
+                current_modes = _get_wifi_modes()
+                current_mode = current_modes.get(name, "none")
+                if current_mode != mode:
+                    try:
+                        if current_mode == "ap":
+                            from raspsec.services.wifi import WifiService
+                            WifiService._stop_ap()
+                        elif current_mode == "client":
+                            from raspsec.services.wifi_client import WifiClientService
+                            WifiClientService.disconnect(name)
+                        if mode == "ap":
+                            from raspsec.services.wifi import WifiService
+                            config = WifiService.get_config()
+                            config["ap"]["enabled"] = True
+                            WifiService.save_ap(config["ap"])
+                    except Exception as e:
+                        errors.append(f"Erro ao alterar modo WiFi: {e}")
+
+        if errors:
+            return Response({"detail": "; ".join(errors)}, status=400)
+
+        logger.log(f"Interface {name} updated: {list(data.keys())}")
+        return Response({"detail": f"Interface {name} atualizada com sucesso."})
+
+
 class DeviceWifiModeView(APIView):
     """Switch a wireless interface between AP and Client mode."""
     permission_classes = [IsAuthenticated]

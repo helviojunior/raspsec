@@ -23,10 +23,14 @@ DEFAULT_RULES = [
     {"chain": "implant", "protocol": "any", "port": "", "source_ip": "", "action": "deny", "priority": 10, "description": "Deny all from Implant"},
 ]
 
+ANTI_LOCKOUT_NAT_RULES = [
+    {"source_chain": "internal", "dest_chain": "firewall", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": -1, "description": "Anti-lockout: No NAT Internal → Firewall", "enabled": False, "is_system": True},
+]
+
 DEFAULT_NAT_RULES = [
-    {"source_chain": "internal", "dest_chain": "outside", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 0, "description": "NAT Internal → Outside", "enabled": True},
-    {"source_chain": "internal", "dest_chain": "implant", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 1, "description": "NAT Internal → Implant", "enabled": True},
-    {"source_chain": "firewall", "dest_chain": "implant", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 2, "description": "NAT Firewall → Implant", "enabled": True},
+    {"source_chain": "internal", "dest_chain": "outside", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 0, "description": "NAT Internal → Outside"},
+    {"source_chain": "internal", "dest_chain": "implant", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 1, "description": "NAT Internal → Implant"},
+    {"source_chain": "firewall", "dest_chain": "implant", "nat_type": "masquerade", "protocol": "any", "port": "", "dest_ip": "", "dest_port": "", "priority": 2, "description": "NAT Firewall → Implant"},
 ]
 
 
@@ -57,9 +61,17 @@ class FirewallService:
             for rule in DEFAULT_RULES:
                 FirewallRule.objects.create(**rule)
 
-        # Default NAT rules
+        # Anti-lockout NAT rules (always recreated if missing)
         from raspsec.dbmodels.firewall import NatRule
-        if not NatRule.objects.exists():
+        for rule in ANTI_LOCKOUT_NAT_RULES:
+            NatRule.objects.get_or_create(
+                is_system=True,
+                description=rule["description"],
+                defaults=rule,
+            )
+
+        # Default NAT rules
+        if NatRule.objects.filter(is_system=False).count() == 0:
             for rule in DEFAULT_NAT_RULES:
                 NatRule.objects.create(**rule)
 
@@ -83,7 +95,7 @@ class FirewallService:
         return list(
             NatRule.objects.all()
             .order_by("priority")
-            .values("id", "source_chain", "dest_chain", "nat_type", "protocol", "port", "dest_ip", "dest_port", "priority", "description", "enabled")
+            .values("id", "source_chain", "dest_chain", "nat_type", "protocol", "port", "dest_ip", "dest_port", "priority", "description", "enabled", "is_system")
         )
 
     @staticmethod
@@ -142,10 +154,10 @@ class FirewallService:
             "enabled": data.get("enabled", True),
         }
         if rule_id:
-            NatRule.objects.filter(id=rule_id).update(**fields)
+            NatRule.objects.filter(id=rule_id, is_system=False).update(**fields)
         else:
-            # New NAT rules go to the top
-            NatRule.objects.all().update(priority=models.F("priority") + 1)
+            # New NAT rules go to the top (after system rules)
+            NatRule.objects.filter(is_system=False).update(priority=models.F("priority") + 1)
             fields["priority"] = 0
             NatRule.objects.create(**fields)
         FirewallService.apply()
@@ -153,7 +165,7 @@ class FirewallService:
     @staticmethod
     def delete_nat_rule(rule_id):
         from raspsec.dbmodels.firewall import NatRule
-        NatRule.objects.filter(id=rule_id).delete()
+        NatRule.objects.filter(id=rule_id, is_system=False).delete()
         FirewallService.apply()
 
     @staticmethod
@@ -228,8 +240,18 @@ class FirewallService:
             cmd += f" -j {target}"
             Exec.execute(cmd, raise_error=False)
 
+        # ── Anti-lockout: ensure no NAT between internal and firewall ──
+        # Build set of exempt paths (internal↔firewall) from system NAT rules
+        exempt_paths = set()
+        for snat in NatRule.objects.filter(is_system=True):
+            exempt_paths.add((snat.source_chain, snat.dest_chain))
+
         # ── NAT rules ──
         for nat in nat_rules:
+            # Skip paths covered by anti-lockout
+            if (nat.source_chain, nat.dest_chain) in exempt_paths:
+                continue
+
             src_ifaces = [i for i, c in mappings.items() if c == nat.source_chain]
             dst_ifaces = [i for i, c in mappings.items() if c == nat.dest_chain]
 

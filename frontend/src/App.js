@@ -11,6 +11,7 @@ import UsbGadget from "pages/network/UsbGadget";
 import NetworkStatus from "pages/network/Status";
 import Firewall from "pages/network/Firewall";
 import Devices from "pages/network/Devices";
+import DeviceEdit from "pages/network/DeviceEdit";
 import DeviceStatus from "pages/tools/DeviceStatus";
 import ConnectivityChecker from "pages/tools/ConnectivityChecker";
 import PacketCapture from "pages/tools/PacketCapture";
@@ -58,6 +59,7 @@ function App() {
               <Route path="/network/status" element={<NetworkStatus />} />
               <Route path="/network/firewall" element={<Firewall />} />
               <Route path="/network/devices" element={<Devices />} />
+              <Route path="/network/devices/:name" element={<DeviceEdit />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/tools/device-status" element={<DeviceStatus />} />
               <Route path="/tools/connectivity" element={<ConnectivityChecker />} />

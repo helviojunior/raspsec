@@ -602,6 +602,10 @@
     {
       "hash": "ba82deeb438bae995439a29a6e32a1c72596387d",
       "message": "Add dashboard gauge cards, fix deploy script, auto-polling"
+    },
+    {
+      "hash": "68ff3cbfbcf5536039ff0c926073ead8ea45d393",
+      "message": "Add anti-lockout NAT rule, device edit page, fix drag ghost position"
     }
   ]
 }

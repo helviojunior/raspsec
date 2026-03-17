@@ -66,6 +66,7 @@ class NatRule(Base):
     dest_port = models.CharField(max_length=50, blank=True, default="", help_text="For DNAT: destination port.")
     priority = models.IntegerField(default=100)
     description = models.CharField(max_length=200, blank=True, default="")
+    is_system = models.BooleanField(default=False, help_text="System rules cannot be deleted or reordered.")
 
     class Meta:
         db_table = "raspsec_nat_rule"
