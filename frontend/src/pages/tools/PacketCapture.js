@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Play, Square, Download, Loader2, RefreshCw } from "lucide-react";
+import { Play, Square, Loader2 } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";

@@ -34,13 +34,20 @@ class DashboardView(APIView):
 
 
 def _get_system_info():
-    """Get hostname, device model, memory, CPU temp."""
+    """Get hostname, device model, memory, CPU temp, CPU usage, disk usage."""
     info = {
         "hostname": "",
         "model": "",
         "memory_mb": 0,
         "memory_used_mb": 0,
+        "memory_available_mb": 0,
         "cpu_temp": 0.0,
+        "cpu_utilization": 0.0,
+        "cpu_cores": 0,
+        "cpu_threads": 0,
+        "cpu_speed_mhz": 0.0,
+        "disk_total_gb": 0.0,
+        "disk_used_gb": 0.0,
         "uptime": "",
     }
 
@@ -68,8 +75,56 @@ def _get_system_info():
         available = meminfo.get("MemAvailable", 0)
         info["memory_mb"] = round(total / 1024)
         info["memory_used_mb"] = round((total - available) / 1024)
+        info["memory_available_mb"] = round(available / 1024)
     except (OSError, IOError):
         pass
+
+    # CPU info (cores, threads, speed)
+    try:
+        with open("/proc/cpuinfo", "r") as f:
+            cpuinfo = f.read()
+        processors = re.findall(r"^processor\s*:", cpuinfo, re.MULTILINE)
+        info["cpu_threads"] = len(processors)
+        # Physical cores from "cpu cores" field (may not exist on all ARM)
+        cores_match = re.search(r"^cpu cores\s*:\s*(\d+)", cpuinfo, re.MULTILINE)
+        info["cpu_cores"] = int(cores_match.group(1)) if cores_match else len(processors)
+        # CPU speed
+        freq_match = re.search(r"^cpu MHz\s*:\s*([\d.]+)", cpuinfo, re.MULTILINE)
+        if freq_match:
+            info["cpu_speed_mhz"] = round(float(freq_match.group(1)), 1)
+        else:
+            # Fallback: read scaling_cur_freq
+            try:
+                with open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq", "r") as f:
+                    info["cpu_speed_mhz"] = round(int(f.read().strip()) / 1000, 1)
+            except (OSError, IOError):
+                pass
+    except (OSError, IOError):
+        pass
+
+    # CPU utilization (from /proc/stat instant snapshot)
+    try:
+        with open("/proc/stat", "r") as f:
+            line = f.readline()
+        parts = line.split()
+        # user, nice, system, idle, iowait, irq, softirq, steal
+        if len(parts) >= 8:
+            total_time = sum(int(x) for x in parts[1:8])
+            idle_time = int(parts[4])
+            if total_time > 0:
+                info["cpu_utilization"] = round((1 - idle_time / total_time) * 100, 1)
+    except (OSError, IOError):
+        pass
+
+    # Disk usage
+    ret, out = Exec.execute("/bin/df -B1 /", raise_error=False)
+    if ret == 0:
+        lines = out.strip().splitlines()
+        if len(lines) >= 2:
+            parts = lines[1].split()
+            if len(parts) >= 4:
+                info["disk_total_gb"] = round(int(parts[1]) / (1024 ** 3), 1)
+                info["disk_used_gb"] = round(int(parts[2]) / (1024 ** 3), 1)
 
     # CPU temperature
     try:

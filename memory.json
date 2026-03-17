@@ -598,6 +598,10 @@
     {
       "hash": "0360888e5087175777e0818df2f22a4c31b743e7",
       "message": "Make file names clickable to download in file browser"
+    },
+    {
+      "hash": "ba82deeb438bae995439a29a6e32a1c72596387d",
+      "message": "Add dashboard gauge cards, fix deploy script, auto-polling"
     }
   ]
 }

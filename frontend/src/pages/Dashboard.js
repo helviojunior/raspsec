@@ -34,15 +34,10 @@ const CHAIN_COLORS = { implant: "text-amber-400", outside: "text-red-400", inter
 // The trunk is a vertical line on the right edge of the branch column.
 // The arm extends from the trunk into the device center.
 
-const ACTIVE_BORDER = "border-emerald-500 border-solid";
-const INACTIVE_BORDER = "border-zinc-700 border-dashed";
-
 // Left tree: each row is [horizontal branch] with a vertical trunk on the right side.
 // The trunk uses a 2px wide div instead of border to guarantee visibility.
 const TreeBranchLeft = ({ active, isFirst, isLast, isOnly }) => {
   const hColor = active ? "bg-emerald-500" : "bg-zinc-700";
-  const hStyle = active ? "" : "style-dashed-h";
-  const vColor = "bg-zinc-700";
   return (
     <div className="relative w-12 self-stretch flex items-center">
       {/* Horizontal branch: full width, centered vertically */}
@@ -97,6 +92,69 @@ const TreeArmRight = ({ anyActive }) => {
   );
 };
 
+// ── Gauge Card ──
+
+const GaugeArc = ({ percent, color, size = 120 }) => {
+  const strokeWidth = 10;
+  const radius = (size - strokeWidth) / 2;
+  const cx = size / 2;
+  const cy = size / 2 + 10;
+  // Arc from 180° to 0° (left to right, bottom half = semi-circle)
+  const startAngle = Math.PI;
+  const endAngle = 0;
+  const sweepAngle = startAngle - (startAngle - endAngle) * (Math.min(Math.max(percent, 0), 100) / 100);
+
+  const bgX1 = cx + radius * Math.cos(startAngle);
+  const bgY1 = cy + radius * Math.sin(startAngle);
+  const bgX2 = cx + radius * Math.cos(endAngle);
+  const bgY2 = cy + radius * Math.sin(endAngle);
+
+  const arcX = cx + radius * Math.cos(sweepAngle);
+  const arcY = cy + radius * Math.sin(sweepAngle);
+  const largeArc = percent > 50 ? 1 : 0;
+
+  return (
+    <svg width={size} height={size / 2 + 20} viewBox={`0 0 ${size} ${size / 2 + 20}`}>
+      {/* Background arc */}
+      <path
+        d={`M ${bgX1} ${bgY1} A ${radius} ${radius} 0 0 1 ${bgX2} ${bgY2}`}
+        fill="none"
+        stroke="rgba(255,255,255,0.08)"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+      {/* Value arc */}
+      {percent > 0 && (
+        <path
+          d={`M ${bgX1} ${bgY1} A ${radius} ${radius} 0 ${largeArc} 1 ${arcX} ${arcY}`}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+      )}
+      {/* Percentage text */}
+      <text x={cx} y={cy - 5} textAnchor="middle" fill="white" fontSize="20" fontWeight="600">
+        {Math.round(percent)}%
+      </text>
+    </svg>
+  );
+};
+
+const GaugeCard = ({ title, percent, color, children }) => (
+  <Card className="flex-1 min-w-0">
+    <CardContent className="p-4 flex items-center gap-4">
+      <div className="flex-1 min-w-0">
+        <h3 className="text-sm font-semibold text-foreground mb-2">{title}</h3>
+        <div className="space-y-0.5 text-xs text-muted-foreground">{children}</div>
+      </div>
+      <div className="shrink-0">
+        <GaugeArc percent={percent} color={color} />
+      </div>
+    </CardContent>
+  </Card>
+);
+
 // ── Status Badge ──
 
 const StatusBadge = ({ icon: Icon, label, active }) => (
@@ -134,6 +192,12 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
+
+  // Polling every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => fetchDashboard(true), 5000);
+    return () => clearInterval(interval);
+  }, [fetchDashboard]);
 
   if (loading || !data) {
     return (
@@ -190,7 +254,6 @@ export default function Dashboard() {
 
   const wlan0 = interfaces?.find(i => i.name === "wlan0");
   const primaryIface = wlan0 || interfaces?.find(i => i.up) || {};
-  const apUp = wlan0?.up || false;
   const leftCount = leftRows.length;
   const rightCount = rightRows.length;
 
@@ -198,17 +261,53 @@ export default function Dashboard() {
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
-          apUp ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-red-500/10 text-red-400 border border-red-500/30"
-        }`}>
-          <span className={`w-2 h-2 rounded-full ${apUp ? "bg-emerald-400" : "bg-red-400"}`} />
-          wlan0 {apUp ? "up" : "down"}
-        </div>
+      </div>
+
+      {/* ── System Stats Gauges ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <GaugeCard
+          title="Ram"
+          percent={system.memory_mb > 0 ? Math.round(system.memory_used_mb / system.memory_mb * 100) : 0}
+          color="#3b82f6"
+        >
+          <p><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5 align-middle" />In Use: {system.memory_used_mb >= 1024 ? `${(system.memory_used_mb / 1024).toFixed(2)} GB` : `${system.memory_used_mb} MB`}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Available: {system.memory_available_mb >= 1024 ? `${(system.memory_available_mb / 1024).toFixed(2)} GB` : `${system.memory_available_mb} MB`}</p>
+        </GaugeCard>
+
+        <GaugeCard
+          title="CPU Usage"
+          percent={system.cpu_utilization || 0}
+          color="#22c55e"
+        >
+          <p><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5 align-middle" />Utilization: {system.cpu_utilization || 0} %</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Cores: {system.cpu_cores || 0}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Speed/Core: {system.cpu_speed_mhz || 0} MHz</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Threads: {system.cpu_threads || 0}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Temp: {system.cpu_temp > 0 ? `${system.cpu_temp}°C` : "N/A"}</p>
+        </GaugeCard>
+
+        <GaugeCard
+          title="Hard Disk Usage"
+          percent={system.disk_total_gb > 0 ? Math.round(system.disk_used_gb / system.disk_total_gb * 100) : 0}
+          color="#38bdf8"
+        >
+          <p><span className="inline-block w-2 h-2 rounded-full bg-sky-400 mr-1.5 align-middle" />Total: {system.disk_total_gb}G</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Used: {system.disk_used_gb}G</p>
+        </GaugeCard>
+
+        <Card className="flex-1 min-w-0">
+          <CardContent className="p-4 flex items-center h-full">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-foreground mb-2">Uptime Overview</h3>
+              <div className="space-y-0.5 text-xs text-muted-foreground">
+                <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{system.uptime || "N/A"}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card><CardContent className="p-6">
-        <h2 className="text-xl font-semibold mb-8">Current status</h2>
-
         <div className="flex items-center justify-center max-w-5xl mx-auto">
 
           {/* ── LEFT: connection types + tree ── */}
