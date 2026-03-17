@@ -102,48 +102,37 @@ const GaugeArc = ({ percent, color, size = 120 }) => {
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const cx = size / 2;
-  const cy = size / 2 + 10;
+  const cy = size / 2;
   const clampedPercent = Math.min(Math.max(percent, 0), 100);
-  // Arc from 180° to 0° (left to right, semi-circle)
-  const startAngle = Math.PI;
-  const sweepAngle = startAngle - startAngle * (clampedPercent / 100);
 
-  const bgX1 = cx + radius * Math.cos(startAngle);
-  const bgY1 = cy + radius * Math.sin(startAngle);
-  const bgX2 = cx + radius * Math.cos(0);
-  const bgY2 = cy + radius * Math.sin(0);
+  // Semi-circle arc using stroke-dasharray on a single path
+  const circumference = Math.PI * radius;
+  const valueDash = circumference * (clampedPercent / 100);
 
-  const arcX = cx + radius * Math.cos(sweepAngle);
-  const arcY = cy + radius * Math.sin(sweepAngle);
-  const largeArc = clampedPercent > 50 ? 1 : 0;
-
-  // Arc length for dash trick (avoids round-cap blob at low %)
-  const totalArcLen = Math.PI * radius;
-  const valueArcLen = totalArcLen * (clampedPercent / 100);
+  // Arc path: semi-circle from left to right
+  const arcPath = `M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`;
 
   return (
-    <svg width={size} height={size / 2 + 20} viewBox={`0 0 ${size} ${size / 2 + 20}`}>
+    <svg width={size} height={size / 2 + 16} viewBox={`0 0 ${size} ${size / 2 + 16}`}>
       {/* Background arc */}
       <path
-        d={`M ${bgX1} ${bgY1} A ${radius} ${radius} 0 0 1 ${bgX2} ${bgY2}`}
+        d={arcPath}
         fill="none"
         stroke="rgba(255,255,255,0.08)"
         strokeWidth={strokeWidth}
-        strokeLinecap="round"
       />
       {/* Value arc */}
       {clampedPercent > 0 && (
         <path
-          d={`M ${bgX1} ${bgY1} A ${radius} ${radius} 0 ${largeArc} 1 ${arcX} ${arcY}`}
+          d={arcPath}
           fill="none"
           stroke={color}
           strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={`${valueArcLen} ${totalArcLen}`}
+          strokeDasharray={`${valueDash} ${circumference}`}
         />
       )}
       {/* Percentage text */}
-      <text x={cx} y={cy - 2} textAnchor="middle" fill="white" fontSize="18" fontWeight="600">
+      <text x={cx} y={cy - 8} textAnchor="middle" fill="white" fontSize="18" fontWeight="600">
         {Math.round(percent)}%
       </text>
     </svg>
@@ -235,9 +224,9 @@ export default function Dashboard() {
 
   const leftRows = [
     buildLeft("ethernet", "Ethernet", EthernetIcon, i => i.type === "physical"),
-    buildLeft("wifi-client", "WiFi Client", WifiIcon, i => i.type === "wireless"),
+    buildLeft("wifi-client", "WiFi Cliente", WifiIcon, i => i.type === "wireless"),
     buildLeft("tethering", "Tethering", TetherIcon, i => i.type === "usb"),
-    buildLeft("cellular", "Cellular", CellularIcon, i => i.type === "cellular"),
+    buildLeft("cellular", "Celular", CellularIcon, i => i.type === "cellular"),
   ];
   // Add VLANs dynamically
   externalIfaces.filter(i => i.type === "vlan").forEach(v => {
@@ -253,12 +242,12 @@ export default function Dashboard() {
         const c = iface.type === "wireless" ? clients.wifi : (byIface[iface.name] || 0);
         return {
           key: iface.name, icon: getInterfaceIcon(iface.type), active: isIfaceActive(iface),
-          name: iface.name, chain: iface.chain, count: c, label: `client${c !== 1 ? "s" : ""}`,
+          name: iface.name, chain: iface.chain, count: c, label: `cliente${c !== 1 ? "s" : ""}`,
         };
       })
     : [
-        { key: "wlan", icon: LaptopWifiIcon, active: clients.wifi > 0, name: "WLAN", count: clients.wifi, label: `client${clients.wifi !== 1 ? "s" : ""}` },
-        { key: "lan", icon: LaptopEthIcon, active: clients.lan > 0, name: "LAN", count: clients.lan, label: `client${clients.lan !== 1 ? "s" : ""}` },
+        { key: "wlan", icon: LaptopWifiIcon, active: clients.wifi > 0, name: "WLAN", count: clients.wifi, label: `cliente${clients.wifi !== 1 ? "s" : ""}` },
+        { key: "lan", icon: LaptopEthIcon, active: clients.lan > 0, name: "LAN", count: clients.lan, label: `cliente${clients.lan !== 1 ? "s" : ""}` },
       ];
 
   const wlan0 = interfaces?.find(i => i.name === "wlan0");
@@ -270,44 +259,47 @@ export default function Dashboard() {
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <Button variant="outline" size="sm" onClick={() => fetchDashboard(true)} disabled={refreshing}>
+          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+        </Button>
       </div>
 
       {/* ── System Stats Gauges ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <GaugeCard
-          title="Ram"
+          title="Memória"
           percent={system.memory_mb > 0 ? Math.round(system.memory_used_mb / system.memory_mb * 100) : 0}
           color="#3b82f6"
         >
-          <p><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5 align-middle" />In Use: {system.memory_used_mb >= 1024 ? `${(system.memory_used_mb / 1024).toFixed(2)} GB` : `${system.memory_used_mb} MB`}</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Available: {system.memory_available_mb >= 1024 ? `${(system.memory_available_mb / 1024).toFixed(2)} GB` : `${system.memory_available_mb} MB`}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5 align-middle" />Em uso: {system.memory_used_mb >= 1024 ? `${(system.memory_used_mb / 1024).toFixed(2)} GB` : `${system.memory_used_mb} MB`}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Disponível: {system.memory_available_mb >= 1024 ? `${(system.memory_available_mb / 1024).toFixed(2)} GB` : `${system.memory_available_mb} MB`}</p>
         </GaugeCard>
 
         <GaugeCard
-          title="CPU Usage"
+          title="Uso de CPU"
           percent={system.cpu_utilization || 0}
           color="#22c55e"
         >
-          <p><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5 align-middle" />Utilization: {system.cpu_utilization || 0} %</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Cores: {system.cpu_cores || 0}</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Speed/Core: {system.cpu_speed_mhz || 0} MHz</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5 align-middle" />Utilização: {system.cpu_utilization || 0} %</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Núcleos: {system.cpu_cores || 0}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Vel./Núcleo: {system.cpu_speed_mhz || 0} MHz</p>
           <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Threads: {system.cpu_threads || 0}</p>
           <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Temp: {system.cpu_temp > 0 ? `${system.cpu_temp}°C` : "N/A"}</p>
         </GaugeCard>
 
         <GaugeCard
-          title="Hard Disk Usage"
+          title="Uso de Disco"
           percent={system.disk_total_gb > 0 ? Math.round(system.disk_used_gb / system.disk_total_gb * 100) : 0}
           color="#38bdf8"
         >
           <p><span className="inline-block w-2 h-2 rounded-full bg-sky-400 mr-1.5 align-middle" />Total: {system.disk_total_gb}G</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Used: {system.disk_used_gb}G</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Usado: {system.disk_used_gb}G</p>
         </GaugeCard>
 
         <Card className="flex-1 min-w-0">
           <CardContent className="p-4 flex items-start h-full">
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground mb-2">Uptime Overview</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-2">Tempo Ativo</h3>
               <div className="space-y-0.5 text-xs text-muted-foreground">
                 <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{system.uptime || "N/A"}</p>
               </div>
@@ -352,7 +344,7 @@ export default function Dashboard() {
                 {system.memory_mb > 0 && ` (${system.memory_mb >= 1024 ? `${Math.round(system.memory_mb / 1024)} GB` : `${system.memory_mb} MB`})`}
               </h3>
               <div className="mt-2 space-y-0.5 text-sm text-muted-foreground">
-                {primaryIface.ip && <p>IP Address: <span className="text-foreground">{primaryIface.ip}</span></p>}
+                {system.hostname && <p>Hostname: <span className="text-foreground">{system.hostname}</span></p>}
               </div>
             </div>
             <div className="flex items-center gap-4 mt-5">
@@ -363,8 +355,8 @@ export default function Dashboard() {
               <StatusBadge icon={SliverIcon} label="C2" active={services.sliver_c2} />
             </div>
             <div className="flex items-center gap-3 mt-4">
-              <BandBadge label="5G" active={frequency_bands["5G"]} />
               <BandBadge label="2.4G" active={frequency_bands["2.4G"]} />
+              <BandBadge label="5G" active={frequency_bands["5G"]} />
             </div>
           </div>
 
@@ -396,18 +388,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 mt-6">
-          <Button variant="outline" onClick={() => fetchDashboard(true)} disabled={refreshing}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        </div>
-
-        <div className="mt-6 pt-4 border-t border-border">
-          <p className="text-xs text-muted-foreground">
-            {system.hostname && <>Host: <span className="text-foreground">{system.hostname}</span></>}
-          </p>
-        </div>
       </CardContent></Card>
     </div>
   );

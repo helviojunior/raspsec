@@ -316,7 +316,7 @@ class DeviceUpdateView(APIView):
                 errors.append("MTU deve estar entre 68 e 9000.")
 
         # DHCP client
-        if "dhcp_client" in data and name not in MANAGED_INTERFACES:
+        if "dhcp_client" in data and not _is_managed(name):
             dhcp_clients = _get_dhcp_client_config()
             dhcp_clients[name] = bool(data["dhcp_client"])
             save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
@@ -343,13 +343,22 @@ class DeviceUpdateView(APIView):
                             config = WifiService.get_config()
                             config["ap"]["enabled"] = True
                             WifiService.save_ap(config["ap"])
-                        elif mode == "client" and name not in MANAGED_INTERFACES:
+                        elif mode == "client":
                             # Auto-enable DHCP client when switching to client mode
-                            if "dhcp_client" not in data:
+                            if not _is_managed(name) and "dhcp_client" not in data:
                                 dhcp_clients = _get_dhcp_client_config()
                                 dhcp_clients[name] = True
                                 save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
                                 _apply_dhcp_client_config()
+                            # Auto-change chain to outside (it's now an uplink)
+                            ChainMapping.objects.update_or_create(
+                                interface=name, defaults={"chain": "outside"}
+                            )
+                            try:
+                                from raspsec.services.firewall import FirewallService
+                                FirewallService.apply()
+                            except Exception:
+                                pass
                     except Exception as e:
                         errors.append(f"Erro ao alterar modo WiFi: {e}")
 
@@ -401,12 +410,22 @@ class DeviceWifiModeView(APIView):
                 logger.log(f"Started AP on {name}")
             elif mode == "client":
                 # Auto-enable DHCP client for WiFi client mode
-                if name not in MANAGED_INTERFACES:
+                if not _is_managed(name):
                     dhcp_clients = _get_dhcp_client_config()
                     dhcp_clients[name] = True
                     save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
                     _apply_dhcp_client_config()
                     logger.log(f"Auto-enabled DHCP client on {name}")
+                # Auto-change chain to outside (it's now an uplink)
+                ChainMapping.objects.update_or_create(
+                    interface=name, defaults={"chain": "outside"}
+                )
+                try:
+                    from raspsec.services.firewall import FirewallService
+                    FirewallService.apply()
+                except Exception:
+                    pass
+                logger.log(f"Auto-set {name} chain to 'outside' (client mode)")
 
         except Exception as e:
             logger.log(f"Failed to switch {name} to {mode}: {e}")
