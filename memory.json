@@ -577,6 +577,15 @@
     {
       "hash": "687c182b0867d8a637fc4fdc51eb9c00696a2a99",
       "message": "Remove custom kernel build, use boot-splash.sh instead"
+    },
+    {
+      "hash": "6784dec2857c160ec769a81d476b3e17d7910970",
+      "message": "Fix boot splash: support 16bpp RGB565, add scroll region and getty override",
+      "skipped": true
+    },
+    {
+      "hash": "7a4761a2d9e319c6d747cdfd8deccf84e5c23752",
+      "message": "Redraw logo on getty start and every 30s via issue timer"
     }
   ]
 }

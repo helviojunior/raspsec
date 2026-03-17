@@ -66,13 +66,22 @@ export default function Files() {
   const downloadFile = (name) => {
     const filePath = path ? `${path}/${name}` : name;
     const url = `/api/tools/files/download/?path=${encodeURIComponent(filePath)}`;
-    const a = document.createElement("a");
     api.get(url, { responseType: "blob" })
       .then((res) => {
-        const blob = new Blob([res.data]);
+        // Extract filename from Content-Disposition header, fallback to name
+        let filename = name;
+        const disposition = res.headers["content-disposition"];
+        if (disposition) {
+          const match = disposition.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i);
+          if (match) filename = decodeURIComponent(match[1].replace(/"/g, ""));
+        }
+        const blob = new Blob([res.data], {
+          type: res.headers["content-type"] || "application/octet-stream",
+        });
         const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
         a.href = blobUrl;
-        a.download = name;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
