@@ -544,6 +544,35 @@
     {
       "hash": "28471c7804ff3329a75cf9552cd1f6848f2e135b",
       "message": "Fix tree trunk visibility: use div+background instead of CSS border"
+    },
+    {
+      "hash": "f88366010c64e1ef87df93d58519c2eaaf48ae68",
+      "message": "Remove Scope column from console login banner table",
+      "skipped": true
+    },
+    {
+      "hash": "45bde79ae96dc2325a0c2336194bed11c9b74e0c",
+      "message": "Add logo verification step and auto-retry in kernel build",
+      "skipped": true
+    },
+    {
+      "hash": "b3cc16d1ca9f7c2e9147cac5271e1b6ad59d0618",
+      "message": "Replace banner text with RaspSec ASCII art logo",
+      "skipped": true
+    },
+    {
+      "hash": "98d5979aa50dbe73bff8f1aa158f263d01506996",
+      "message": "Fix kernel logo: single RUN to prevent layer caching issues",
+      "skipped": true
+    },
+    {
+      "hash": "a39642ad89b5d616b454d738235103d37b9f0e06",
+      "message": "Fix ASCII art in /etc/issue: escape backslashes for agetty",
+      "skipped": true
+    },
+    {
+      "hash": "1b1acfcc78c0d2c12f1133b17bfa4881a1d7e2a1",
+      "message": "Fix logo verification: use nm vmlinux instead of strings Image"
     }
   ]
 }

@@ -57,6 +57,42 @@ class DeviceStatusView(APIView):
         return Response(result)
 
 
+class EthtoolView(APIView):
+    """Return ethtool output for each network interface."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        ifaces = []
+        try:
+            entries = os.listdir("/sys/class/net")
+            ifaces = sorted(e for e in entries if e != "lo")
+        except OSError:
+            pass
+        sections = {}
+        for iface in ifaces:
+            result = _run(f"sudo /usr/sbin/ethtool {iface}", timeout=10)
+            sections[iface] = result.get("output", "")
+        return Response({"interfaces": sections})
+
+
+class ArpTableView(APIView):
+    """Return ARP table."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        result = _run("/usr/sbin/arp -an")
+        return Response(result)
+
+
+class RouteTableView(APIView):
+    """Return routing table."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        result = _run("/sbin/route -n")
+        return Response(result)
+
+
 class PingView(APIView):
     """Ping a host."""
     permission_classes = [IsAuthenticated]
@@ -220,52 +256,64 @@ class CaptureStartView(APIView):
         # Create capture directory
         os.makedirs(CAPTURE_DIR, exist_ok=True)
 
-        # Generate unique pcap filename and pidfile
+        # Generate unique pcap filename
         ts = time.strftime("%Y%m%d_%H%M%S")
         pcap_path = os.path.join(CAPTURE_DIR, f"capture_{interface}_{ts}.pcap")
-        pid_path = os.path.join(CAPTURE_DIR, f"capture_{interface}_{ts}.pid")
 
-        # Build tcpdump command — write PID to file so we can track the real process
-        cmd = f"sudo /usr/sbin/tcpdump -i {interface} -w {pcap_path} -Z root"
+        # Build tcpdump command
+        tcpdump_args = [
+            "sudo", "/usr/sbin/tcpdump",
+            "-i", interface,
+            "-w", pcap_path,
+            "-Z", "root",
+        ]
         if max_packets > 0:
-            cmd += f" -c {max_packets}"
+            tcpdump_args += ["-c", str(max_packets)]
         if bpf_filter:
-            cmd += f" {bpf_filter}"
+            tcpdump_args += bpf_filter.split()
 
-        # Launch in background with nohup, write PID
-        # Using bash -c to get the PID of the actual tcpdump process
-        launch_cmd = (
-            f"nohup {cmd} > /dev/null 2>&1 & "
-            f"echo $! > {pid_path}"
-        )
+        # stderr log to capture tcpdump errors
+        err_path = pcap_path.replace(".pcap", ".err")
 
-        ret = subprocess.run(
-            launch_cmd, shell=True, cwd="/tmp",
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            timeout=10,
-        )
-
-        if ret.returncode != 0:
-            return Response({"detail": f"Erro ao iniciar tcpdump: {ret.stderr.decode()}"}, status=500)
-
-        # Read PID (small delay for file write)
-        time.sleep(0.3)
-        tcpdump_pid = 0
         try:
-            with open(pid_path) as f:
-                tcpdump_pid = int(f.read().strip())
-        except (OSError, ValueError):
-            return Response({"detail": "Erro ao obter PID do tcpdump."}, status=500)
+            err_fd = open(err_path, "w")
+            proc = subprocess.Popen(
+                tcpdump_args,
+                stdout=subprocess.DEVNULL,
+                stderr=err_fd,
+                stdin=subprocess.DEVNULL,
+                cwd="/tmp",
+                start_new_session=True,
+            )
+        except Exception as exc:
+            return Response({"detail": f"Erro ao iniciar tcpdump: {exc}"}, status=500)
 
-        # Verify process is actually running
-        if not _pid_alive(tcpdump_pid):
-            return Response({"detail": "tcpdump não iniciou corretamente."}, status=500)
+        # Give tcpdump a moment to start (or fail)
+        time.sleep(0.5)
+
+        # Check if it exited immediately (error)
+        ret = proc.poll()
+        if ret is not None:
+            err_fd.close()
+            err_msg = ""
+            try:
+                with open(err_path) as f:
+                    err_msg = f.read().strip()
+            except OSError:
+                pass
+            return Response(
+                {"detail": f"tcpdump encerrou imediatamente (code {ret}): {err_msg}"},
+                status=500,
+            )
+        err_fd.close()
+
+        tcpdump_pid = proc.pid
 
         session_id = str(tcpdump_pid)
         _active_captures[session_id] = {
             "pid": tcpdump_pid,
             "pcap_path": pcap_path,
-            "pid_path": pid_path,
+            "err_path": err_path,
             "interface": interface,
             "filter": bpf_filter,
             "started": time.time(),
@@ -318,9 +366,11 @@ class CaptureStopView(APIView):
         pcap_path = cap["pcap_path"]
         pid = cap["pid"]
 
-        # Send SIGTERM to tcpdump via sudo kill
-        subprocess.run(f"sudo /bin/kill -TERM {pid}", shell=True, timeout=5,
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # Send SIGTERM to tcpdump process tree (sudo + tcpdump)
+        subprocess.run(
+            ["sudo", "/bin/kill", "-TERM", "--", str(pid)],
+            timeout=5, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
 
         # Wait for process to exit
         for _ in range(20):
@@ -329,14 +379,16 @@ class CaptureStopView(APIView):
             time.sleep(0.25)
         else:
             # Force kill
-            subprocess.run(f"sudo /bin/kill -9 {pid}", shell=True, timeout=5,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(
+                ["sudo", "/bin/kill", "-9", "--", str(pid)],
+                timeout=5, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
             time.sleep(0.5)
 
-        # Clean up pidfile
-        pid_path = cap.get("pid_path", "")
-        if pid_path and os.path.isfile(pid_path):
-            os.unlink(pid_path)
+        # Clean up auxiliary files
+        for ext_path in [cap.get("pid_path", ""), cap.get("err_path", "")]:
+            if ext_path and os.path.isfile(ext_path):
+                os.unlink(ext_path)
 
         # Remove from active
         del _active_captures[session_id]
@@ -375,8 +427,8 @@ def _cleanup_dead_captures():
         if not _pid_alive(cap["pid"]):
             dead.append(sid)
     for sid in dead:
-        # Clean up pidfile
-        pid_path = _active_captures[sid].get("pid_path", "")
-        if pid_path and os.path.isfile(pid_path):
-            os.unlink(pid_path)
+        # Clean up auxiliary files
+        for ext_path in [_active_captures[sid].get("err_path", "")]:
+            if ext_path and os.path.isfile(ext_path):
+                os.unlink(ext_path)
         del _active_captures[sid]
