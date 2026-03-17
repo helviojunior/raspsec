@@ -7,6 +7,7 @@ from raspsec.libs.config import load_config, save_config
 from raspsec.libs.log import StrataLogger
 from raspsec.libs.network import write_dhcpcd, write_system_file, DHCPCD_CONF
 from raspsec.dbmodels.firewall import ChainMapping
+from raspsec.services.bridge import BridgeService
 from raspsec.services.vlan import VlanService
 
 import os
@@ -34,9 +35,12 @@ class DevicesView(APIView):
             iface["managed"] = iface["name"] in MANAGED_INTERFACES
             iface["dhcp_client"] = dhcp_clients.get(iface["name"], False)
 
+        bridge = BridgeService.get_bridge()
+
         return Response({
             "interfaces": interfaces,
             "vlans": vlans,
+            "bridge": bridge,
         })
 
 
@@ -152,6 +156,95 @@ class DeviceChainView(APIView):
         return Response({"detail": f"Chain de {name} alterada para '{chain}'."})
 
 
+class BridgeView(APIView):
+    """Manage network bridge between two wired ethernet interfaces."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Return current bridge configuration."""
+        bridge = BridgeService.get_bridge()
+        # If bridge is active, check if br0 is really up on the system
+        if bridge:
+            ret, out = Exec.execute("/sbin/ip link show br0", raise_error=False)
+            bridge["active"] = ret == 0 and "UP" in out
+        return Response({"bridge": bridge})
+
+    def post(self, request):
+        """Create a new bridge."""
+        port1 = request.data.get("port1", "")
+        port2 = request.data.get("port2", "")
+
+        try:
+            bridge = BridgeService.create_bridge(port1, port2)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
+        except Exception as e:
+            logger.log(f"Bridge creation failed: {e}")
+            return Response({"detail": f"Erro ao criar bridge: {e}"}, status=500)
+
+        return Response({"bridge": bridge, "detail": f"Bridge br0 criada: {port1} ↔ {port2}."})
+
+    def delete(self, request):
+        """Remove the bridge."""
+        try:
+            BridgeService.remove_bridge()
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
+        except Exception as e:
+            logger.log(f"Bridge removal failed: {e}")
+            return Response({"detail": f"Erro ao remover bridge: {e}"}, status=500)
+
+        return Response({"detail": "Bridge br0 removida."})
+
+
+class DeviceWifiModeView(APIView):
+    """Switch a wireless interface between AP and Client mode."""
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        name = request.data.get("interface", "")
+        mode = request.data.get("mode", "")  # "ap" or "client"
+
+        if not _valid_iface(name):
+            return Response({"detail": "Interface inválida."}, status=400)
+        if mode not in ("ap", "client"):
+            return Response({"detail": "Modo inválido. Use 'ap' ou 'client'."}, status=400)
+
+        current_modes = _get_wifi_modes()
+        current_mode = current_modes.get(name, "none")
+
+        if current_mode == mode:
+            return Response({"detail": f"{name} já está em modo {mode.upper()}."})
+
+        try:
+            if current_mode == "ap":
+                # Stop AP on this interface
+                from raspsec.services.wifi import WifiService
+                WifiService._stop_ap()
+                logger.log(f"Stopped AP on {name}")
+            elif current_mode == "client":
+                # Stop client on this interface
+                from raspsec.services.wifi_client import WifiClientService
+                WifiClientService.disconnect(name)
+                logger.log(f"Disconnected client on {name}")
+
+            if mode == "ap":
+                from raspsec.services.wifi import WifiService
+                config = WifiService.get_config()
+                config["ap"]["enabled"] = True
+                WifiService.save_ap(config["ap"])
+                logger.log(f"Started AP on {name}")
+            # client mode: don't auto-connect, just ensure AP is stopped
+            # user will connect via WiFi Client tab
+
+        except Exception as e:
+            logger.log(f"Failed to switch {name} to {mode}: {e}")
+            return Response({"detail": f"Erro ao alternar modo: {e}"}, status=500)
+
+        label = "Access Point" if mode == "ap" else "Client"
+        return Response({"detail": f"{name} alterada para modo {label}."})
+
+
 def _valid_iface(name):
     """Validate interface name to prevent injection."""
     return bool(name) and re.match(r"^[a-zA-Z0-9._-]+$", name)
@@ -180,7 +273,9 @@ def _get_all_interfaces():
 
         # Detect interface type
         itype = "physical"
-        if "." in name:
+        if name.startswith("br"):
+            itype = "bridge"
+        elif "." in name:
             itype = "vlan"
         elif name.startswith("usb"):
             itype = "usb"
@@ -207,7 +302,59 @@ def _get_all_interfaces():
                 if name in iface_data and not iface_data[name]["ip"]:
                     iface_data[name]["ip"] = parts[3]
 
+    # Add wifi mode for wireless interfaces
+    wifi_modes = _get_wifi_modes()
+    for name, data in iface_data.items():
+        if data["type"] == "wireless":
+            data["wifi_mode"] = wifi_modes.get(name, "none")
+
     return list(iface_data.values())
+
+
+def _get_wifi_modes():
+    """Detect wifi mode (ap/client/none) for each wireless interface.
+
+    Uses `iw dev` output to check interface type:
+      - type AP → ap mode (hostapd running)
+      - type managed → could be client (wpa_supplicant) or idle
+    Also checks if hostapd/wpa_supplicant is actually running.
+    """
+    modes = {}
+
+    ret, out = Exec.execute("/usr/sbin/iw dev", raise_error=False)
+    if ret != 0:
+        return modes
+
+    current_iface = None
+    current_type = None
+    for line in out.splitlines():
+        line = line.strip()
+        if line.startswith("Interface "):
+            if current_iface and current_type:
+                modes[current_iface] = current_type
+            current_iface = line.split()[1]
+            current_type = "none"
+        elif line.startswith("type "):
+            iw_type = line.split()[1]
+            if iw_type == "AP":
+                current_type = "ap"
+            elif iw_type == "managed":
+                current_type = "none"  # will check wpa_supplicant below
+
+    if current_iface and current_type:
+        modes[current_iface] = current_type
+
+    # For "none" mode interfaces, check if wpa_supplicant is running
+    for iface, mode in list(modes.items()):
+        if mode == "none":
+            ret, out = Exec.execute(
+                f"sudo /usr/bin/pgrep -f 'wpa_supplicant.*-i {iface}'",
+                raise_error=False,
+            )
+            if ret == 0 and out.strip():
+                modes[iface] = "client"
+
+    return modes
 
 
 def _has_carrier(iface):

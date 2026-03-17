@@ -13,16 +13,22 @@ from raspsec.views.netstat import NetworkStatusView, GatewayConfigView
 from raspsec.views.dns import DnsConfigView, DnsSyncView, DnsServersView
 from raspsec.views.firewall import FirewallConfigView, FirewallRuleView, NatRuleView, FirewallReorderView, FirewallApplyView
 from raspsec.views.vlan import VlanConfigView, VlanView, VlanApplyView
-from raspsec.views.devices import DevicesView, DeviceToggleView, DeviceMacView, DeviceChainView, DeviceDhcpClientView
+from raspsec.views.devices import (
+    DevicesView, DeviceToggleView, DeviceMacView, DeviceChainView,
+    DeviceDhcpClientView, DeviceWifiModeView, BridgeView,
+)
 from raspsec.views.ssh_keys import SSHKeysView
 from raspsec.views.dashboard import DashboardView
 from raspsec.views.wifi_client import (
     WifiClientScanView, WifiClientConnectView, WifiClientDisconnectView,
     WifiClientStatusView, WifiClientProfilesView,
 )
+from raspsec.views.files import FileListView, FileDownloadView, FileDeleteView
 from raspsec.views.tools import (
-    DeviceStatusView, PingView, DnsCheckView, HttpCheckView, TracerouteView,
+    DeviceStatusView, EthtoolView, ArpTableView, RouteTableView,
+    PingView, DnsCheckView, HttpCheckView, TracerouteView,
     CaptureStartView, CaptureStatusView, CaptureStopView,
+    StartupScriptView, StartupScriptRunView, StartupScriptLogView,
 )
 
 
@@ -83,6 +89,8 @@ urlpatterns = [
     path('api/network/devices/mac/', DeviceMacView.as_view(), name='device-mac'),
     path('api/network/devices/chain/', DeviceChainView.as_view(), name='device-chain'),
     path('api/network/devices/dhcp-client/', DeviceDhcpClientView.as_view(), name='device-dhcp-client'),
+    path('api/network/devices/wifi-mode/', DeviceWifiModeView.as_view(), name='device-wifi-mode'),
+    path('api/network/devices/bridge/', BridgeView.as_view(), name='device-bridge'),
 
     # WiFi Client
     path('api/wifi-client/scan/', WifiClientScanView.as_view(), name='wifi-client-scan'),
@@ -100,6 +108,9 @@ urlpatterns = [
 
     # Tools
     path('api/tools/device-status/', DeviceStatusView.as_view(), name='tools-device-status'),
+    path('api/tools/ethtool/', EthtoolView.as_view(), name='tools-ethtool'),
+    path('api/tools/arp/', ArpTableView.as_view(), name='tools-arp'),
+    path('api/tools/route/', RouteTableView.as_view(), name='tools-route'),
     path('api/tools/ping/', PingView.as_view(), name='tools-ping'),
     path('api/tools/dns-check/', DnsCheckView.as_view(), name='tools-dns-check'),
     path('api/tools/http-check/', HttpCheckView.as_view(), name='tools-http-check'),
@@ -107,5 +118,13 @@ urlpatterns = [
     path('api/tools/capture/start/', CaptureStartView.as_view(), name='tools-capture-start'),
     path('api/tools/capture/status/', CaptureStatusView.as_view(), name='tools-capture-status'),
     path('api/tools/capture/stop/', CaptureStopView.as_view(), name='tools-capture-stop'),
+    path('api/tools/startup-script/', StartupScriptView.as_view(), name='tools-startup-script'),
+    path('api/tools/startup-script/run/', StartupScriptRunView.as_view(), name='tools-startup-script-run'),
+    path('api/tools/startup-script/log/', StartupScriptLogView.as_view(), name='tools-startup-script-log'),
+
+    # Files
+    path('api/tools/files/', FileListView.as_view(), name='tools-files'),
+    path('api/tools/files/download/', FileDownloadView.as_view(), name='tools-files-download'),
+    path('api/tools/files/delete/', FileDeleteView.as_view(), name='tools-files-delete'),
 
 ]

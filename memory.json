@@ -573,6 +573,10 @@
     {
       "hash": "1b1acfcc78c0d2c12f1133b17bfa4881a1d7e2a1",
       "message": "Fix logo verification: use nm vmlinux instead of strings Image"
+    },
+    {
+      "hash": "687c182b0867d8a637fc4fdc51eb9c00696a2a99",
+      "message": "Remove custom kernel build, use boot-splash.sh instead"
     }
   ]
 }

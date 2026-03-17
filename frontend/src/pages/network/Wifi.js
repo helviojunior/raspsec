@@ -15,6 +15,8 @@ export default function Wifi() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [apInterfaces, setApInterfaces] = useState([]);
+  const [selectedIface, setSelectedIface] = useState("");
 
   // AP state
   const [ap, setAp] = useState({
@@ -41,15 +43,25 @@ export default function Wifi() {
   const fetchConfig = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await api.get("/api/wifi/config/");
-      setAp(data.ap);
-      setNet(data.networking);
+      const [configRes, devicesRes] = await Promise.all([
+        api.get("/api/wifi/config/"),
+        api.get("/api/network/devices/"),
+      ]);
+      setAp(configRes.data.ap);
+      setNet(configRes.data.networking);
+      // Only show wireless interfaces in AP mode
+      const wifiIfaces = (devicesRes.data.interfaces || [])
+        .filter((i) => i.type === "wireless" && i.wifi_mode === "ap");
+      setApInterfaces(wifiIfaces);
+      if (wifiIfaces.length > 0 && !selectedIface) {
+        setSelectedIface(wifiIfaces[0].name);
+      }
     } catch (err) {
       setError("Erro ao carregar configurações.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedIface]);
 
   useEffect(() => {
     fetchConfig();
@@ -144,6 +156,26 @@ export default function Wifi() {
         ))}
       </div>
 
+      {/* Interface selector */}
+      {apInterfaces.length === 0 ? (
+        <div className="mb-4 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
+          Nenhuma interface wireless em modo AP. Altere o modo em Devices &gt; Interfaces.
+        </div>
+      ) : apInterfaces.length > 1 && (
+        <div className="mb-4 flex items-center gap-3">
+          <Label className="text-sm whitespace-nowrap">Interface AP:</Label>
+          <select
+            value={selectedIface}
+            onChange={(e) => setSelectedIface(e.target.value)}
+            className="h-9 rounded-md border border-border bg-background px-3 text-sm"
+          >
+            {apInterfaces.map((i) => (
+              <option key={i.name} value={i.name}>{i.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Tab: Management Access Point */}
       {activeTab === "ap" && (
         <Card>
@@ -232,7 +264,7 @@ export default function Wifi() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="interface_ip">IP da Interface (wlan0)</Label>
+                <Label htmlFor="interface_ip">IP da Interface ({selectedIface || "wlan0"})</Label>
                 <Input
                   id="interface_ip"
                   value={net.interface_ip}

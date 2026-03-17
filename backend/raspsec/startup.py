@@ -88,6 +88,9 @@ def on_startup():
         # Verify and fix boot configs before applying network
         _verify_boot_configs()
 
+        # Ensure downloads directory structure
+        _ensure_downloads_dir()
+
         # Apply network configurations
         _apply_network_configs()
 
@@ -167,6 +170,16 @@ def _verify_boot_configs():
         log.warning(f"Failed to verify boot configs: {e}")
 
 
+def _ensure_downloads_dir():
+    """Create the downloads directory structure and symlinks."""
+    try:
+        from raspsec.views.files import _ensure_downloads_dir as ensure
+        ensure()
+        log.info("Downloads directory ready.")
+    except Exception as e:
+        log.warning(f"Failed to setup downloads dir: {e}")
+
+
 def _apply_network_configs():
     """Apply saved network configurations on boot."""
     try:
@@ -196,6 +209,13 @@ def _apply_network_configs():
         log.info("VLAN config applied.")
     except Exception as e:
         log.warning(f"Failed to apply VLAN config: {e}")
+
+    try:
+        from raspsec.services.bridge import BridgeService
+        BridgeService.apply_on_boot()
+        log.info("Bridge config applied.")
+    except Exception as e:
+        log.warning(f"Failed to apply bridge config: {e}")
 
     try:
         from raspsec.services.firewall import FirewallService

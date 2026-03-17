@@ -3,6 +3,7 @@ import {
   Plus, Trash2, Save, RefreshCw, EthernetPort, Wifi, Usb,
   Cable, PenLine, Layers, Search, Lock, Unlock,
   Signal, X, Loader2, FileText, Key, ShieldCheck, Eye, EyeOff,
+  Unplug, Router,
 } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
@@ -25,11 +26,13 @@ const typeIcon = {
   wireless: Wifi,
   usb: Usb,
   vlan: Layers,
+  bridge: Unplug,
 };
 
 const tabs = [
   { id: "interfaces", label: "Interfaces", icon: EthernetPort },
   { id: "vlans", label: "VLANs", icon: Layers },
+  { id: "bridge", label: "Bridge", icon: Unplug },
   { id: "wifi-client", label: "WiFi Client", icon: Wifi },
 ];
 
@@ -41,6 +44,7 @@ export default function Devices() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [editMac, setEditMac] = useState(null);
+  const [bridge, setBridge] = useState(null);
   const [vlanForm, setVlanForm] = useState({ parent: "eth0", vlan_id: "", ip_address: "", enabled: true });
 
   const fetchData = useCallback(async () => {
@@ -49,6 +53,7 @@ export default function Devices() {
       const { data } = await api.get("/api/network/devices/");
       setInterfaces(data.interfaces || []);
       setVlans(data.vlans || []);
+      setBridge(data.bridge || null);
     } catch {
       setError("Erro ao carregar interfaces.");
     } finally {
@@ -97,6 +102,16 @@ export default function Devices() {
     } catch { setError("Erro ao alterar chain."); }
   };
 
+  const changeWifiMode = async (name, mode) => {
+    try {
+      const { data } = await api.put("/api/network/devices/wifi-mode/", { interface: name, mode });
+      setSuccess(data.detail);
+      fetchData();
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao alterar modo WiFi.");
+    }
+  };
+
   const addVlan = async () => {
     try {
       const payload = { ...vlanForm, vlan_id: parseInt(vlanForm.vlan_id, 10) };
@@ -117,8 +132,8 @@ export default function Devices() {
     } catch { setError("Erro ao remover VLAN."); }
   };
 
-  // All wireless interfaces (including wlan0 with warning)
-  const allWirelessIfaces = interfaces.filter((i) => i.type === "wireless");
+  // WiFi Client: only show interfaces NOT in AP mode
+  const clientWirelessIfaces = interfaces.filter((i) => i.type === "wireless" && i.wifi_mode !== "ap");
 
   if (loading) {
     return (
@@ -172,6 +187,7 @@ export default function Devices() {
           toggleInterface={toggleInterface}
           toggleDhcpClient={toggleDhcpClient}
           changeChain={changeChain}
+          changeWifiMode={changeWifiMode}
         />
       )}
 
@@ -186,9 +202,19 @@ export default function Devices() {
         />
       )}
 
+      {activeTab === "bridge" && (
+        <BridgeTab
+          interfaces={interfaces}
+          bridge={bridge}
+          setError={setError}
+          setSuccess={setSuccess}
+          fetchData={fetchData}
+        />
+      )}
+
       {activeTab === "wifi-client" && (
         <WifiClientTab
-          wirelessInterfaces={allWirelessIfaces}
+          wirelessInterfaces={clientWirelessIfaces}
           setError={setError}
           setSuccess={setSuccess}
         />
@@ -200,11 +226,12 @@ export default function Devices() {
 
 // ── Interfaces Tab ──
 
-function InterfacesTab({ interfaces, editMac, setEditMac, changeMac, toggleInterface, toggleDhcpClient, changeChain }) {
+function InterfacesTab({ interfaces, editMac, setEditMac, changeMac, toggleInterface, toggleDhcpClient, changeChain, changeWifiMode }) {
   return (
     <div className="space-y-3">
       {interfaces.map((iface) => {
         const Icon = typeIcon[iface.type] || EthernetPort;
+        const wifiMode = iface.wifi_mode;
         return (
           <Card key={iface.name}>
             <CardContent className="pt-5 pb-5">
@@ -234,6 +261,19 @@ function InterfacesTab({ interfaces, editMac, setEditMac, changeMac, toggleInter
                           {iface.carrier ? "Conectado" : "Desconectado"}
                         </span>
                       )}
+                      {iface.type === "wireless" && wifiMode && (
+                        <span className={cn(
+                          "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded flex items-center gap-1",
+                          wifiMode === "ap"
+                            ? "bg-violet-500/15 text-violet-400"
+                            : wifiMode === "client"
+                            ? "bg-cyan-500/15 text-cyan-400"
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          {wifiMode === "ap" ? <Router size={10} /> : <Wifi size={10} />}
+                          {wifiMode === "ap" ? "AP" : wifiMode === "client" ? "Client" : "Idle"}
+                        </span>
+                      )}
                     </div>
                     <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
                       <div>IP: <span className="text-foreground font-mono">{iface.ip || "—"}</span></div>
@@ -254,6 +294,27 @@ function InterfacesTab({ interfaces, editMac, setEditMac, changeMac, toggleInter
                 </div>
 
                 <div className="flex items-center gap-3">
+                  {iface.type === "wireless" && (
+                    <div className="text-right">
+                      <div className="text-[10px] text-muted-foreground uppercase mb-1">Modo</div>
+                      <select
+                        value={wifiMode || "none"}
+                        onChange={(e) => changeWifiMode(iface.name, e.target.value)}
+                        className={cn(
+                          "text-xs font-medium rounded px-2 py-1 border bg-transparent cursor-pointer",
+                          wifiMode === "ap"
+                            ? "text-violet-400 bg-violet-500/15 border-violet-500/30"
+                            : wifiMode === "client"
+                            ? "text-cyan-400 bg-cyan-500/15 border-cyan-500/30"
+                            : "text-muted-foreground border-border"
+                        )}
+                      >
+                        <option value="ap">AP</option>
+                        <option value="client">Client</option>
+                      </select>
+                    </div>
+                  )}
+
                   <div className="text-right">
                     <div className="text-[10px] text-muted-foreground uppercase mb-1">Chain</div>
                     <select
@@ -419,6 +480,143 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
             </table>
           </CardContent>
         </Card>
+      )}
+    </div>
+  );
+}
+
+
+// ── Bridge Tab ──
+
+function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
+  const ethInterfaces = interfaces.filter((i) => i.type === "physical" && i.name.startsWith("eth"));
+  const [port1, setPort1] = useState(ethInterfaces[0]?.name || "");
+  const [port2, setPort2] = useState(ethInterfaces[1]?.name || "");
+  const [loading, setLoading] = useState(false);
+
+  const createBridge = async () => {
+    if (!port1 || !port2) return;
+    if (port1 === port2) { setError("Selecione duas interfaces diferentes."); return; }
+    try {
+      setLoading(true);
+      const { data } = await api.post("/api/network/devices/bridge/", { port1, port2 });
+      setSuccess(data.detail);
+      fetchData();
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao criar bridge.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeBridge = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.delete("/api/network/devices/bridge/");
+      setSuccess(data.detail);
+      fetchData();
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao remover bridge.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Active bridge info */}
+      {bridge ? (
+        <Card>
+          <CardContent className="pt-5 pb-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                  <Unplug size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                    {bridge.name}
+                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
+                      Ativa
+                    </span>
+                  </h3>
+                  <div className="mt-1 text-sm text-muted-foreground">
+                    <span className="font-mono text-foreground">{bridge.port1}</span>
+                    {" ↔ "}
+                    <span className="font-mono text-foreground">{bridge.port2}</span>
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Modo transparente · STP desabilitado · Bridge netfilter desabilitado
+                  </div>
+                </div>
+              </div>
+              <Button variant="destructive" size="sm" onClick={removeBridge} disabled={loading}>
+                {loading ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                <span className="ml-1.5">Remover Bridge</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Create bridge form */}
+          <Card>
+            <CardHeader>
+              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Plus size={18} /> Criar Bridge
+              </h2>
+            </CardHeader>
+            <CardContent>
+              {ethInterfaces.length < 2 ? (
+                <div className="p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
+                  São necessárias pelo menos 2 interfaces ethernet cabeada para criar uma bridge.
+                  Conecte um adaptador USB-Ethernet adicional.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                      <Label>Interface 1</Label>
+                      <select
+                        value={port1}
+                        onChange={(e) => setPort1(e.target.value)}
+                        className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm"
+                      >
+                        {ethInterfaces.map((i) => (
+                          <option key={i.name} value={i.name}>{i.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Interface 2</Label>
+                      <select
+                        value={port2}
+                        onChange={(e) => setPort2(e.target.value)}
+                        className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm"
+                      >
+                        {ethInterfaces.filter((i) => i.name !== port1).map((i) => (
+                          <option key={i.name} value={i.name}>{i.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Button onClick={createBridge} disabled={loading || !port1 || !port2} className="w-full">
+                        {loading ? <Loader2 size={14} className="animate-spin" /> : <Unplug size={14} />}
+                        <span className="ml-1.5">Criar Bridge</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-md bg-muted/50 border border-border text-xs text-muted-foreground space-y-1">
+                    <p>A bridge conecta duas interfaces ethernet em modo transparente (Layer 2), permitindo que o tráfego passe entre elas sem roteamento IP.</p>
+                    <p>As interfaces serão colocadas em modo promíscuo e qualquer IP atribuído a elas será removido.</p>
+                    <p>Configurações aplicadas: STP off, forward delay 0, bridge netfilter desabilitado.</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
@@ -608,6 +806,17 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
     );
   };
 
+  if (wirelessInterfaces.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-muted-foreground">
+          <p>Nenhuma interface wireless disponível para modo Client.</p>
+          <p className="text-xs mt-2">Altere o modo de uma interface wireless para Client na aba Interfaces.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Interface selector + status */}
@@ -622,12 +831,10 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
                 className="block h-9 rounded-md border border-border bg-background px-3 text-sm min-w-[140px]"
               >
                 {wirelessInterfaces.length === 0 && (
-                  <option value="">Nenhuma interface wireless</option>
+                  <option value="">Nenhuma interface disponível</option>
                 )}
                 {wirelessInterfaces.map((i) => (
-                  <option key={i.name} value={i.name}>
-                    {i.name} {i.name === "wlan0" ? "(AP)" : ""}
-                  </option>
+                  <option key={i.name} value={i.name}>{i.name}</option>
                 ))}
               </select>
             </div>
@@ -678,12 +885,6 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
             </div>
           )}
 
-          {selectedIface === "wlan0" && (
-            <div className="mt-3 p-2.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs">
-              wlan0 é a interface do Access Point. Conectar como cliente pode conflitar com o AP.
-              Use outra interface wireless se disponível.
-            </div>
-          )}
         </CardContent>
       </Card>
 

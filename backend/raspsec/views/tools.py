@@ -215,7 +215,7 @@ class TracerouteView(APIView):
 
 # ── Packet Capture ──
 
-CAPTURE_DIR = "/tmp/raspsec_captures"
+CAPTURE_DIR = "/app/data/downloads/captures"
 
 
 def _valid_iface(name):
@@ -432,3 +432,60 @@ def _cleanup_dead_captures():
             if ext_path and os.path.isfile(ext_path):
                 os.unlink(ext_path)
         del _active_captures[sid]
+
+
+# ── Startup Script ──
+
+from raspsec.services.startup_script import StartupScriptService
+
+
+class StartupScriptView(APIView):
+    """Manage the user startup script."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Return script content, enabled state, and service status."""
+        config = StartupScriptService.get_config()
+        status = StartupScriptService.get_status()
+        return Response({
+            "script": config.get("script", ""),
+            "enabled": config.get("enabled", False),
+            "status": status,
+        })
+
+    def put(self, request):
+        """Save script and enable/disable."""
+        script = request.data.get("script", "")
+        enabled = request.data.get("enabled", False)
+
+        StartupScriptService.save_script(script, enabled)
+
+        return Response({"detail": "Startup script salvo."})
+
+
+class StartupScriptRunView(APIView):
+    """Run or stop the startup script manually."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Execute the startup script now."""
+        try:
+            StartupScriptService.run_now()
+        except (ValueError, RuntimeError) as e:
+            return Response({"detail": str(e)}, status=400)
+        return Response({"detail": "Script executado."})
+
+    def delete(self, request):
+        """Stop the startup script service."""
+        StartupScriptService.stop()
+        return Response({"detail": "Script parado."})
+
+
+class StartupScriptLogView(APIView):
+    """Clear the startup script log."""
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        """Clear the output log."""
+        StartupScriptService.clear_log()
+        return Response({"detail": "Log limpo."})

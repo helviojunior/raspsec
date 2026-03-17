@@ -21,6 +21,8 @@ import {
   Monitor,
   Radar,
   Scan,
+  FileCode,
+  FolderOpen,
 } from "lucide-react";
 import { useAuth } from "contexts/AuthContext";
 import { cn } from "lib/utils";
@@ -61,9 +63,11 @@ const menuStructure = [
     icon: Wrench,
     label: "Tools",
     children: [
-      { id: "device-status", path: "/tools/device-status", label: "Device Status", icon: Monitor },
+      { id: "device-status", path: "/tools/device-status", label: "Network Status", icon: Monitor },
       { id: "connectivity", path: "/tools/connectivity", label: "Connectivity", icon: Radar },
       { id: "packet-capture", path: "/tools/packet-capture", label: "Packet Capture", icon: Scan },
+      { id: "startup-script", path: "/tools/startup-script", label: "Startup Script", icon: FileCode },
+      { id: "files", path: "/tools/files", label: "Arquivos", icon: FolderOpen },
       { id: "webshell", action: "webshell", label: "Web Shell", icon: WebShellIcon },
     ],
   },

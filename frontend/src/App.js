@@ -14,6 +14,8 @@ import Devices from "pages/network/Devices";
 import DeviceStatus from "pages/tools/DeviceStatus";
 import ConnectivityChecker from "pages/tools/ConnectivityChecker";
 import PacketCapture from "pages/tools/PacketCapture";
+import StartupScript from "pages/tools/StartupScript";
+import Files from "pages/tools/Files";
 import "./App.css";
 
 function RequireHealthy({ children }) {
@@ -60,6 +62,8 @@ function App() {
               <Route path="/tools/device-status" element={<DeviceStatus />} />
               <Route path="/tools/connectivity" element={<ConnectivityChecker />} />
               <Route path="/tools/packet-capture" element={<PacketCapture />} />
+              <Route path="/tools/startup-script" element={<StartupScript />} />
+              <Route path="/tools/files" element={<Files />} />
             </Route>
 
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
