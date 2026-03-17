@@ -282,7 +282,7 @@ class CaptureStartView(APIView):
             tcpdump_args += bpf_filter.split()
 
         # stderr log to capture tcpdump errors
-        err_path = pcap_path.replace(".pcap", ".err")
+        err_path = pcap_path.replace(".pcap", ".err.log")
 
         try:
             err_fd = open(err_path, "w")
