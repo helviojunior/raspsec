@@ -641,6 +641,10 @@
     {
       "hash": "1793f48cb5a80c36b1e803407be1ce4205322c42",
       "message": "WiFi client auto-connect, dynamic managed interfaces, gauge and dashboard fixes"
+    },
+    {
+      "hash": "9dacb24e4a149488f7115e7bee852fff32725e84",
+      "message": "Fix tree arm/trunk alignment in dashboard network diagram"
     }
   ]
 }
