@@ -225,7 +225,12 @@ export default function Files() {
                             )}
                           </button>
                         ) : (
-                          <span className="text-foreground font-mono text-xs">{entry.name}</span>
+                          <button
+                            onClick={() => downloadFile(entry.name)}
+                            className="text-foreground hover:text-primary transition-colors font-mono text-xs"
+                          >
+                            {entry.name}
+                          </button>
                         )}
                       </td>
                       <td className="px-2 py-2 text-right text-xs text-muted-foreground font-mono">

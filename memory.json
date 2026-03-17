@@ -594,6 +594,10 @@
     {
       "hash": "b32678e2ae65f4e559b85f73239e8c925089733d",
       "message": "Remove all boot logo/splash attempts"
+    },
+    {
+      "hash": "0360888e5087175777e0818df2f22a4c31b743e7",
+      "message": "Make file names clickable to download in file browser"
     }
   ]
 }
