@@ -674,6 +674,10 @@
     {
       "hash": "242b7c723014920715cf1b58d46f9c3031b0c65f",
       "message": "Add hostname configuration in admin settings"
+    },
+    {
+      "hash": "32980c5f5dd307e96d4914b2f81fbd70f95893c2",
+      "message": "Fix drag ghost position using React portal to document.body"
     }
   ]
 }

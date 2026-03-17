@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Plus, Trash2, Save, RefreshCw, ArrowRightLeft, Pencil, GripVertical, Lock, ShieldCheck } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
@@ -426,14 +427,15 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
           </tbody>
         </table>
 
-        {isDragging && dragState && userRules[dragState.origIndex] && (
+        {isDragging && dragState && userRules[dragState.origIndex] && createPortal(
           <div style={ghostStyle}>
             <table className="w-full text-sm border border-primary/30 rounded-md bg-card shadow-xl shadow-primary/20">
               <tbody>
                 {renderRow(userRules[dragState.origIndex], dragState.origIndex, true)}
               </tbody>
             </table>
-          </div>
+          </div>,
+          document.body
         )}
       </CardContent>
     </Card>
@@ -735,14 +737,15 @@ function NatTab() {
             </tbody>
           </table>
 
-          {isDragging && dragState && userNatRules[dragState.origIndex] && (
+          {isDragging && dragState && userNatRules[dragState.origIndex] && createPortal(
             <div style={ghostStyle}>
               <table className="w-full text-sm border border-primary/30 rounded-md bg-card shadow-xl shadow-primary/20">
                 <tbody>
                   {renderRow(userNatRules[dragState.origIndex], dragState.origIndex, true)}
                 </tbody>
               </table>
-            </div>
+            </div>,
+            document.body
           )}
         </CardContent>
       </Card>
