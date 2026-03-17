@@ -250,8 +250,6 @@ export default function Dashboard() {
         { key: "lan", icon: LaptopEthIcon, active: clients.lan > 0, name: "LAN", count: clients.lan, label: `cliente${clients.lan !== 1 ? "s" : ""}` },
       ];
 
-  const wlan0 = interfaces?.find(i => i.name === "wlan0");
-  const primaryIface = wlan0 || interfaces?.find(i => i.up) || {};
   const leftCount = leftRows.length;
   const rightCount = rightRows.length;
 

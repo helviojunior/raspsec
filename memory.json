@@ -662,6 +662,10 @@
     {
       "hash": "f1b233ebc525a5facbaaf1fd6187eb77ae9b235d",
       "message": "Auto-set wlan chain to outside in client mode, dashboard PT-BR translation"
+    },
+    {
+      "hash": "58e8b027e4f8c4b1670158f1a8f0dd8acaeb162c",
+      "message": "Remove unused primaryIface and wlan0 variables from Dashboard"
     }
   ]
 }
