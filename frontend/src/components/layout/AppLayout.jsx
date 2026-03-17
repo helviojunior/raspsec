@@ -23,12 +23,11 @@ import {
   FileCode,
   FolderOpen,
   Plug,
-  Crosshair,
 } from "lucide-react";
 import { useAuth } from "contexts/AuthContext";
 import { cn } from "lib/utils";
 import WebShell from "components/WebShell";
-import { WebShellIcon } from "components/icons";
+import { WebShellIcon, SliverIcon } from "components/icons";
 
 const menuStructure = [
   {
@@ -55,7 +54,7 @@ const menuStructure = [
     icon: Plug,
     label: "Serviços externos",
     children: [
-      { id: "sliver-c2", path: "/services/sliver-c2", label: "Sliver C2", icon: Crosshair },
+      { id: "sliver-c2", path: "/services/sliver-c2", label: "Sliver C2", icon: SliverIcon },
     ],
   },
   {

@@ -633,6 +633,10 @@
     {
       "hash": "7c2ba4fd14bf80cfcbeab0480d4a710eee47027e",
       "message": "Add Sliver C2 service configuration panel"
+    },
+    {
+      "hash": "a82e8932fed95a54c302add310a661b933974c05",
+      "message": "Add Sliver icon and C2 status badge to dashboard"
     }
   ]
 }

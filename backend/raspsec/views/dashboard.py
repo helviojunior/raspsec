@@ -305,6 +305,13 @@ def _get_service_status():
     )
     statuses["usb_gadget"] = ret == 0 and "UP" in out
 
+    # Sliver C2
+    ret, out = Exec.execute(
+        "sudo /usr/bin/systemctl is-active raspsec-sliver-c2.service",
+        raise_error=False,
+    )
+    statuses["sliver_c2"] = out.strip() == "active"
+
     return statuses
 
 

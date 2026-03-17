@@ -8,6 +8,7 @@ import {
   LaptopWifiIcon, LaptopEthIcon,
   ApIcon, FirewallStatusIcon, VpnIcon,
   DeviceIllustration,
+  SliverIcon,
 } from "components/icons";
 
 // ── Helpers ──
@@ -354,6 +355,7 @@ export default function Dashboard() {
               <StatusBadge icon={FirewallStatusIcon} label="Firewall" active={services.firewall} />
               <StatusBadge icon={VpnIcon} label="VPN" active={services.vpn} />
               <StatusBadge icon={UsbIcon} label="USB" active={services.usb_gadget} />
+              <StatusBadge icon={SliverIcon} label="C2" active={services.sliver_c2} />
             </div>
             <div className="flex items-center gap-3 mt-4">
               <BandBadge label="5G" active={frequency_bands["5G"]} />
