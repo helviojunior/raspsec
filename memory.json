@@ -637,6 +637,10 @@
     {
       "hash": "a82e8932fed95a54c302add310a661b933974c05",
       "message": "Add Sliver icon and C2 status badge to dashboard"
+    },
+    {
+      "hash": "1793f48cb5a80c36b1e803407be1ce4205322c42",
+      "message": "WiFi client auto-connect, dynamic managed interfaces, gauge and dashboard fixes"
     }
   ]
 }

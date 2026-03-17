@@ -15,9 +15,19 @@ import re
 
 logger = StrataLogger("DevicesView")
 
-# Interfaces managed as servers (static IP, DHCP server) — not eligible for DHCP client
-MANAGED_INTERFACES = {"wlan0", "usb0"}
+# Interfaces always managed as servers (static IP, DHCP server)
+ALWAYS_MANAGED = {"usb0"}
 DHCP_CLIENT_CONFIG = "dhcp_clients.yml"
+
+
+def _is_managed(name):
+    """Check if interface is managed (static IP server). wlan0 is only managed in AP mode."""
+    if name in ALWAYS_MANAGED:
+        return True
+    if name.startswith("wlan"):
+        modes = _get_wifi_modes()
+        return modes.get(name) == "ap"
+    return False
 
 
 class DevicesView(APIView):
@@ -32,7 +42,7 @@ class DevicesView(APIView):
 
         for iface in interfaces:
             iface["chain"] = chain_map.get(iface["name"], "")
-            iface["managed"] = iface["name"] in MANAGED_INTERFACES
+            iface["managed"] = _is_managed(iface["name"])
             iface["dhcp_client"] = dhcp_clients.get(iface["name"], False)
 
         bridge = BridgeService.get_bridge()
@@ -108,7 +118,7 @@ class DeviceDhcpClientView(APIView):
         if not _valid_iface(name):
             return Response({"detail": "Interface inválida."}, status=400)
 
-        if name in MANAGED_INTERFACES:
+        if _is_managed(name):
             return Response({"detail": f"{name} é gerenciada como servidor, não pode usar DHCP client."}, status=400)
 
         dhcp_clients = _get_dhcp_client_config()
@@ -213,7 +223,7 @@ class DeviceDetailView(APIView):
         chain_map = {cm.interface: cm.chain for cm in ChainMapping.objects.all()}
         dhcp_clients = _get_dhcp_client_config()
         iface["chain"] = chain_map.get(name, "")
-        iface["managed"] = name in MANAGED_INTERFACES
+        iface["managed"] = _is_managed(name)
         iface["dhcp_client"] = dhcp_clients.get(name, False)
 
         # MTU
@@ -333,6 +343,13 @@ class DeviceUpdateView(APIView):
                             config = WifiService.get_config()
                             config["ap"]["enabled"] = True
                             WifiService.save_ap(config["ap"])
+                        elif mode == "client" and name not in MANAGED_INTERFACES:
+                            # Auto-enable DHCP client when switching to client mode
+                            if "dhcp_client" not in data:
+                                dhcp_clients = _get_dhcp_client_config()
+                                dhcp_clients[name] = True
+                                save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
+                                _apply_dhcp_client_config()
                     except Exception as e:
                         errors.append(f"Erro ao alterar modo WiFi: {e}")
 
@@ -382,8 +399,14 @@ class DeviceWifiModeView(APIView):
                 config["ap"]["enabled"] = True
                 WifiService.save_ap(config["ap"])
                 logger.log(f"Started AP on {name}")
-            # client mode: don't auto-connect, just ensure AP is stopped
-            # user will connect via WiFi Client tab
+            elif mode == "client":
+                # Auto-enable DHCP client for WiFi client mode
+                if name not in MANAGED_INTERFACES:
+                    dhcp_clients = _get_dhcp_client_config()
+                    dhcp_clients[name] = True
+                    save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
+                    _apply_dhcp_client_config()
+                    logger.log(f"Auto-enabled DHCP client on {name}")
 
         except Exception as e:
             logger.log(f"Failed to switch {name} to {mode}: {e}")

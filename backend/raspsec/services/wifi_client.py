@@ -212,8 +212,29 @@ class WifiClientService:
                 "auth_type": p.get("auth_type", ""),
                 "identity": p.get("identity", ""),
                 "has_password": bool(p.get("password")),
+                "auto_connect": p.get("auto_connect", False),
             })
         return safe
+
+    @staticmethod
+    def set_auto_connect(interface, ssid, enabled):
+        """Enable or disable auto-connect for a saved profile."""
+        config = load_config(CONFIG_FILE, DEFAULT_CONFIG)
+        profiles = config.get("profiles", [])
+        for p in profiles:
+            if p.get("interface") == interface and p.get("ssid") == ssid:
+                p["auto_connect"] = bool(enabled)
+        save_config(CONFIG_FILE, config)
+        logger.log(f"Auto-connect {'enabled' if enabled else 'disabled'} for {ssid} on {interface}")
+
+    @staticmethod
+    def get_auto_connect_profile(interface):
+        """Get the auto-connect profile for an interface, if any."""
+        config = load_config(CONFIG_FILE, DEFAULT_CONFIG)
+        for p in config.get("profiles", []):
+            if p.get("interface") == interface and p.get("auto_connect"):
+                return p
+        return None
 
     @staticmethod
     def delete_profile(interface, ssid):

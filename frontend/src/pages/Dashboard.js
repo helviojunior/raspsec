@@ -96,23 +96,27 @@ const TreeArmRight = ({ anyActive }) => {
 // ── Gauge Card ──
 
 const GaugeArc = ({ percent, color, size = 120 }) => {
-  const strokeWidth = 10;
+  const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const cx = size / 2;
   const cy = size / 2 + 10;
-  // Arc from 180° to 0° (left to right, bottom half = semi-circle)
+  const clampedPercent = Math.min(Math.max(percent, 0), 100);
+  // Arc from 180° to 0° (left to right, semi-circle)
   const startAngle = Math.PI;
-  const endAngle = 0;
-  const sweepAngle = startAngle - (startAngle - endAngle) * (Math.min(Math.max(percent, 0), 100) / 100);
+  const sweepAngle = startAngle - startAngle * (clampedPercent / 100);
 
   const bgX1 = cx + radius * Math.cos(startAngle);
   const bgY1 = cy + radius * Math.sin(startAngle);
-  const bgX2 = cx + radius * Math.cos(endAngle);
-  const bgY2 = cy + radius * Math.sin(endAngle);
+  const bgX2 = cx + radius * Math.cos(0);
+  const bgY2 = cy + radius * Math.sin(0);
 
   const arcX = cx + radius * Math.cos(sweepAngle);
   const arcY = cy + radius * Math.sin(sweepAngle);
-  const largeArc = percent > 50 ? 1 : 0;
+  const largeArc = clampedPercent > 50 ? 1 : 0;
+
+  // Arc length for dash trick (avoids round-cap blob at low %)
+  const totalArcLen = Math.PI * radius;
+  const valueArcLen = totalArcLen * (clampedPercent / 100);
 
   return (
     <svg width={size} height={size / 2 + 20} viewBox={`0 0 ${size} ${size / 2 + 20}`}>
@@ -125,17 +129,18 @@ const GaugeArc = ({ percent, color, size = 120 }) => {
         strokeLinecap="round"
       />
       {/* Value arc */}
-      {percent > 0 && (
+      {clampedPercent > 0 && (
         <path
           d={`M ${bgX1} ${bgY1} A ${radius} ${radius} 0 ${largeArc} 1 ${arcX} ${arcY}`}
           fill="none"
           stroke={color}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
+          strokeDasharray={`${valueArcLen} ${totalArcLen}`}
         />
       )}
       {/* Percentage text */}
-      <text x={cx} y={cy - 5} textAnchor="middle" fill="white" fontSize="20" fontWeight="600">
+      <text x={cx} y={cy - 2} textAnchor="middle" fill="white" fontSize="18" fontWeight="600">
         {Math.round(percent)}%
       </text>
     </svg>
@@ -345,9 +350,6 @@ export default function Dashboard() {
               </h3>
               <div className="mt-2 space-y-0.5 text-sm text-muted-foreground">
                 {primaryIface.ip && <p>IP Address: <span className="text-foreground">{primaryIface.ip}</span></p>}
-                {wifi.subnet_mask && <p>Netmask: <span className="text-foreground">{wifi.subnet_mask}</span></p>}
-                {primaryIface.mac && <p>MAC Address: <span className="text-foreground">{primaryIface.mac}</span></p>}
-                {wifi.ssid && <p>SSID: <span className="text-foreground">{wifi.ssid}</span></p>}
               </div>
             </div>
             <div className="flex items-center gap-4 mt-5">

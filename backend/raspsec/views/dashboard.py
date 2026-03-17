@@ -272,12 +272,18 @@ def _get_service_status():
     """Get status of key services for the dashboard."""
     statuses = {}
 
-    # AP status (hostapd)
+    # AP status — hostapd must be active AND wlan0 must be in AP mode
     ret, out = Exec.execute(
         "sudo /usr/bin/systemctl is-active hostapd.service",
         raise_error=False,
     )
-    statuses["ap"] = out.strip() == "active"
+    hostapd_active = out.strip() == "active"
+    # Cross-check with iw: is wlan0 actually in AP mode?
+    if hostapd_active:
+        ret2, out2 = Exec.execute("sudo /usr/sbin/iw dev wlan0 info", raise_error=False)
+        statuses["ap"] = ret2 == 0 and "type AP" in out2
+    else:
+        statuses["ap"] = False
 
     # Firewall — check if iptables has RASPSEC chains active
     ret, out = Exec.execute(

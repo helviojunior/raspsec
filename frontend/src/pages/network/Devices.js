@@ -645,6 +645,16 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
     }
   };
 
+  const toggleAutoConnect = async (iface, ssid, current) => {
+    try {
+      await api.put("/api/wifi-client/profiles/", { interface: iface, ssid, auto_connect: !current });
+      setSuccess(`Auto-connect ${!current ? "habilitado" : "desabilitado"} para '${ssid}'.`);
+      fetchProfiles();
+    } catch {
+      setError("Erro ao alterar auto-connect.");
+    }
+  };
+
   const readFileContent = (field) => (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1051,13 +1061,26 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
                     {p.identity && (
                       <span className="text-[10px] text-muted-foreground">{p.identity}</span>
                     )}
+                    {p.auto_connect && (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
+                        Auto
+                      </span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => deleteProfile(p.interface, p.ssid)}
-                    className="text-muted-foreground hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Toggle
+                      checked={p.auto_connect}
+                      onChange={() => toggleAutoConnect(p.interface, p.ssid, p.auto_connect)}
+                      className="scale-75"
+                    />
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">Auto-connect</span>
+                    <button
+                      onClick={() => deleteProfile(p.interface, p.ssid)}
+                      className="text-muted-foreground hover:text-red-500 transition-colors ml-1"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

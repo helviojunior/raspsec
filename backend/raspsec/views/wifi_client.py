@@ -97,3 +97,15 @@ class WifiClientProfilesView(APIView):
 
         WifiClientService.delete_profile(interface, ssid)
         return Response({"detail": f"Perfil '{ssid}' removido."})
+
+    def put(self, request):
+        """Toggle auto-connect for a profile."""
+        interface = request.data.get("interface", "")
+        ssid = request.data.get("ssid", "")
+        auto_connect = request.data.get("auto_connect", False)
+
+        if not interface or not ssid:
+            return Response({"detail": "Interface e SSID são obrigatórios."}, status=400)
+
+        WifiClientService.set_auto_connect(interface, ssid, auto_connect)
+        return Response({"detail": f"Auto-connect {'habilitado' if auto_connect else 'desabilitado'} para '{ssid}'."})

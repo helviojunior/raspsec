@@ -237,7 +237,12 @@ export default function DeviceEdit() {
               <FieldRow label="WiFi Mode">
                 <select
                   value={form.wifi_mode || "none"}
-                  onChange={(e) => setForm({ ...form, wifi_mode: e.target.value })}
+                  onChange={(e) => {
+                    const mode = e.target.value;
+                    const updates = { wifi_mode: mode };
+                    if (mode === "client") updates.dhcp_client = true;
+                    setForm({ ...form, ...updates });
+                  }}
                   className="h-10 rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm max-w-md w-full"
                 >
                   <option value="ap">Access Point (AP)</option>
