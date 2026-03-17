@@ -610,6 +610,15 @@
     {
       "hash": "55739c554e5906b58b0e46f70969bc1191dab94f",
       "message": "Fix WiFi client mode not persisting across reboot, UI tweaks"
+    },
+    {
+      "hash": "d107c9acd356a033b2bcd4dd9de49060a4d417a0",
+      "message": "Add systemd timer to refresh TTY console banner every 5 minutes",
+      "skipped": true
+    },
+    {
+      "hash": "ec64b4f6e281a2b848768e1d2c4ed2f2d1bfd100",
+      "message": "Fix firewall rules lost on reboot, harden deploy and fallback"
     }
   ]
 }

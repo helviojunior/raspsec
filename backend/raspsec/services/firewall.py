@@ -185,7 +185,16 @@ class FirewallService:
         rules = FirewallRule.objects.filter(enabled=True).order_by("chain", "priority")
         nat_rules = NatRule.objects.filter(enabled=True).order_by("priority")
 
-        logger.log("Applying firewall rules...")
+        logger.log(f"Applying firewall rules... mappings={mappings}, rules={rules.count()}, nat_rules={nat_rules.count()}")
+
+        if not mappings:
+            logger.log("WARNING: No chain mappings found! Firewall will have no interface rules.")
+            # Try to recreate defaults before proceeding
+            FirewallService.ensure_defaults()
+            mappings = {m.interface: m.chain for m in ChainMapping.objects.all()}
+            rules = FirewallRule.objects.filter(enabled=True).order_by("chain", "priority")
+            nat_rules = NatRule.objects.filter(enabled=True).order_by("priority")
+            logger.log(f"After ensure_defaults: mappings={mappings}, rules={rules.count()}, nat_rules={nat_rules.count()}")
 
         # ── Flush ──
         for chain in CHAINS:
