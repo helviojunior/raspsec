@@ -222,7 +222,7 @@ export default function Dashboard() {
     );
   }
 
-  const { system, wifi, clients, services, frequency_bands, interfaces } = data;
+  const { system, clients, services, frequency_bands, interfaces } = data;
 
   // ── Build left rows (connection types) ──
   const externalIfaces = (interfaces || []).filter(i => i.chain === "implant" || i.chain === "outside" || !i.chain);

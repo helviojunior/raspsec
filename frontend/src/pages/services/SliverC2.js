@@ -216,7 +216,7 @@ export default function SliverC2() {
                   <button
                     type="button"
                     onClick={() => setShowProxyPass(!showProxyPass)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-0 leading-none text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showProxyPass ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>

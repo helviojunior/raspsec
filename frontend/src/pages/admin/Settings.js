@@ -104,7 +104,7 @@ function ProfileTab({ user, loginUser }) {
                 <Label>{f.label}</Label>
                 <div className="relative">
                   <Input type={f.show ? "text" : "password"} value={f.value} onChange={(e) => f.set(e.target.value)} className="pr-10" />
-                  <button type="button" onClick={f.toggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
+                  <button type="button" onClick={f.toggle} className="absolute right-3 top-1/2 -translate-y-1/2 p-0 leading-none text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
                     {f.show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
