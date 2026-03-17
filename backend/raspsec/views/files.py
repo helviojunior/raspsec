@@ -200,16 +200,25 @@ class FileDownloadView(APIView):
         if ext.lower() in BLOCKED_EXTENSIONS:
             return Response({"detail": "Tipo de arquivo bloqueado."}, status=403)
 
+        # Force application/octet-stream for extensionless files so browsers
+        # don't try to append .txt or similar
+        _, ext = os.path.splitext(filename)
+        content_type = mimetypes.guess_type(filename)[0] if ext else None
+        if not content_type:
+            content_type = "application/octet-stream"
+
         # For files we can read directly
         try:
             fd = open(real_path, "rb")
-            content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
-            return FileResponse(
+            response = FileResponse(
                 fd,
                 content_type=content_type,
                 as_attachment=True,
                 filename=filename,
             )
+            # Ensure header is accessible to frontend JS
+            response["Access-Control-Expose-Headers"] = "Content-Disposition"
+            return response
         except PermissionError:
             # Copy to temp with sudo then serve
             tmp_path = f"/tmp/raspsec_dl_{os.getpid()}_{filename}"
@@ -220,19 +229,6 @@ class FileDownloadView(APIView):
             if ret != 0:
                 return Response({"detail": f"Erro ao ler arquivo: {out}"}, status=500)
 
-            content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
-
-            def cleanup_file(fd, path):
-                """Wrapper that deletes temp file after response is sent."""
-                try:
-                    yield from fd
-                finally:
-                    fd.close()
-                    try:
-                        os.unlink(path)
-                    except OSError:
-                        pass
-
             fd = open(tmp_path, "rb")
             response = FileResponse(
                 fd,
@@ -240,6 +236,7 @@ class FileDownloadView(APIView):
                 as_attachment=True,
                 filename=filename,
             )
+            response["Access-Control-Expose-Headers"] = "Content-Disposition"
             # Django FileResponse closes fd, we just need to clean up tmp
             response._tmp_path = tmp_path
             return response

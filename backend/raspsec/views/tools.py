@@ -260,9 +260,18 @@ class CaptureStartView(APIView):
         ts = time.strftime("%Y%m%d_%H%M%S")
         pcap_path = os.path.join(CAPTURE_DIR, f"capture_{interface}_{ts}.pcap")
 
+        # Find tcpdump binary
+        tcpdump_bin = None
+        for p in ["/usr/sbin/tcpdump", "/usr/bin/tcpdump"]:
+            if os.path.isfile(p):
+                tcpdump_bin = p
+                break
+        if not tcpdump_bin:
+            return Response({"detail": "tcpdump não encontrado no sistema."}, status=500)
+
         # Build tcpdump command
         tcpdump_args = [
-            "sudo", "/usr/sbin/tcpdump",
+            "sudo", tcpdump_bin,
             "-i", interface,
             "-w", pcap_path,
             "-Z", "root",

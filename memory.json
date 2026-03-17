@@ -586,6 +586,10 @@
     {
       "hash": "7a4761a2d9e319c6d747cdfd8deccf84e5c23752",
       "message": "Redraw logo on getty start and every 30s via issue timer"
+    },
+    {
+      "hash": "bf8322228d5306d4f84fc18a365dabce970cdb58",
+      "message": "Fix file download naming, tcpdump path detection, remove boot splash"
     }
   ]
 }
