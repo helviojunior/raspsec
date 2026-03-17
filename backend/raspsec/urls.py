@@ -24,6 +24,7 @@ from raspsec.views.wifi_client import (
     WifiClientScanView, WifiClientConnectView, WifiClientDisconnectView,
     WifiClientStatusView, WifiClientProfilesView,
 )
+from raspsec.views.sliver import SliverConfigView
 from raspsec.views.files import FileListView, FileDownloadView, FileDeleteView
 from raspsec.views.tools import (
     DeviceStatusView, EthtoolView, ArpTableView, RouteTableView,
@@ -129,5 +130,8 @@ urlpatterns = [
     path('api/tools/files/', FileListView.as_view(), name='tools-files'),
     path('api/tools/files/download/', FileDownloadView.as_view(), name='tools-files-download'),
     path('api/tools/files/delete/', FileDeleteView.as_view(), name='tools-files-delete'),
+
+    # External Services
+    path('api/services/sliver/', SliverConfigView.as_view(), name='sliver-config'),
 
 ]

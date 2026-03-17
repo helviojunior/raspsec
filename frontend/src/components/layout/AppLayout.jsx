@@ -22,6 +22,8 @@ import {
   Scan,
   FileCode,
   FolderOpen,
+  Plug,
+  Crosshair,
 } from "lucide-react";
 import { useAuth } from "contexts/AuthContext";
 import { cn } from "lib/utils";
@@ -46,6 +48,14 @@ const menuStructure = [
       { id: "firewall", path: "/network/firewall", label: "Firewall/NAT", icon: ShieldCheck },
       { id: "wifi", path: "/network/wifi", label: "WiFi", icon: Network },
       { id: "usb-gadget", path: "/network/usb-gadget", label: "USB Gadget", icon: Usb },
+    ],
+  },
+  {
+    id: "services",
+    icon: Plug,
+    label: "Serviços externos",
+    children: [
+      { id: "sliver-c2", path: "/services/sliver-c2", label: "Sliver C2", icon: Crosshair },
     ],
   },
   {

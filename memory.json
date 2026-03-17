@@ -619,6 +619,20 @@
     {
       "hash": "ec64b4f6e281a2b848768e1d2c4ed2f2d1bfd100",
       "message": "Fix firewall rules lost on reboot, harden deploy and fallback"
+    },
+    {
+      "hash": "bacf2e8e735fda69b9b13f50b760a5744eb1e974",
+      "message": "Clean up Docker images and build cache after frontend build",
+      "skipped": true
+    },
+    {
+      "hash": "0d4d4a191770910d6111a6064afed7e0f06efe41",
+      "message": "Remove docker builder prune from deploy to preserve pi-gen build cache",
+      "skipped": true
+    },
+    {
+      "hash": "7c2ba4fd14bf80cfcbeab0480d4a710eee47027e",
+      "message": "Add Sliver C2 service configuration panel"
     }
   ]
 }

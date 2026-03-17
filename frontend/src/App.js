@@ -17,6 +17,7 @@ import ConnectivityChecker from "pages/tools/ConnectivityChecker";
 import PacketCapture from "pages/tools/PacketCapture";
 import StartupScript from "pages/tools/StartupScript";
 import Files from "pages/tools/Files";
+import SliverC2 from "pages/services/SliverC2";
 import "./App.css";
 
 function RequireHealthy({ children }) {
@@ -60,6 +61,7 @@ function App() {
               <Route path="/network/firewall" element={<Firewall />} />
               <Route path="/network/devices" element={<Devices />} />
               <Route path="/network/devices/:name" element={<DeviceEdit />} />
+              <Route path="/services/sliver-c2" element={<SliverC2 />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/tools/device-status" element={<DeviceStatus />} />
               <Route path="/tools/connectivity" element={<ConnectivityChecker />} />
