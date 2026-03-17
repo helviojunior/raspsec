@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Navigate } from "react-router-dom";
-import { Settings as SettingsIcon, Save, Eye, EyeOff, User, Key, Plus, Trash2 } from "lucide-react";
+import { Settings as SettingsIcon, Save, Eye, EyeOff, User, Key, Plus, Trash2, Server } from "lucide-react";
 import { useAuth } from "contexts/AuthContext";
 import api, { setToken } from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
@@ -11,9 +11,84 @@ import { Toggle } from "components/ui/toggle";
 import { cn } from "lib/utils";
 
 const tabs = [
+  { id: "system", label: "Sistema", icon: Server },
   { id: "profile", label: "Perfil", icon: User },
   { id: "ssh", label: "SSH Keys", icon: Key },
 ];
+
+function SystemTab() {
+  const [hostname, setHostname] = useState("");
+  const [original, setOriginal] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get("/api/admin/system/");
+        setHostname(data.hostname || "");
+        setOriginal(data.hostname || "");
+      } catch {
+        setError("Erro ao carregar configurações.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const { data } = await api.put("/api/admin/system/", { hostname });
+      setSuccess(data.detail || "Hostname atualizado.");
+      setOriginal(hostname);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao salvar.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Server size={18} /> Sistema
+        </h2>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {error && (
+          <div className="p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-500 text-sm">{error}</div>
+        )}
+        {success && (
+          <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-sm">{success}</div>
+        )}
+
+        <div className="space-y-2 max-w-md">
+          <Label>Hostname</Label>
+          <Input
+            value={hostname}
+            onChange={(e) => setHostname(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+            placeholder="raspsec"
+            disabled={loading}
+          />
+          <p className="text-xs text-muted-foreground">
+            Nome do dispositivo na rede. Apenas letras minúsculas, números e hifens.
+          </p>
+        </div>
+
+        <div className="flex justify-end">
+          <Button onClick={handleSave} loading={saving} disabled={hostname === original || !hostname}>
+            <Save size={14} /> Salvar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 function ProfileTab({ user, loginUser }) {
   const [firstName, setFirstName] = useState(user?.first_name || "");
@@ -266,7 +341,7 @@ function SSHKeysTab() {
 
 export default function Settings() {
   const { user, loginUser } = useAuth();
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("system");
 
   if (!user?.is_admin) {
     return <Navigate to="/dashboard" replace />;
@@ -301,6 +376,7 @@ export default function Settings() {
         ))}
       </div>
 
+      {activeTab === "system" && <SystemTab />}
       {activeTab === "profile" && <ProfileTab user={user} loginUser={loginUser} />}
       {activeTab === "ssh" && <SSHKeysTab />}
     </div>

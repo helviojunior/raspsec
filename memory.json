@@ -670,6 +670,10 @@
     {
       "hash": "04f7e206f2c0ffbc740f5cb9a6c183602845392a",
       "message": "Add static IP/gateway config, fix drag ghost, IPv4 mode options"
+    },
+    {
+      "hash": "242b7c723014920715cf1b58d46f9c3031b0c65f",
+      "message": "Add hostname configuration in admin settings"
     }
   ]
 }

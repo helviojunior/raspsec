@@ -19,6 +19,7 @@ from raspsec.views.devices import (
     DeviceDetailView, DeviceUpdateView,
 )
 from raspsec.views.ssh_keys import SSHKeysView
+from raspsec.views.system import SystemConfigView
 from raspsec.views.dashboard import DashboardView
 from raspsec.views.wifi_client import (
     WifiClientScanView, WifiClientConnectView, WifiClientDisconnectView,
@@ -105,6 +106,7 @@ urlpatterns = [
 
     # SSH Keys
     path('api/admin/ssh-keys/', SSHKeysView.as_view(), name='ssh-keys'),
+    path('api/admin/system/', SystemConfigView.as_view(), name='system-config'),
 
     # Shell
     path('api/shell/info/', ShellInfoView.as_view(), name='shell-info'),
