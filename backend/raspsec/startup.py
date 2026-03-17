@@ -186,6 +186,21 @@ def _apply_network_configs():
         from raspsec.services.wifi import WifiService
         WifiService.apply_config()
         log.info("WiFi config applied.")
+
+        # If AP is disabled, check if there's a saved WiFi client config to restore
+        config = WifiService.get_config()
+        if not config["ap"].get("enabled"):
+            import os
+            wpa_conf = "/etc/wpa_supplicant/wpa_supplicant-wlan0.conf"
+            if os.path.exists(wpa_conf):
+                from raspsec.libs.cmd import Exec
+                Exec.execute("sudo /sbin/ip link set wlan0 up", raise_error=False)
+                Exec.execute(
+                    f"sudo /usr/sbin/wpa_supplicant -B -i wlan0 -c {wpa_conf} -D nl80211,wext",
+                    raise_error=False,
+                )
+                Exec.execute("sudo /sbin/dhclient wlan0", raise_error=False)
+                log.info("WiFi client mode restored from saved config.")
     except Exception as e:
         log.warning(f"Failed to apply WiFi config: {e}")
 

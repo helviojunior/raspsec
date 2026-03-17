@@ -322,7 +322,9 @@ class DeviceUpdateView(APIView):
                     try:
                         if current_mode == "ap":
                             from raspsec.services.wifi import WifiService
-                            WifiService._stop_ap()
+                            config = WifiService.get_config()
+                            config["ap"]["enabled"] = False
+                            WifiService.save_ap(config["ap"])
                         elif current_mode == "client":
                             from raspsec.services.wifi_client import WifiClientService
                             WifiClientService.disconnect(name)
@@ -362,9 +364,11 @@ class DeviceWifiModeView(APIView):
 
         try:
             if current_mode == "ap":
-                # Stop AP on this interface
+                # Stop AP and persist disabled state
                 from raspsec.services.wifi import WifiService
-                WifiService._stop_ap()
+                config = WifiService.get_config()
+                config["ap"]["enabled"] = False
+                WifiService.save_ap(config["ap"])
                 logger.log(f"Stopped AP on {name}")
             elif current_mode == "client":
                 # Stop client on this interface

@@ -606,6 +606,10 @@
     {
       "hash": "68ff3cbfbcf5536039ff0c926073ead8ea45d393",
       "message": "Add anti-lockout NAT rule, device edit page, fix drag ghost position"
+    },
+    {
+      "hash": "55739c554e5906b58b0e46f70969bc1191dab94f",
+      "message": "Fix WiFi client mode not persisting across reboot, UI tweaks"
     }
   ]
 }

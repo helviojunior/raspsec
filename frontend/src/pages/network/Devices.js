@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Plus, Trash2, Save, RefreshCw, EthernetPort, Wifi, Usb,
-  Cable, PenLine, Layers, Search, Lock, Unlock,
+  Plus, Trash2, RefreshCw, EthernetPort, Wifi, Usb,
+  Cable, Layers, Search, Lock, Unlock,
   Signal, X, Loader2, FileText, Key, ShieldCheck, Eye, EyeOff,
   Unplug, Router, ChevronRight,
 } from "lucide-react";
@@ -13,8 +13,6 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Toggle } from "components/ui/toggle";
 import { cn } from "lib/utils";
-
-const CHAINS = ["internal", "implant", "outside"];
 
 const chainColor = {
   internal: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30",
@@ -544,6 +542,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
   );
   const [networks, setNetworks] = useState([]);
   const [scanning, setScanning] = useState(false);
+  const [scanEmpty, setScanEmpty] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [connStatus, setConnStatus] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -577,8 +576,11 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
     if (!selectedIface) return;
     try {
       setScanning(true);
+      setScanEmpty(false);
       const { data } = await api.get(`/api/wifi-client/scan/?interface=${selectedIface}`);
-      setNetworks(data.networks || []);
+      const nets = data.networks || [];
+      setNetworks(nets);
+      if (nets.length === 0) setScanEmpty(true);
     } catch (err) {
       setError(err.response?.data?.detail || "Erro ao escanear redes.");
     } finally {
@@ -702,9 +704,9 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
       {/* Interface selector + status */}
       <Card>
         <CardContent className="pt-5 pb-5">
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-end gap-4 flex-wrap">
             <div>
-              <Label className="text-xs text-muted-foreground">Interface</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Interface</Label>
               <select
                 value={selectedIface}
                 onChange={(e) => { setSelectedIface(e.target.value); setNetworks([]); setConnStatus(null); }}
@@ -767,57 +769,6 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
 
         </CardContent>
       </Card>
-
-      {/* Scan results */}
-      {networks.length > 0 && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Signal size={18} /> Redes disponíveis
-              <span className="text-xs font-normal text-muted-foreground">({networks.length})</span>
-            </h2>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1">
-              {networks.map((net, idx) => (
-                <button
-                  key={`${net.bssid}-${idx}`}
-                  onClick={() => selectNetwork(net)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
-                >
-                  <SignalIcon signal={net.signal} />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-foreground truncate block">
-                      {net.ssid || "(hidden)"}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {net.bssid} · {net.frequency} MHz
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {net.security !== "Open" ? (
-                      <Lock size={12} className="text-amber-400" />
-                    ) : (
-                      <Unlock size={12} className="text-muted-foreground" />
-                    )}
-                    <span className={cn(
-                      "text-[10px] font-medium px-1.5 py-0.5 rounded",
-                      net.security === "Open"
-                        ? "bg-muted text-muted-foreground"
-                        : net.security === "802.1X"
-                        ? "bg-blue-500/15 text-blue-400"
-                        : "bg-amber-500/15 text-amber-400"
-                    )}>
-                      {net.security}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground w-12 text-right">{net.signal} dBm</span>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Connection form */}
       {showForm && (
@@ -1010,6 +961,64 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
                   Cancelar
                 </Button>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Scan empty warning */}
+      {scanEmpty && networks.length === 0 && !scanning && (
+        <div className="p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
+          Nenhuma rede encontrada. Tente novamente em alguns segundos.
+        </div>
+      )}
+
+      {/* Scan results */}
+      {networks.length > 0 && (
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Signal size={18} /> Redes disponíveis
+              <span className="text-xs font-normal text-muted-foreground">({networks.length})</span>
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {networks.map((net, idx) => (
+                <button
+                  key={`${net.bssid}-${idx}`}
+                  onClick={() => selectNetwork(net)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
+                >
+                  <SignalIcon signal={net.signal} />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-foreground truncate block">
+                      {net.ssid || "(hidden)"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {net.bssid} · {net.frequency} MHz
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {net.security !== "Open" ? (
+                      <Lock size={12} className="text-amber-400" />
+                    ) : (
+                      <Unlock size={12} className="text-muted-foreground" />
+                    )}
+                    <span className={cn(
+                      "text-[10px] font-medium px-1.5 py-0.5 rounded",
+                      net.security === "Open"
+                        ? "bg-muted text-muted-foreground"
+                        : net.security === "802.1X"
+                        ? "bg-blue-500/15 text-blue-400"
+                        : "bg-amber-500/15 text-amber-400"
+                    )}>
+                      {net.security}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground w-12 text-right">{net.signal} dBm</span>
+                </button>
+              ))}
             </div>
           </CardContent>
         </Card>

@@ -62,6 +62,10 @@ class WifiClientService:
         Exec.execute(f"sudo /usr/sbin/iw dev {interface} scan trigger",
                      raise_error=False)
 
+        # Wait for scan to complete (iw scan trigger is async)
+        import time
+        time.sleep(3)
+
         # Get scan results
         ret, out = Exec.execute(
             f"sudo /usr/sbin/iw dev {interface} scan dump",

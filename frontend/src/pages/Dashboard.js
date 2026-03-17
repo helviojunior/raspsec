@@ -143,7 +143,7 @@ const GaugeArc = ({ percent, color, size = 120 }) => {
 
 const GaugeCard = ({ title, percent, color, children }) => (
   <Card className="flex-1 min-w-0">
-    <CardContent className="p-4 flex items-center gap-4">
+    <CardContent className="p-4 flex items-start gap-4">
       <div className="flex-1 min-w-0">
         <h3 className="text-sm font-semibold text-foreground mb-2">{title}</h3>
         <div className="space-y-0.5 text-xs text-muted-foreground">{children}</div>
@@ -296,7 +296,7 @@ export default function Dashboard() {
         </GaugeCard>
 
         <Card className="flex-1 min-w-0">
-          <CardContent className="p-4 flex items-center h-full">
+          <CardContent className="p-4 flex items-start h-full">
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-foreground mb-2">Uptime Overview</h3>
               <div className="space-y-0.5 text-xs text-muted-foreground">
