@@ -153,6 +153,7 @@ raspsec_data/
 
 # Node
 node_modules/
+.deps-hash
 
 output/
 

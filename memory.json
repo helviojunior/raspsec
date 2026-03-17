@@ -654,6 +654,10 @@
     {
       "hash": "845be81b533d5e75baa1deff42f22622d8684a3b",
       "message": "Fix password toggle icon shift on hover, remove unused wifi var"
+    },
+    {
+      "hash": "e124f5910be6374e4ef9bb5996d91a82477c0958",
+      "message": "Cache frontend deps image, remove TTY noise, clean login screen"
     }
   ]
 }
