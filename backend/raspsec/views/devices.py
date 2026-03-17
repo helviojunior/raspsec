@@ -248,6 +248,15 @@ class DeviceDetailView(APIView):
             except (OSError, IOError):
                 pass
 
+        # Gateway
+        iface["gateway"] = ""
+        ret, out = Exec.execute(f"/sbin/ip route show dev {name}", raise_error=False)
+        if ret == 0:
+            for line in out.strip().splitlines():
+                if line.startswith("default via "):
+                    iface["gateway"] = line.split()[2]
+                    break
+
         # Description from config
         desc_config = load_config("interface_descriptions.yml", {"interfaces": {}})
         iface["description"] = desc_config.get("interfaces", {}).get(name, "")
@@ -315,8 +324,43 @@ class DeviceUpdateView(APIView):
             elif mtu != 0:
                 errors.append("MTU deve estar entre 68 e 9000.")
 
-        # DHCP client
-        if "dhcp_client" in data and not _is_managed(name):
+        # IPv4 mode (none / static / dhcp)
+        ipv4_mode = data.get("ipv4_mode", "")
+        if ipv4_mode == "none":
+            # Remove IP and disable DHCP
+            Exec.execute(f"sudo /sbin/ip addr flush dev {name}", raise_error=False)
+            if not _is_managed(name):
+                dhcp_clients = _get_dhcp_client_config()
+                dhcp_clients[name] = False
+                save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
+                _apply_dhcp_client_config()
+        elif ipv4_mode == "static":
+            # Disable DHCP, set static IP
+            if not _is_managed(name):
+                dhcp_clients = _get_dhcp_client_config()
+                dhcp_clients[name] = False
+                save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
+                _apply_dhcp_client_config()
+            static_ip = data.get("static_ip", "").strip()
+            static_gw = data.get("static_gw", "").strip()
+            if static_ip:
+                Exec.execute(f"sudo /sbin/ip addr flush dev {name}", raise_error=False)
+                ret, out = Exec.execute(f"sudo /sbin/ip addr add {static_ip} dev {name}", raise_error=False)
+                if ret != 0:
+                    errors.append(f"Erro ao configurar IP: {out}")
+                if static_gw:
+                    Exec.execute(f"sudo /sbin/ip route del default dev {name}", raise_error=False)
+                    ret, out = Exec.execute(f"sudo /sbin/ip route add default via {static_gw} dev {name}", raise_error=False)
+                    if ret != 0:
+                        errors.append(f"Erro ao configurar gateway: {out}")
+        elif ipv4_mode == "dhcp":
+            if not _is_managed(name):
+                dhcp_clients = _get_dhcp_client_config()
+                dhcp_clients[name] = True
+                save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
+                _apply_dhcp_client_config()
+        elif "dhcp_client" in data and not _is_managed(name):
+            # Fallback for legacy dhcp_client field
             dhcp_clients = _get_dhcp_client_config()
             dhcp_clients[name] = bool(data["dhcp_client"])
             save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})

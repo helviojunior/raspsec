@@ -71,6 +71,9 @@ export default function DeviceEdit() {
         mac: data.mac || "",
         mtu: data.mtu || 1500,
         dhcp_client: data.dhcp_client || false,
+        ipv4_mode: data.dhcp_client ? "dhcp" : data.ip ? "static" : "none",
+        static_ip: data.ip || "",
+        static_gw: data.gateway || "",
         wifi_mode: data.wifi_mode || "",
       });
     } catch {
@@ -169,23 +172,46 @@ export default function DeviceEdit() {
             />
           </FieldRow>
 
-          <FieldRow label="IPv4 Configuration">
+          <FieldRow label="Configuração IPv4">
             <div className="flex items-center gap-3">
               <select
-                value={form.dhcp_client ? "dhcp" : "static"}
-                onChange={(e) => setForm({ ...form, dhcp_client: e.target.value === "dhcp" })}
+                value={form.ipv4_mode || "none"}
+                onChange={(e) => {
+                  const mode = e.target.value;
+                  setForm({ ...form, ipv4_mode: mode, dhcp_client: mode === "dhcp" });
+                }}
                 disabled={iface.managed}
                 className="h-10 rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm max-w-md w-full"
               >
-                <option value="static">Static IPv4</option>
+                <option value="none">Sem IP</option>
+                <option value="static">IPv4 Estático</option>
                 <option value="dhcp">DHCP</option>
               </select>
               {iface.managed && (
                 <span className="text-xs text-muted-foreground">(gerenciada como servidor)</span>
               )}
             </div>
-            {!form.dhcp_client && iface.ip && (
-              <p className="text-xs text-muted-foreground mt-1">Current IP: <span className="text-foreground font-mono">{iface.ip}</span></p>
+            {form.ipv4_mode === "static" && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Endereço IP / CIDR</Label>
+                  <Input
+                    value={form.static_ip}
+                    onChange={(e) => setForm({ ...form, static_ip: e.target.value })}
+                    placeholder="192.168.1.10/24"
+                    className="font-mono"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Gateway</Label>
+                  <Input
+                    value={form.static_gw}
+                    onChange={(e) => setForm({ ...form, static_gw: e.target.value })}
+                    placeholder="192.168.1.1"
+                    className="font-mono"
+                  />
+                </div>
+              </div>
             )}
           </FieldRow>
 

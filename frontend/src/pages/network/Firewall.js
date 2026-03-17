@@ -41,20 +41,16 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
     const row = rowRefs.current[index];
     if (!row) return;
     const rect = row.getBoundingClientRect();
-    const tableRect = tableRef.current?.getBoundingClientRect();
-    // Offset from mouse click to top of row — keeps ghost aligned with cursor
-    const offsetY = e.clientY - rect.top;
     setDragState({
       index,
       id,
-      mouseX: e.clientX,
       mouseY: e.clientY,
       startY: e.clientY,
       rowHeight: rect.height,
-      offsetY,
+      offsetY: e.clientY - rect.top,
       origIndex: index,
-      tableLeft: tableRect?.left || 0,
-      tableWidth: tableRect?.width || 800,
+      rowLeft: rect.left,
+      rowWidth: rect.width,
     });
   }, [items, canDrag]);
 
@@ -69,7 +65,7 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
           items.length - 1,
           prev.origIndex + Math.round(deltaY / prev.rowHeight)
         ));
-        return { ...prev, mouseY: e.clientY, mouseX: e.clientX, index: newIndex };
+        return { ...prev, mouseY: e.clientY, index: newIndex };
       });
     };
 
@@ -114,12 +110,12 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
   const isDragging = !!dragState;
   const dragId = dragState?.id;
 
-  // Ghost position (follows mouse vertically, aligned with table horizontally)
+  // Ghost position (follows mouse vertically, aligned with original row horizontally)
   const ghostStyle = dragState ? {
     position: "fixed",
     top: dragState.mouseY - (dragState.offsetY || 0),
-    left: dragState.tableLeft || 0,
-    width: dragState.tableWidth || 800,
+    left: dragState.rowLeft || 0,
+    width: dragState.rowWidth || 800,
     zIndex: 9999,
     pointerEvents: "none",
     opacity: 0.9,

@@ -666,6 +666,10 @@
     {
       "hash": "58e8b027e4f8c4b1670158f1a8f0dd8acaeb162c",
       "message": "Remove unused primaryIface and wlan0 variables from Dashboard"
+    },
+    {
+      "hash": "04f7e206f2c0ffbc740f5cb9a6c183602845392a",
+      "message": "Add static IP/gateway config, fix drag ghost, IPv4 mode options"
     }
   ]
 }
