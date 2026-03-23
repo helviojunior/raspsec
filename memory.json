@@ -682,6 +682,15 @@
     {
       "hash": "803f1d84e87b99edf931e8c27fdf428f8d2890c9",
       "message": "Add WiFi Spectrum Analyser tool with real-time WebSocket scanning"
+    },
+    {
+      "hash": "dfce696eef3f1b006afce9f2d74d62dbee01b8b0",
+      "message": "Switch raspsec-issue timer to calendar-based schedule",
+      "skipped": true
+    },
+    {
+      "hash": "857fb76f1f9a32b68616a72acbee8b36d183a8da",
+      "message": "Fix spectrum server subprocess handling breaking scan results"
     }
   ]
 }

@@ -14,8 +14,8 @@ import asyncio
 import json
 import os
 import re
+import subprocess
 import sys
-import signal
 
 # Bootstrap Django so we can reuse JWE auth
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "stratasec.settings")
@@ -162,39 +162,40 @@ def _freq_to_channel(freq):
     return 0
 
 
-async def _run_scan(interface):
-    """Trigger scan and return parsed results."""
+def _run_scan_sync(interface):
+    """Trigger scan and return parsed results (blocking)."""
     # Ensure interface is up
-    proc = await asyncio.create_subprocess_exec(
-        "sudo", IP_BIN, "link", "set", interface, "up",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+    subprocess.run(
+        ["sudo", IP_BIN, "link", "set", interface, "up"],
+        capture_output=True, timeout=10,
     )
-    await proc.wait()
 
-    # Trigger scan
-    proc = await asyncio.create_subprocess_exec(
-        "sudo", IW_BIN, "dev", interface, "scan", "trigger",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+    # Trigger scan (may fail if already scanning — ok)
+    subprocess.run(
+        ["sudo", IW_BIN, "dev", interface, "scan", "trigger"],
+        capture_output=True, timeout=10,
     )
-    await proc.wait()
 
-    # Brief wait for scan to complete
-    await asyncio.sleep(1.5)
+    # Wait for scan to complete
+    import time
+    time.sleep(1.5)
 
     # Dump results
-    proc = await asyncio.create_subprocess_exec(
-        "sudo", IW_BIN, "dev", interface, "scan", "dump",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+    result = subprocess.run(
+        ["sudo", IW_BIN, "dev", interface, "scan", "dump"],
+        capture_output=True, timeout=15,
     )
-    stdout, _ = await proc.communicate()
 
-    if proc.returncode != 0:
+    if result.returncode != 0:
         return []
 
-    return _parse_scan_output(stdout.decode("utf-8", errors="replace"))
+    return _parse_scan_output(result.stdout.decode("utf-8", errors="replace"))
+
+
+async def _run_scan(interface):
+    """Run scan in thread executor to avoid blocking the event loop."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, _run_scan_sync, interface)
 
 
 async def spectrum_handler(websocket):
@@ -294,5 +295,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    signal.signal(signal.SIGCHLD, signal.SIG_IGN)
     asyncio.run(main())
