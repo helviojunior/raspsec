@@ -8,6 +8,7 @@ from raspsec.libs.log import StrataLogger
 from raspsec.libs.network import write_dhcpcd, write_system_file, DHCPCD_CONF
 from raspsec.dbmodels.firewall import ChainMapping
 from raspsec.services.bridge import BridgeService
+from raspsec.services.eth_server import EthServerService
 from raspsec.services.vlan import VlanService
 
 import os
@@ -27,6 +28,8 @@ def _is_managed(name):
     if name.startswith("wlan"):
         modes = _get_wifi_modes()
         return modes.get(name) == "ap"
+    if name.startswith("eth"):
+        return EthServerService.is_server(name)
     return False
 
 
@@ -40,10 +43,13 @@ class DevicesView(APIView):
         vlans = VlanService.get_config().get("vlans", [])
         dhcp_clients = _get_dhcp_client_config()
 
+        eth_server_config = EthServerService.get_config().get("interfaces", {})
         for iface in interfaces:
             iface["chain"] = chain_map.get(iface["name"], "")
             iface["managed"] = _is_managed(iface["name"])
             iface["dhcp_client"] = dhcp_clients.get(iface["name"], False)
+            if iface["type"] == "physical" and iface["name"].startswith("eth"):
+                iface["eth_mode"] = "server" if eth_server_config.get(iface["name"], {}).get("enabled") else "client"
 
         bridge = BridgeService.get_bridge()
 
@@ -261,6 +267,16 @@ class DeviceDetailView(APIView):
         desc_config = load_config("interface_descriptions.yml", {"interfaces": {}})
         iface["description"] = desc_config.get("interfaces", {}).get(name, "")
 
+        # Eth server mode and networking config
+        if iface["type"] == "physical" and name.startswith("eth"):
+            eth_cfg = EthServerService.get_interface_config(name)
+            if eth_cfg.get("enabled"):
+                iface["eth_mode"] = "server"
+                iface["eth_server_networking"] = eth_cfg.get("networking", {})
+            else:
+                iface["eth_mode"] = "client"
+                iface["eth_server_networking"] = {}
+
         return Response(iface)
 
 
@@ -365,6 +381,36 @@ class DeviceUpdateView(APIView):
             dhcp_clients[name] = bool(data["dhcp_client"])
             save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
             _apply_dhcp_client_config()
+
+        # Eth mode (client / server)
+        if "eth_mode" in data and name.startswith("eth"):
+            eth_mode = data["eth_mode"]
+            if eth_mode == "server":
+                try:
+                    EthServerService.enable_server(name)
+                    # Auto-set chain to internal (it's now a server network)
+                    ChainMapping.objects.update_or_create(
+                        interface=name, defaults={"chain": "internal"}
+                    )
+                    try:
+                        from raspsec.services.firewall import FirewallService
+                        FirewallService.apply()
+                    except Exception:
+                        pass
+                except Exception as e:
+                    errors.append(f"Erro ao ativar modo servidor: {e}")
+            elif eth_mode == "client":
+                try:
+                    EthServerService.disable_server(name)
+                except Exception as e:
+                    errors.append(f"Erro ao desativar modo servidor: {e}")
+
+        # Eth server networking config
+        if "eth_server_networking" in data and name.startswith("eth"):
+            try:
+                EthServerService.save_networking(name, data["eth_server_networking"])
+            except Exception as e:
+                errors.append(f"Erro ao salvar config de rede: {e}")
 
         # WiFi mode
         if "wifi_mode" in data:

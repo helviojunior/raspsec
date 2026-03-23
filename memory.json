@@ -691,6 +691,10 @@
     {
       "hash": "857fb76f1f9a32b68616a72acbee8b36d183a8da",
       "message": "Fix spectrum server subprocess handling breaking scan results"
+    },
+    {
+      "hash": "285446cd855f640dca475ad6ee7b37bd9f58a66e",
+      "message": "Add Client/Server mode for ethernet interfaces with DHCP server config"
     }
   ]
 }

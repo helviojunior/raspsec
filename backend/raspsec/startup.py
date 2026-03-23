@@ -222,6 +222,13 @@ def _apply_network_configs():
         log.warning(f"Failed to apply USB Gadget config: {e}")
 
     try:
+        from raspsec.services.eth_server import EthServerService
+        EthServerService.apply_config()
+        log.info("Eth Server config applied.")
+    except Exception as e:
+        log.warning(f"Failed to apply Eth Server config: {e}")
+
+    try:
         from raspsec.services.dns import DnsService
         DnsService.apply_on_boot()
         log.info("DNS config applied.")
