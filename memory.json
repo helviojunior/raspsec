@@ -715,6 +715,10 @@
     {
       "hash": "34d74491544a829ca4ea1ff1a5fa68fcf811ecba",
       "message": "Force g_ether interface name to usb0 via explicit udev NAME rule"
+    },
+    {
+      "hash": "5b796fd0dbce2c8d31206a4bdccafe9e5b21f926",
+      "message": "Rename RNDIS/CDC USB devices to usb1+ and add MAC-persistent naming"
     }
   ]
 }
