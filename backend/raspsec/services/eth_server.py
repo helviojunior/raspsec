@@ -65,6 +65,16 @@ class EthServerService:
     @staticmethod
     def enable_server(iface_name):
         """Enable server mode on an ethernet interface."""
+        # Prevent enabling on bridge member ports
+        from raspsec.services.bridge import BridgeService
+        bridge = BridgeService.get_bridge()
+        if bridge and bridge.get("enabled"):
+            if iface_name in (bridge.get("port1"), bridge.get("port2")):
+                raise ValueError(
+                    f"{iface_name} é membro da bridge {bridge['name']}. "
+                    "Remova a bridge antes de ativar o modo servidor."
+                )
+
         config = EthServerService.get_config()
         interfaces = config.get("interfaces", {})
 

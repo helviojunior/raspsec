@@ -695,6 +695,10 @@
     {
       "hash": "285446cd855f640dca475ad6ee7b37bd9f58a66e",
       "message": "Add Client/Server mode for ethernet interfaces with DHCP server config"
+    },
+    {
+      "hash": "2bac44162cf94b1d6cd43fd6989fa5125f3dab49",
+      "message": "Disable eth server mode on bridge member ports"
     }
   ]
 }

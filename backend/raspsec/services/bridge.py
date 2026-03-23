@@ -60,6 +60,13 @@ class BridgeService:
             "enabled": True,
         }
 
+        # Disable eth server mode on member ports (can't serve DHCP on bridge members)
+        from raspsec.services.eth_server import EthServerService
+        for port in [port1, port2]:
+            if EthServerService.is_server(port):
+                EthServerService.disable_server(port)
+                logger.log(f"Disabled eth server mode on {port} (bridge member)")
+
         save_config(CONFIG_FILE, {"bridge": bridge})
         BridgeService._apply_bridge(bridge)
 
@@ -83,6 +90,14 @@ class BridgeService:
         bridge = BridgeService.get_bridge()
         if not bridge or not bridge.get("enabled", False):
             return
+
+        # Ensure eth server mode is disabled on bridge member ports
+        from raspsec.services.eth_server import EthServerService
+        for port in [bridge["port1"], bridge["port2"]]:
+            if EthServerService.is_server(port):
+                EthServerService.disable_server(port)
+                logger.log(f"Disabled eth server on {port} (bridge member, boot)")
+
         BridgeService._apply_bridge(bridge)
         logger.log("Bridge restored on boot.")
 
@@ -103,6 +118,12 @@ class BridgeService:
             ret, _ = Exec.execute(f"cat /sys/class/net/{iface}/type", raise_error=False)
             if ret != 0:
                 raise ValueError(f"Interface {iface} não encontrada no sistema.")
+
+        # Warn (but proceed) if interfaces are in server mode — they will be disabled
+        from raspsec.services.eth_server import EthServerService
+        for iface in [port1, port2]:
+            if EthServerService.is_server(iface):
+                logger.log(f"Warning: {iface} is in server mode, will be disabled for bridge")
 
     @staticmethod
     def _apply_bridge(bridge):
