@@ -26,6 +26,9 @@ from raspsec.views.wifi_client import (
     WifiClientStatusView, WifiClientProfilesView,
 )
 from raspsec.views.sliver import SliverConfigView
+from raspsec.views.static_routes import (
+    StaticRoutesConfigView, StaticRouteView, StaticRoutesReorderView, StaticRoutesApplyView,
+)
 from raspsec.views.files import FileListView, FileDownloadView, FileDeleteView
 from raspsec.views.tools import (
     DeviceStatusView, EthtoolView, ArpTableView, RouteTableView,
@@ -85,6 +88,12 @@ urlpatterns = [
     path('api/network/vlans/', VlanConfigView.as_view(), name='vlan-config'),
     path('api/network/vlans/manage/', VlanView.as_view(), name='vlan-manage'),
     path('api/network/vlans/apply/', VlanApplyView.as_view(), name='vlan-apply'),
+
+    # Static Routes
+    path('api/network/routes/', StaticRoutesConfigView.as_view(), name='static-routes-config'),
+    path('api/network/routes/manage/', StaticRouteView.as_view(), name='static-route-manage'),
+    path('api/network/routes/reorder/', StaticRoutesReorderView.as_view(), name='static-routes-reorder'),
+    path('api/network/routes/apply/', StaticRoutesApplyView.as_view(), name='static-routes-apply'),
 
     # Devices (interfaces)
     path('api/network/devices/', DevicesView.as_view(), name='devices'),

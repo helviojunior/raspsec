@@ -236,6 +236,13 @@ def _apply_network_configs():
         log.warning(f"Failed to apply Eth Server config: {e}")
 
     try:
+        from raspsec.services.static_routes import StaticRoutesService
+        StaticRoutesService.apply()
+        log.info("Static routes applied.")
+    except Exception as e:
+        log.warning(f"Failed to apply static routes: {e}")
+
+    try:
         from raspsec.services.dns import DnsService
         DnsService.apply_on_boot()
         log.info("DNS config applied.")

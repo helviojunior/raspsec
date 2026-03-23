@@ -727,6 +727,10 @@
     {
       "hash": "42a64656a03049d2d722ac7cbc18d7d9f5e1d1a0",
       "message": "Add USB Dongle Behaviour tab with auto-connect policy"
+    },
+    {
+      "hash": "3b57d48b41eef477879b83819dd240d248a59107",
+      "message": "Add static routing page with drag-and-drop ordering"
     }
   ]
 }

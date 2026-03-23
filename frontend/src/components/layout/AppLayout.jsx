@@ -24,6 +24,7 @@ import {
   FolderOpen,
   Plug,
   Radio,
+  Route,
 } from "lucide-react";
 import { useAuth } from "contexts/AuthContext";
 import { cn } from "lib/utils";
@@ -45,6 +46,7 @@ const menuStructure = [
     children: [
       { id: "net-status", path: "/network/status", label: "General", icon: MonitorCheck },
       { id: "devices", path: "/network/devices", label: "Devices", icon: EthernetPort },
+      { id: "routing", path: "/network/routing", label: "Roteamento", icon: Route },
       { id: "firewall", path: "/network/firewall", label: "Firewall/NAT", icon: ShieldCheck },
       { id: "wifi", path: "/network/wifi", label: "WiFi", icon: Network },
       { id: "usb-gadget", path: "/network/usb-gadget", label: "USB Gadget", icon: Usb },

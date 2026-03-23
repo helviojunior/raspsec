@@ -92,6 +92,15 @@ class DeviceToggleView(APIView):
             return Response({"detail": f"Erro ao alterar interface: {out}"}, status=500)
 
         logger.log(f"Interface {name} set {action}")
+
+        # Apply static routes when interface comes up
+        if enabled:
+            try:
+                from raspsec.services.static_routes import StaticRoutesService
+                StaticRoutesService.apply_for_interface(name)
+            except Exception as e:
+                logger.log(f"Failed to apply static routes for {name}: {e}")
+
         return Response({"detail": f"Interface {name} {'habilitada' if enabled else 'desabilitada'}."})
 
 

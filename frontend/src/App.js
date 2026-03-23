@@ -10,6 +10,7 @@ import Wifi from "pages/network/Wifi";
 import UsbGadget from "pages/network/UsbGadget";
 import NetworkStatus from "pages/network/Status";
 import Firewall from "pages/network/Firewall";
+import Routing from "pages/network/Routing";
 import Devices from "pages/network/Devices";
 import DeviceEdit from "pages/network/DeviceEdit";
 import DeviceStatus from "pages/tools/DeviceStatus";
@@ -59,6 +60,7 @@ function App() {
               <Route path="/network/wifi" element={<Wifi />} />
               <Route path="/network/usb-gadget" element={<UsbGadget />} />
               <Route path="/network/status" element={<NetworkStatus />} />
+              <Route path="/network/routing" element={<Routing />} />
               <Route path="/network/firewall" element={<Firewall />} />
               <Route path="/network/devices" element={<Devices />} />
               <Route path="/network/devices/:name" element={<DeviceEdit />} />
