@@ -8,7 +8,34 @@ from raspsec.dbmodels.firewall import ChainMapping
 logger = StrataLogger("StaticRoutesService")
 
 
+IANA_PRIVATE_ROUTES = [
+    {"destination": "10.0.0.0/8", "description": "IANA Private — Class A"},
+    {"destination": "172.16.0.0/12", "description": "IANA Private — Class B"},
+    {"destination": "192.168.0.0/16", "description": "IANA Private — Class C"},
+]
+
+
 class StaticRoutesService:
+
+    @staticmethod
+    def ensure_defaults():
+        """Create default IANA private routes via implant chain if none exist."""
+        if StaticRoute.objects.exists():
+            return
+
+        for i, route in enumerate(IANA_PRIVATE_ROUTES):
+            StaticRoute.objects.create(
+                destination=route["destination"],
+                gateway="",
+                interface="",
+                chain="implant",
+                metric=100,
+                description=route["description"],
+                enabled=True,
+                priority=i * 10,
+            )
+
+        logger.log("Default IANA private routes created (chain=implant)")
 
     @staticmethod
     def get_routes():

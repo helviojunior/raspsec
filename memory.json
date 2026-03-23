@@ -735,6 +735,10 @@
     {
       "hash": "f55dd9c97c95e91a1061df0ab5e864a8b631df3b",
       "message": "Remove unused chainColor variable in Routing.js"
+    },
+    {
+      "hash": "8ee09d9bd7e938e0c47fb977e6689d5fa406540e",
+      "message": "Add default IANA private routes via implant chain"
     }
   ]
 }
