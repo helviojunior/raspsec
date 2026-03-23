@@ -13,11 +13,6 @@ import { cn } from "lib/utils";
 
 const CHAINS = ["internal", "implant", "outside"];
 
-const chainColor = {
-  internal: "text-emerald-400",
-  implant: "text-amber-400",
-  outside: "text-red-400",
-};
 
 
 // ── Reusable Drag & Drop Hook (pfSense style) ──

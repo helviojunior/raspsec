@@ -731,6 +731,10 @@
     {
       "hash": "3b57d48b41eef477879b83819dd240d248a59107",
       "message": "Add static routing page with drag-and-drop ordering"
+    },
+    {
+      "hash": "f55dd9c97c95e91a1061df0ab5e864a8b631df3b",
+      "message": "Remove unused chainColor variable in Routing.js"
     }
   ]
 }
