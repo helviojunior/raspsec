@@ -55,6 +55,8 @@ class DevicesView(APIView):
             iface["dhcp_client"] = dhcp_clients.get(iface["name"], False)
             if iface["type"] == "physical" and iface["name"].startswith("eth"):
                 iface["eth_mode"] = "server" if eth_server_config.get(iface["name"], {}).get("enabled") else "client"
+            # Persistent naming info for eth and wlan interfaces
+            if iface["name"].startswith("eth") or iface["name"].startswith("wlan"):
                 reg_info = name_registry.get(iface["name"])
                 iface["registered"] = reg_info is not None
                 iface["builtin"] = reg_info.get("builtin", False) if reg_info else False
@@ -285,7 +287,8 @@ class DeviceDetailView(APIView):
                 iface["eth_mode"] = "client"
                 iface["eth_server_networking"] = {}
 
-            # Persistent naming info
+        # Persistent naming info for eth and wlan
+        if name.startswith("eth") or name.startswith("wlan"):
             reg_info = IfaceNamesService.get_all_mappings().get(name)
             iface["registered"] = reg_info is not None
             iface["builtin"] = reg_info.get("builtin", False) if reg_info else False

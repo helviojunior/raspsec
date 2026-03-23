@@ -505,7 +505,7 @@ export default function DeviceEdit() {
                 Cancelar
               </Button>
             </div>
-            {iface.type === "physical" && name.startsWith("eth") && iface.registered && !iface.builtin && (
+            {iface.registered && !iface.builtin && (
               <Button
                 variant="outline"
                 className="text-red-400 border-red-500/30 hover:bg-red-500/10"

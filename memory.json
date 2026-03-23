@@ -703,6 +703,10 @@
     {
       "hash": "370607d46bb19bd52f6dba1eb9e5baefefda4753",
       "message": "Add persistent interface naming via MAC-based udev rules"
+    },
+    {
+      "hash": "ff9ee3476d6b7f172f658fe2b836077d59e9a3a4",
+      "message": "Extend persistent interface naming to wlan interfaces"
     }
   ]
 }
