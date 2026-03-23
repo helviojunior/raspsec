@@ -719,6 +719,10 @@
     {
       "hash": "5b796fd0dbce2c8d31206a4bdccafe9e5b21f926",
       "message": "Rename RNDIS/CDC USB devices to usb1+ and add MAC-persistent naming"
+    },
+    {
+      "hash": "299c3f3f0d74a3335f255b85a95acdc04280455a",
+      "message": "Sort interfaces by name with natural ordering on devices page"
     }
   ]
 }

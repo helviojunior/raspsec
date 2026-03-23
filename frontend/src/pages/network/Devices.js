@@ -172,7 +172,7 @@ function InterfacesTab({ interfaces }) {
 
   return (
     <div className="space-y-3">
-      {interfaces.map((iface) => {
+      {[...interfaces].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })).map((iface) => {
         const Icon = typeIcon[iface.type] || EthernetPort;
         const wifiMode = iface.wifi_mode;
         return (
