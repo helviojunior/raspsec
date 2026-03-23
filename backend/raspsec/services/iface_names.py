@@ -214,8 +214,8 @@ class IfaceNamesService:
             lines.append(f'SUBSYSTEM=="net", ACTION=="add", ATTR{{address}}=="{mac}", NAME="{name}"')
 
         lines.append("")
-        lines.append("# Exclude USB gadget (g_ether) — managed separately as usb0")
-        lines.append('SUBSYSTEM=="net", ACTION=="add", DRIVERS=="g_ether", GOTO="raspsec_net_end"')
+        lines.append("# USB gadget (g_ether) — always named usb0")
+        lines.append('SUBSYSTEM=="net", ACTION=="add", DRIVERS=="g_ether", NAME="usb0"')
         lines.append("")
         lines.append("# Fallback for unknown USB ethernet adapters — next available ethX")
         lines.append(
@@ -228,8 +228,6 @@ class IfaceNamesService:
             'SUBSYSTEM=="net", ACTION=="add", SUBSYSTEMS=="usb", KERNEL=="wl*", '
             'PROGRAM="/bin/sh -c \'echo wlan$(($(ls -d /sys/class/net/wlan[0-9]* 2>/dev/null | wc -l)))\'", NAME="%c"'
         )
-        lines.append("")
-        lines.append('LABEL="raspsec_net_end"')
         lines.append("")
 
         content = "\n".join(lines)

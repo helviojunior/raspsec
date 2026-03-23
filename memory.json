@@ -711,6 +711,10 @@
     {
       "hash": "9776c1c710f342a470037c125f74152e98b8fc10",
       "message": "Exclude g_ether (USB gadget) from persistent naming rules"
+    },
+    {
+      "hash": "34d74491544a829ca4ea1ff1a5fa68fcf811ecba",
+      "message": "Force g_ether interface name to usb0 via explicit udev NAME rule"
     }
   ]
 }
