@@ -17,6 +17,7 @@ import ConnectivityChecker from "pages/tools/ConnectivityChecker";
 import PacketCapture from "pages/tools/PacketCapture";
 import StartupScript from "pages/tools/StartupScript";
 import Files from "pages/tools/Files";
+import SpectrumAnalyser from "pages/tools/SpectrumAnalyser";
 import SliverC2 from "pages/services/SliverC2";
 import "./App.css";
 
@@ -68,6 +69,7 @@ function App() {
               <Route path="/tools/packet-capture" element={<PacketCapture />} />
               <Route path="/tools/startup-script" element={<StartupScript />} />
               <Route path="/tools/files" element={<Files />} />
+              <Route path="/tools/spectrum" element={<SpectrumAnalyser />} />
             </Route>
 
             <Route path="/" element={<Navigate to="/dashboard" replace />} />

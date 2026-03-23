@@ -23,6 +23,7 @@ import {
   FileCode,
   FolderOpen,
   Plug,
+  Radio,
 } from "lucide-react";
 import { useAuth } from "contexts/AuthContext";
 import { cn } from "lib/utils";
@@ -75,6 +76,7 @@ const menuStructure = [
       { id: "connectivity", path: "/tools/connectivity", label: "Connectivity", icon: Radar },
       { id: "packet-capture", path: "/tools/packet-capture", label: "Packet Capture", icon: Scan },
       { id: "startup-script", path: "/tools/startup-script", label: "Startup Script", icon: FileCode },
+      { id: "spectrum", path: "/tools/spectrum", label: "Spectrum Analyser", icon: Radio },
       { id: "files", path: "/tools/files", label: "Arquivos", icon: FolderOpen },
       { id: "webshell", action: "webshell", label: "Web Shell", icon: WebShellIcon },
     ],

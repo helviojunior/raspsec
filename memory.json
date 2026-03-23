@@ -678,6 +678,10 @@
     {
       "hash": "32980c5f5dd307e96d4914b2f81fbd70f95893c2",
       "message": "Fix drag ghost position using React portal to document.body"
+    },
+    {
+      "hash": "803f1d84e87b99edf931e8c27fdf428f8d2890c9",
+      "message": "Add WiFi Spectrum Analyser tool with real-time WebSocket scanning"
     }
   ]
 }
