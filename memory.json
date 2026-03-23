@@ -707,6 +707,10 @@
     {
       "hash": "ff9ee3476d6b7f172f658fe2b836077d59e9a3a4",
       "message": "Extend persistent interface naming to wlan interfaces"
+    },
+    {
+      "hash": "9776c1c710f342a470037c125f74152e98b8fc10",
+      "message": "Exclude g_ether (USB gadget) from persistent naming rules"
     }
   ]
 }
