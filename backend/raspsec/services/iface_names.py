@@ -1,0 +1,272 @@
+"""Persistent interface naming service.
+
+Maps MAC addresses to stable ethX names via udev rules.
+When a new USB ethernet adapter is detected, it gets registered
+and a MAC-based udev rule is generated so the name persists
+across reboots and reconnections.
+"""
+
+from raspsec.libs.cmd import Exec
+from raspsec.libs.config import load_config, save_config
+from raspsec.libs.log import StrataLogger
+from raspsec.libs.network import write_system_file
+
+CONFIG_FILE = "interface_names.yml"
+UDEV_RULES_FILE = "/etc/udev/rules.d/80-raspsec-net.rules"
+
+logger = StrataLogger("IfaceNamesService")
+
+
+class IfaceNamesService:
+
+    @staticmethod
+    def get_config():
+        """Return full config: {interfaces: {eth0: {mac: "...", builtin: true}, ...}}"""
+        return load_config(CONFIG_FILE, {"interfaces": {}})
+
+    @staticmethod
+    def get_name_for_mac(mac):
+        """Lookup the assigned name for a given MAC. Returns None if not found."""
+        config = IfaceNamesService.get_config()
+        for name, info in config.get("interfaces", {}).items():
+            if info.get("mac", "").lower() == mac.lower():
+                return name
+        return None
+
+    @staticmethod
+    def get_all_mappings():
+        """Return dict of all MAC→name mappings: {eth0: {mac, builtin, label}, ...}"""
+        return IfaceNamesService.get_config().get("interfaces", {})
+
+    @staticmethod
+    def register_builtin(name, mac):
+        """Register the built-in ethernet (eth0) if not already known."""
+        config = IfaceNamesService.get_config()
+        interfaces = config.get("interfaces", {})
+
+        if name in interfaces:
+            # Update MAC if changed (shouldn't happen, but be safe)
+            if interfaces[name].get("mac", "").lower() != mac.lower():
+                interfaces[name]["mac"] = mac.lower()
+                config["interfaces"] = interfaces
+                save_config(CONFIG_FILE, config)
+            return
+
+        interfaces[name] = {
+            "mac": mac.lower(),
+            "builtin": True,
+        }
+        config["interfaces"] = interfaces
+        save_config(CONFIG_FILE, config)
+        logger.log(f"Registered built-in interface {name} ({mac})")
+
+    @staticmethod
+    def register_interface(mac):
+        """Register a new USB ethernet adapter. Returns the assigned ethX name."""
+        mac = mac.lower()
+
+        # Check if already registered
+        existing_name = IfaceNamesService.get_name_for_mac(mac)
+        if existing_name:
+            return existing_name
+
+        config = IfaceNamesService.get_config()
+        interfaces = config.get("interfaces", {})
+
+        # Find the next available ethX number
+        used_numbers = set()
+        for name in interfaces.keys():
+            if name.startswith("eth"):
+                try:
+                    used_numbers.add(int(name[3:]))
+                except ValueError:
+                    pass
+
+        # eth0 is typically built-in, start USB at eth1
+        next_num = 1
+        while next_num in used_numbers:
+            next_num += 1
+
+        new_name = f"eth{next_num}"
+        interfaces[new_name] = {
+            "mac": mac,
+            "builtin": False,
+        }
+        config["interfaces"] = interfaces
+        save_config(CONFIG_FILE, config)
+
+        # Regenerate udev rules so name persists
+        IfaceNamesService.write_udev_rules()
+
+        logger.log(f"Registered new interface {new_name} ({mac})")
+        return new_name
+
+    @staticmethod
+    def forget_interface(name):
+        """Remove a registered interface. Returns True if removed, raises ValueError if built-in."""
+        config = IfaceNamesService.get_config()
+        interfaces = config.get("interfaces", {})
+
+        if name not in interfaces:
+            raise ValueError(f"Interface {name} não está registrada.")
+
+        if interfaces[name].get("builtin"):
+            raise ValueError(f"Não é possível esquecer a interface built-in {name}.")
+
+        del interfaces[name]
+        config["interfaces"] = interfaces
+        save_config(CONFIG_FILE, config)
+
+        # Clean up related configs
+        IfaceNamesService._cleanup_interface_config(name)
+
+        # Regenerate udev rules
+        IfaceNamesService.write_udev_rules()
+
+        logger.log(f"Forgot interface {name}")
+        return True
+
+    @staticmethod
+    def _cleanup_interface_config(name):
+        """Remove all configs associated with a forgotten interface."""
+        # DHCP client config
+        try:
+            dhcp_cfg = load_config("dhcp_clients.yml", {"interfaces": {}})
+            ifaces = dhcp_cfg.get("interfaces", {})
+            if name in ifaces:
+                del ifaces[name]
+                save_config("dhcp_clients.yml", {"interfaces": ifaces})
+        except Exception:
+            pass
+
+        # Interface descriptions
+        try:
+            desc_cfg = load_config("interface_descriptions.yml", {"interfaces": {}})
+            descs = desc_cfg.get("interfaces", {})
+            if name in descs:
+                del descs[name]
+                save_config("interface_descriptions.yml", {"interfaces": descs})
+        except Exception:
+            pass
+
+        # Eth server config
+        try:
+            from raspsec.services.eth_server import EthServerService
+            if EthServerService.is_server(name):
+                EthServerService.disable_server(name)
+            eth_cfg = EthServerService.get_config()
+            ifaces = eth_cfg.get("interfaces", {})
+            if name in ifaces:
+                del ifaces[name]
+                save_config("eth_servers.yml", eth_cfg)
+        except Exception:
+            pass
+
+        # Chain mapping
+        try:
+            from raspsec.dbmodels.firewall import ChainMapping
+            ChainMapping.objects.filter(interface=name).delete()
+        except Exception:
+            pass
+
+        logger.log(f"Cleaned up configs for {name}")
+
+    @staticmethod
+    def write_udev_rules():
+        """Generate /etc/udev/rules.d/80-raspsec-net.rules from registered interfaces."""
+        config = IfaceNamesService.get_config()
+        interfaces = config.get("interfaces", {})
+
+        lines = [
+            "# RaspSec — Persistent network interface naming",
+            "#",
+            "# Built-in Raspberry Pi ethernet → eth0 (driver-based)",
+            "# USB ethernet adapters → ethX (MAC-based, persistent)",
+            "# Auto-generated by RaspSec — do not edit manually",
+            "",
+            "# Built-in ethernet (BCM2711/RP1 — identified by driver on platform bus)",
+            'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="bcmgenet", KERNEL=="en*", NAME="eth0"',
+            'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="macb", KERNEL=="en*", NAME="eth0"',
+            "",
+            "# Registered USB ethernet adapters (MAC-based persistent naming)",
+        ]
+
+        for name, info in sorted(interfaces.items()):
+            if info.get("builtin"):
+                continue
+            mac = info.get("mac", "")
+            if not mac:
+                continue
+            lines.append(f'SUBSYSTEM=="net", ACTION=="add", ATTR{{address}}=="{mac}", NAME="{name}"')
+
+        lines.append("")
+        lines.append("# Fallback for unknown USB adapters — assigned next available ethX")
+        lines.append(
+            'SUBSYSTEM=="net", ACTION=="add", SUBSYSTEMS=="usb", KERNEL=="en*", '
+            'PROGRAM="/bin/sh -c \'echo eth$(($(ls -d /sys/class/net/eth[0-9]* 2>/dev/null | wc -l)))\'", NAME="%c"'
+        )
+        lines.append("")
+
+        content = "\n".join(lines)
+        write_system_file(UDEV_RULES_FILE, content)
+        Exec.execute("sudo /usr/bin/udevadm control --reload-rules", raise_error=False)
+        logger.log("Udev rules regenerated")
+
+    @staticmethod
+    def sync_current_interfaces():
+        """Detect currently connected interfaces and register any unknown ones.
+
+        Called at startup and when listing interfaces to auto-register new adapters.
+        """
+        ret, out = Exec.execute("/sbin/ip -o link show", raise_error=False)
+        if ret != 0:
+            return
+
+        import re
+        for line in out.strip().splitlines():
+            match = re.match(r"^\d+:\s+(\S+?)(?:@\S+)?:\s+<([^>]*)>", line)
+            if not match:
+                continue
+            name = match.group(1)
+            if name == "lo" or not name.startswith("eth"):
+                continue
+
+            mac_match = re.search(r"link/\S+\s+([\da-fA-F:]{17})", line)
+            if not mac_match:
+                continue
+            mac = mac_match.group(1).lower()
+
+            # Skip all-zeros MAC (interface not ready)
+            if mac == "00:00:00:00:00:00":
+                continue
+
+            config = IfaceNamesService.get_config()
+            interfaces = config.get("interfaces", {})
+
+            if name in interfaces:
+                # Already registered with this name — update MAC if needed
+                if interfaces[name].get("mac", "").lower() != mac:
+                    interfaces[name]["mac"] = mac
+                    save_config(CONFIG_FILE, {"interfaces": interfaces})
+                continue
+
+            # Check if this MAC is registered under a different name
+            existing_name = IfaceNamesService.get_name_for_mac(mac)
+            if existing_name:
+                # MAC known but name doesn't match — udev will fix it next plug
+                continue
+
+            # New unknown interface — register it
+            if name == "eth0":
+                IfaceNamesService.register_builtin(name, mac)
+            else:
+                # For USB adapters that already got a name from the fallback rule,
+                # register them with their current name
+                interfaces[name] = {
+                    "mac": mac,
+                    "builtin": False,
+                }
+                config["interfaces"] = interfaces
+                save_config(CONFIG_FILE, config)
+                IfaceNamesService.write_udev_rules()
+                logger.log(f"Auto-registered interface {name} ({mac})")

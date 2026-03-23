@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Save, ArrowLeft, RefreshCw, EthernetPort, Wifi, Usb, Layers, Unplug,
-  Cable, Server, Monitor,
+  Cable, Server, Monitor, Trash2,
 } from "lucide-react";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
@@ -496,13 +496,32 @@ export default function DeviceEdit() {
           )}
 
           {/* Save */}
-          <div className="flex items-center gap-3 mt-6 pt-4 border-t border-border">
-            <Button onClick={handleSave} loading={saving}>
-              <Save size={14} /> Salvar
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/network/devices")}>
-              Cancelar
-            </Button>
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+            <div className="flex items-center gap-3">
+              <Button onClick={handleSave} loading={saving}>
+                <Save size={14} /> Salvar
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/network/devices")}>
+                Cancelar
+              </Button>
+            </div>
+            {iface.type === "physical" && name.startsWith("eth") && iface.registered && !iface.builtin && (
+              <Button
+                variant="outline"
+                className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+                onClick={async () => {
+                  if (!window.confirm(`Esquecer interface ${name}? Todas as configurações associadas serão removidas.`)) return;
+                  try {
+                    await api.delete(`/api/network/devices/${name}/forget/`);
+                    navigate("/network/devices");
+                  } catch (err) {
+                    setError(err.response?.data?.detail || "Erro ao esquecer interface.");
+                  }
+                }}
+              >
+                <Trash2 size={14} /> Esquecer Interface
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

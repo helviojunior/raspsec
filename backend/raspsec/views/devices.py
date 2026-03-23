@@ -9,6 +9,7 @@ from raspsec.libs.network import write_dhcpcd, write_system_file, DHCPCD_CONF
 from raspsec.dbmodels.firewall import ChainMapping
 from raspsec.services.bridge import BridgeService
 from raspsec.services.eth_server import EthServerService
+from raspsec.services.iface_names import IfaceNamesService
 from raspsec.services.vlan import VlanService
 
 import os
@@ -38,11 +39,15 @@ class DevicesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        # Auto-register any new ethernet interfaces
+        IfaceNamesService.sync_current_interfaces()
+
         interfaces = _get_all_interfaces()
         chain_map = {cm.interface: cm.chain for cm in ChainMapping.objects.all()}
         vlans = VlanService.get_config().get("vlans", [])
         dhcp_clients = _get_dhcp_client_config()
 
+        name_registry = IfaceNamesService.get_all_mappings()
         eth_server_config = EthServerService.get_config().get("interfaces", {})
         for iface in interfaces:
             iface["chain"] = chain_map.get(iface["name"], "")
@@ -50,6 +55,9 @@ class DevicesView(APIView):
             iface["dhcp_client"] = dhcp_clients.get(iface["name"], False)
             if iface["type"] == "physical" and iface["name"].startswith("eth"):
                 iface["eth_mode"] = "server" if eth_server_config.get(iface["name"], {}).get("enabled") else "client"
+                reg_info = name_registry.get(iface["name"])
+                iface["registered"] = reg_info is not None
+                iface["builtin"] = reg_info.get("builtin", False) if reg_info else False
 
         bridge = BridgeService.get_bridge()
 
@@ -277,6 +285,11 @@ class DeviceDetailView(APIView):
                 iface["eth_mode"] = "client"
                 iface["eth_server_networking"] = {}
 
+            # Persistent naming info
+            reg_info = IfaceNamesService.get_all_mappings().get(name)
+            iface["registered"] = reg_info is not None
+            iface["builtin"] = reg_info.get("builtin", False) if reg_info else False
+
         return Response(iface)
 
 
@@ -457,6 +470,26 @@ class DeviceUpdateView(APIView):
 
         logger.log(f"Interface {name} updated: {list(data.keys())}")
         return Response({"detail": f"Interface {name} atualizada com sucesso."})
+
+
+class DeviceForgetView(APIView):
+    """Forget a registered interface, removing its persistent name and all associated config."""
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, name):
+        if not _valid_iface(name):
+            return Response({"detail": "Interface inválida."}, status=400)
+
+        try:
+            IfaceNamesService.forget_interface(name)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
+        except Exception as e:
+            logger.log(f"Failed to forget {name}: {e}")
+            return Response({"detail": f"Erro ao esquecer interface: {e}"}, status=500)
+
+        logger.log(f"Interface {name} forgotten")
+        return Response({"detail": f"Interface {name} esquecida. A placa será renomeada ao ser reconectada."})
 
 
 class DeviceWifiModeView(APIView):

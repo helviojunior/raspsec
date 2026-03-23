@@ -699,6 +699,10 @@
     {
       "hash": "2bac44162cf94b1d6cd43fd6989fa5125f3dab49",
       "message": "Disable eth server mode on bridge member ports"
+    },
+    {
+      "hash": "370607d46bb19bd52f6dba1eb9e5baefefda4753",
+      "message": "Add persistent interface naming via MAC-based udev rules"
     }
   ]
 }

@@ -222,6 +222,13 @@ def _apply_network_configs():
         log.warning(f"Failed to apply USB Gadget config: {e}")
 
     try:
+        from raspsec.services.iface_names import IfaceNamesService
+        IfaceNamesService.sync_current_interfaces()
+        log.info("Interface names synced.")
+    except Exception as e:
+        log.warning(f"Failed to sync interface names: {e}")
+
+    try:
         from raspsec.services.eth_server import EthServerService
         EthServerService.apply_config()
         log.info("Eth Server config applied.")

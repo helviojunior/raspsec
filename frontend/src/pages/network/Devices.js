@@ -231,6 +231,11 @@ function InterfacesTab({ interfaces }) {
                           DHCP
                         </span>
                       )}
+                      {iface.eth_mode === "server" && (
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-400">
+                          Server
+                        </span>
+                      )}
                     </div>
                     <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
                       <span>IP: <span className="text-foreground font-mono">{iface.ip || "—"}</span></span>
