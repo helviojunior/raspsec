@@ -496,6 +496,28 @@ class DeviceForgetView(APIView):
         return Response({"detail": f"Interface {name} esquecida. A placa será renomeada ao ser reconectada."})
 
 
+class DonglePolicyView(APIView):
+    """Get or update the USB dongle default behaviour policy."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        policy = IfaceNamesService.get_policy()
+        return Response(policy)
+
+    def put(self, request):
+        data = request.data
+        mode = data.get("mode", "none")
+        if mode not in ("none", "auto_connect"):
+            return Response({"detail": "Modo inválido. Use 'none' ou 'auto_connect'."}, status=400)
+
+        chain = data.get("default_chain", "")
+        if chain and chain not in ("internal", "implant", "outside"):
+            return Response({"detail": "Chain inválida."}, status=400)
+
+        IfaceNamesService.save_policy(data)
+        return Response({"detail": "Política de dongle atualizada."})
+
+
 class DeviceWifiModeView(APIView):
     """Switch a wireless interface between AP and Client mode."""
     permission_classes = [IsAuthenticated]

@@ -12,7 +12,13 @@ from raspsec.libs.log import StrataLogger
 from raspsec.libs.network import write_system_file
 
 CONFIG_FILE = "interface_names.yml"
+POLICY_FILE = "dongle_policy.yml"
 UDEV_RULES_FILE = "/etc/udev/rules.d/80-raspsec-net.rules"
+
+DEFAULT_POLICY = {
+    "mode": "none",       # "none" or "auto_connect"
+    "default_chain": "",  # firewall chain for auto-connected dongles
+}
 
 logger = StrataLogger("IfaceNamesService")
 
@@ -243,6 +249,56 @@ class IfaceNamesService:
         logger.log("Udev rules regenerated")
 
     @staticmethod
+    def get_policy():
+        """Return dongle policy config."""
+        return load_config(POLICY_FILE, DEFAULT_POLICY)
+
+    @staticmethod
+    def save_policy(data):
+        """Save dongle policy config."""
+        policy = {
+            "mode": data.get("mode", "none"),
+            "default_chain": data.get("default_chain", ""),
+        }
+        save_config(POLICY_FILE, policy)
+        logger.log(f"Dongle policy saved: {policy}")
+
+    @staticmethod
+    def _apply_auto_connect(name):
+        """Apply auto-connect policy to a newly registered interface."""
+        policy = IfaceNamesService.get_policy()
+        if policy.get("mode") != "auto_connect":
+            return
+
+        # Bring interface up
+        Exec.execute(f"sudo /sbin/ip link set {name} up", raise_error=False)
+
+        # Enable DHCP client
+        dhcp_cfg = load_config("dhcp_clients.yml", {"interfaces": {}})
+        ifaces = dhcp_cfg.get("interfaces", {})
+        ifaces[name] = True
+        save_config("dhcp_clients.yml", {"interfaces": ifaces})
+
+        from raspsec.libs.network import write_dhcpcd
+        write_dhcpcd()
+        Exec.execute("sudo /usr/bin/systemctl restart dhcpcd.service", raise_error=False)
+
+        # Set default chain
+        chain = policy.get("default_chain", "")
+        if chain and chain in ("internal", "implant", "outside"):
+            from raspsec.dbmodels.firewall import ChainMapping
+            ChainMapping.objects.update_or_create(
+                interface=name, defaults={"chain": chain}
+            )
+            try:
+                from raspsec.services.firewall import FirewallService
+                FirewallService.apply()
+            except Exception:
+                pass
+
+        logger.log(f"Auto-connected {name} (chain={chain})")
+
+    @staticmethod
     def sync_current_interfaces():
         """Detect currently connected interfaces and register any unknown ones.
 
@@ -308,3 +364,6 @@ class IfaceNamesService:
                 save_config(CONFIG_FILE, config)
                 IfaceNamesService.write_udev_rules()
                 logger.log(f"Auto-registered interface {name} ({mac})")
+
+                # Apply dongle policy (auto-connect if configured)
+                IfaceNamesService._apply_auto_connect(name)

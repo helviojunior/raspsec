@@ -723,6 +723,10 @@
     {
       "hash": "299c3f3f0d74a3335f255b85a95acdc04280455a",
       "message": "Sort interfaces by name with natural ordering on devices page"
+    },
+    {
+      "hash": "42a64656a03049d2d722ac7cbc18d7d9f5e1d1a0",
+      "message": "Add USB Dongle Behaviour tab with auto-connect policy"
     }
   ]
 }

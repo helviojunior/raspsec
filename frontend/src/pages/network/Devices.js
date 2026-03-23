@@ -33,6 +33,7 @@ const tabs = [
   { id: "vlans", label: "VLANs", icon: Layers },
   { id: "bridge", label: "Bridge", icon: Unplug },
   { id: "wifi-client", label: "WiFi Client", icon: Wifi },
+  { id: "dongle", label: "USB Dongle", icon: Usb },
 ];
 
 export default function Devices() {
@@ -156,6 +157,13 @@ export default function Devices() {
       {activeTab === "wifi-client" && (
         <WifiClientTab
           wirelessInterfaces={clientWirelessIfaces}
+          setError={setError}
+          setSuccess={setSuccess}
+        />
+      )}
+
+      {activeTab === "dongle" && (
+        <DonglePolicyTab
           setError={setError}
           setSuccess={setSuccess}
         />
@@ -1092,6 +1100,139 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+
+// ── USB Dongle Policy Tab ──
+
+const CHAINS = ["internal", "implant", "outside"];
+
+const chainBadge = {
+  internal: "text-emerald-400",
+  implant: "text-amber-400",
+  outside: "text-red-400",
+};
+
+function DonglePolicyTab({ setError, setSuccess }) {
+  const [policy, setPolicy] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    api.get("/api/network/devices/dongle-policy/")
+      .then(({ data }) => setPolicy(data))
+      .catch(() => setError("Erro ao carregar política de dongle."))
+      .finally(() => setLoading(false));
+  }, [setError]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.put("/api/network/devices/dongle-policy/", policy);
+      setSuccess("Política de dongle atualizada.");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao salvar.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading || !policy) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <RefreshCw className="animate-spin text-muted-foreground" size={24} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Usb size={18} /> USB Dongle Behaviour
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Define o comportamento padrão quando um novo adaptador USB de rede é conectado.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Mode selector */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Ao detectar novo dongle</Label>
+            <div className="flex flex-col gap-2">
+              {[
+                {
+                  value: "none",
+                  label: "None",
+                  desc: "Apenas registrar o nome. Nenhuma ação automática.",
+                },
+                {
+                  value: "auto_connect",
+                  label: "Auto Connect",
+                  desc: "Ativar interface, habilitar DHCP client e aplicar chain padrão.",
+                },
+              ].map(({ value, label, desc }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPolicy({ ...policy, mode: value })}
+                  className={cn(
+                    "flex items-start gap-3 p-3 rounded-lg border text-left transition-all",
+                    policy.mode === value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-muted/50"
+                  )}
+                >
+                  <div className={cn(
+                    "mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0",
+                    policy.mode === value ? "border-primary" : "border-muted-foreground/40"
+                  )}>
+                    {policy.mode === value && (
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-foreground">{label}</div>
+                    <div className="text-xs text-muted-foreground">{desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Chain selector — only when auto_connect */}
+          {policy.mode === "auto_connect" && (
+            <div className="space-y-2 pl-7">
+              <Label className="text-sm font-medium">Firewall Chain padrão</Label>
+              <select
+                value={policy.default_chain || ""}
+                onChange={(e) => setPolicy({ ...policy, default_chain: e.target.value })}
+                className="h-10 rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm max-w-md w-full"
+              >
+                <option value="">Nenhuma</option>
+                {CHAINS.map((c) => (
+                  <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                ))}
+              </select>
+              {policy.default_chain && (
+                <p className={cn("text-xs font-medium", chainBadge[policy.default_chain])}>
+                  Novos dongles serão atribuídos à chain {policy.default_chain}.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Save */}
+          <div className="pt-2 border-t border-border">
+            <Button onClick={handleSave} loading={saving}>
+              Salvar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
