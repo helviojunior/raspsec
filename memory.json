@@ -807,6 +807,10 @@
     {
       "hash": "ffddc34ba3b41936e2961dca7b42cc4ab3913741",
       "message": "Persist IPv4 mode to prevent 'none' reverting to 'static' on reload"
+    },
+    {
+      "hash": "7faddf470419350af37c5f609f6171e539a980df",
+      "message": "Fully clean interface when setting IPv4 to none"
     }
   ]
 }

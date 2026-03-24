@@ -389,13 +389,23 @@ class DeviceUpdateView(APIView):
             save_config("ipv4_modes.yml", {"interfaces": ipv4_modes})
 
         if ipv4_mode == "none":
-            # Remove IP and disable DHCP
-            Exec.execute(f"sudo /sbin/ip addr flush dev {name}", raise_error=False)
+            # Disable DHCP client first (so dhcpcd doesn't reassign)
             if not _is_managed(name):
                 dhcp_clients = _get_dhcp_client_config()
                 dhcp_clients[name] = False
                 save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
+                # Also clear no_default_route flag
+                no_gw_cfg = load_config("dhcp_no_gateway.yml", {"interfaces": {}})
+                no_gw_ifaces = no_gw_cfg.get("interfaces", {})
+                no_gw_ifaces.pop(name, None)
+                save_config("dhcp_no_gateway.yml", {"interfaces": no_gw_ifaces})
                 _apply_dhcp_client_config()
+            # Release DHCP lease and kill any dhclient
+            Exec.execute(f"sudo /sbin/dhcpcd --release {name}", raise_error=False)
+            Exec.execute(f"sudo /usr/sbin/dhclient -r {name}", raise_error=False)
+            # Flush all IPs and routes
+            Exec.execute(f"sudo /sbin/ip addr flush dev {name}", raise_error=False)
+            Exec.execute(f"sudo /sbin/ip route flush dev {name}", raise_error=False)
         elif ipv4_mode == "static":
             # Disable DHCP, set static IP
             if not _is_managed(name):
