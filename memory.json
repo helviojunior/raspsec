@@ -781,6 +781,10 @@
     {
       "hash": "31b9dc8b001c8913351ec88d5affaccec147eb5a",
       "message": "Fix gateway resolution for nogateway interfaces"
+    },
+    {
+      "hash": "b94ef25ac9a54748f684b817a6edbf9bd079d8d0",
+      "message": "Apply static routes with delayed retries on boot"
     }
   ]
 }

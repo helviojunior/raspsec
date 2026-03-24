@@ -246,9 +246,23 @@ def _apply_network_configs():
     try:
         from raspsec.services.static_routes import StaticRoutesService
         StaticRoutesService.ensure_defaults()
-        log.info("Static routes defaults ensured (routes activate when interfaces come up).")
+        # Delayed apply: interfaces like wlan0 may take time to get DHCP lease
+        import threading
+
+        def _delayed_static_routes():
+            import time
+            for delay in (10, 30, 60):
+                time.sleep(delay)
+                try:
+                    StaticRoutesService.apply()
+                    log.info(f"Static routes applied (delayed {delay}s).")
+                except Exception as e:
+                    log.warning(f"Static routes apply failed at {delay}s: {e}")
+
+        threading.Thread(target=_delayed_static_routes, daemon=True).start()
+        log.info("Static routes defaults ensured, delayed apply scheduled.")
     except Exception as e:
-        log.warning(f"Failed to apply static routes: {e}")
+        log.warning(f"Failed to setup static routes: {e}")
 
     try:
         from raspsec.services.dns import DnsService
