@@ -199,18 +199,7 @@ def _apply_network_configs():
                 except Exception as e:
                     log.warning(f"WiFi client auto-connect failed: {e}")
             else:
-                # Fallback: restore from existing wpa_supplicant config
-                import os
-                wpa_conf = "/etc/wpa_supplicant/wpa_supplicant-wlan0.conf"
-                if os.path.exists(wpa_conf):
-                    from raspsec.libs.cmd import Exec
-                    Exec.execute("sudo /sbin/ip link set wlan0 up", raise_error=False)
-                    Exec.execute(
-                        f"sudo /usr/sbin/wpa_supplicant -B -i wlan0 -c {wpa_conf} -D nl80211,wext",
-                        raise_error=False,
-                    )
-                    Exec.execute("sudo /sbin/dhcpcd --rebind wlan0", raise_error=False)
-                    log.info("WiFi client mode restored from saved config.")
+                log.info("No auto-connect WiFi profile found, skipping client mode.")
     except Exception as e:
         log.warning(f"Failed to apply WiFi config: {e}")
 

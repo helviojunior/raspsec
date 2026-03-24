@@ -769,6 +769,10 @@
     {
       "hash": "13f851e9ec8e2d619af8946800eb91a3a1f5796e",
       "message": "Fix nogateway not working: skip AP section when wlan0 is DHCP client, use dhcpcd instead of dhclient"
+    },
+    {
+      "hash": "f64c440c3aab0f1b19bf4a6875480a1ec4ea5b1b",
+      "message": "Add connect button on saved WiFi profiles, fix auto-connect on reboot"
     }
   ]
 }

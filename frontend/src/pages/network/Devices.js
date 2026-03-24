@@ -668,6 +668,19 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
     }
   };
 
+  const connectProfile = async (profile) => {
+    try {
+      await api.post("/api/wifi-client/connect/", {
+        interface: profile.interface,
+        profile,
+      });
+      setSuccess(`Conectado a ${profile.ssid} via ${profile.interface}.`);
+      fetchStatus();
+    } catch (err) {
+      setError(err.response?.data?.detail || "Erro ao conectar.");
+    }
+  };
+
   const readFileContent = (field) => (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1081,12 +1094,19 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => connectProfile(p)}
+                      className="text-[10px] font-medium px-2 py-1 rounded border border-primary/30 text-primary hover:bg-primary/10 transition-colors whitespace-nowrap"
+                    >
+                      <Wifi size={10} className="inline mr-1" />
+                      Conectar
+                    </button>
                     <Toggle
                       checked={p.auto_connect}
                       onChange={() => toggleAutoConnect(p.interface, p.ssid, p.auto_connect)}
                       className="scale-75"
                     />
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">Auto-connect</span>
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">Auto</span>
                     <button
                       onClick={() => deleteProfile(p.interface, p.ssid)}
                       className="text-muted-foreground hover:text-red-500 transition-colors ml-1"
