@@ -757,6 +757,10 @@
     {
       "hash": "bbb985f02912deaa462b48a910bcc8d3bffec7b1",
       "message": "Add no-default-route option for DHCP client interfaces"
+    },
+    {
+      "hash": "7c4d87bf986a8f2f57e0f79f7334844a97b434ef",
+      "message": "Force DHCP release+rebind when no_default_route flag changes"
     }
   ]
 }

@@ -425,6 +425,9 @@ class DeviceUpdateView(APIView):
             no_gw_ifaces[name] = bool(data["no_default_route"])
             save_config("dhcp_no_gateway.yml", {"interfaces": no_gw_ifaces})
             _apply_dhcp_client_config()
+            # Force DHCP release+renew so the new nogateway setting takes effect
+            Exec.execute(f"sudo /sbin/dhcpcd --release {name}", raise_error=False)
+            Exec.execute(f"sudo /sbin/dhcpcd --rebind {name}", raise_error=False)
 
         # Eth mode (client / server)
         if "eth_mode" in data and name.startswith("eth"):
