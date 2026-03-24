@@ -823,6 +823,10 @@
     {
       "hash": "c7f0bea278af9e8d7ade08499078bdd700fe2996",
       "message": "Clean ipv4_modes and dhcp_no_gateway on forget, regenerate dhcpcd"
+    },
+    {
+      "hash": "c8fc4605c717bf44f7e23e79853eb6563518b4e7",
+      "message": "Bring all registered interfaces UP on boot"
     }
   ]
 }

@@ -232,7 +232,11 @@ def _apply_network_configs():
     try:
         from raspsec.services.iface_names import IfaceNamesService
         IfaceNamesService.sync_current_interfaces()
-        log.info("Interface names synced.")
+        # Ensure all registered physical interfaces are UP (even without IP)
+        from raspsec.libs.cmd import Exec as _Exec
+        for iface_name, info in IfaceNamesService.get_all_mappings().items():
+            _Exec.execute(f"sudo /sbin/ip link set {iface_name} up", raise_error=False)
+        log.info("Interface names synced, all registered interfaces brought up.")
     except Exception as e:
         log.warning(f"Failed to sync interface names: {e}")
 
