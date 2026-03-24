@@ -793,6 +793,20 @@
     {
       "hash": "bc75ff2dea9fb3b39f01592fad2bacfa648b8d60",
       "message": "Use allowinterfaces whitelist to prevent DHCP on unmanaged dongles"
+    },
+    {
+      "hash": "d263c2d73d84be6d59dcf347fe9f33e32a776fcc",
+      "message": "Prevent NetworkManager from auto-managing network interfaces",
+      "skipped": true
+    },
+    {
+      "hash": "ef7081ef95d7981492ff4af973db710f1da4bd99",
+      "message": "Fix wifi-unblock service failing on boot due to missing /dev/rfkill",
+      "skipped": true
+    },
+    {
+      "hash": "ffddc34ba3b41936e2961dca7b42cc4ab3913741",
+      "message": "Persist IPv4 mode to prevent 'none' reverting to 'static' on reload"
     }
   ]
 }

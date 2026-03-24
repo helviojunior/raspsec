@@ -71,7 +71,7 @@ export default function DeviceEdit() {
         mac: data.mac || "",
         mtu: data.mtu || 1500,
         dhcp_client: data.dhcp_client || false,
-        ipv4_mode: data.dhcp_client ? "dhcp" : data.ip ? "static" : "none",
+        ipv4_mode: data.ipv4_mode || (data.dhcp_client ? "dhcp" : data.ip ? "static" : "none"),
         static_ip: data.ip || "",
         static_gw: data.gateway || "",
         wifi_mode: data.wifi_mode || "",

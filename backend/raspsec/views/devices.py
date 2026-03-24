@@ -254,6 +254,10 @@ class DeviceDetailView(APIView):
         iface["managed"] = _is_managed(name)
         iface["dhcp_client"] = dhcp_clients.get(name, False)
 
+        # Persisted IPv4 mode
+        ipv4_modes = load_config("ipv4_modes.yml", {"interfaces": {}}).get("interfaces", {})
+        iface["ipv4_mode"] = ipv4_modes.get(name, "")
+
         # MTU
         try:
             with open(f"/sys/class/net/{name}/mtu") as f:
@@ -378,6 +382,12 @@ class DeviceUpdateView(APIView):
 
         # IPv4 mode (none / static / dhcp)
         ipv4_mode = data.get("ipv4_mode", "")
+        if ipv4_mode in ("none", "static", "dhcp"):
+            # Persist the chosen mode
+            ipv4_modes = load_config("ipv4_modes.yml", {"interfaces": {}}).get("interfaces", {})
+            ipv4_modes[name] = ipv4_mode
+            save_config("ipv4_modes.yml", {"interfaces": ipv4_modes})
+
         if ipv4_mode == "none":
             # Remove IP and disable DHCP
             Exec.execute(f"sudo /sbin/ip addr flush dev {name}", raise_error=False)
