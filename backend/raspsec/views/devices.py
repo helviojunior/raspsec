@@ -285,6 +285,14 @@ class DeviceDetailView(APIView):
                     iface["gateway"] = line.split()[2]
                     break
 
+        # No default route flag (for DHCP client interfaces)
+        no_gw_cfg = load_config("dhcp_no_gateway.yml", {"interfaces": {}})
+        iface["no_default_route"] = no_gw_cfg.get("interfaces", {}).get(name, False)
+
+        # Stored DHCP gateway (when nogateway is set)
+        dhcp_gw_cfg = load_config("dhcp_gateways.yml", {"interfaces": {}})
+        iface["dhcp_gateway"] = dhcp_gw_cfg.get("interfaces", {}).get(name, "")
+
         # Description from config
         desc_config = load_config("interface_descriptions.yml", {"interfaces": {}})
         iface["description"] = desc_config.get("interfaces", {}).get(name, "")
@@ -408,6 +416,14 @@ class DeviceUpdateView(APIView):
             dhcp_clients = _get_dhcp_client_config()
             dhcp_clients[name] = bool(data["dhcp_client"])
             save_config(DHCP_CLIENT_CONFIG, {"interfaces": dhcp_clients})
+            _apply_dhcp_client_config()
+
+        # No default route (DHCP client without installing default gateway)
+        if "no_default_route" in data:
+            no_gw_cfg = load_config("dhcp_no_gateway.yml", {"interfaces": {}})
+            no_gw_ifaces = no_gw_cfg.get("interfaces", {})
+            no_gw_ifaces[name] = bool(data["no_default_route"])
+            save_config("dhcp_no_gateway.yml", {"interfaces": no_gw_ifaces})
             _apply_dhcp_client_config()
 
         # Eth mode (client / server)

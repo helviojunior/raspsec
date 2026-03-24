@@ -181,13 +181,25 @@ class StaticRoutesService:
 
     @staticmethod
     def _get_interface_gateway(iface_name):
-        """Get the default gateway of an interface from its current routing table."""
+        """Get gateway for an interface.
+
+        First checks the routing table (normal DHCP). If not found (nogateway),
+        falls back to stored DHCP gateway from the dhcpcd hook.
+        """
+        # 1. Check current routing table
         ret, out = Exec.execute(f"/sbin/ip route show dev {iface_name}", raise_error=False)
-        if ret != 0:
-            return ""
-        for line in out.strip().splitlines():
-            if line.startswith("default via "):
-                return line.split()[2]
+        if ret == 0:
+            for line in out.strip().splitlines():
+                if line.startswith("default via "):
+                    return line.split()[2]
+
+        # 2. Fallback: read stored DHCP gateway (for nogateway interfaces)
+        from raspsec.libs.config import load_config
+        gw_cfg = load_config("dhcp_gateways.yml", {"interfaces": {}})
+        stored_gw = gw_cfg.get("interfaces", {}).get(iface_name, "")
+        if stored_gw:
+            return stored_gw
+
         return ""
 
     @staticmethod

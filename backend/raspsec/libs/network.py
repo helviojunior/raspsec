@@ -90,13 +90,28 @@ def write_dhcpcd():
         # Remove the denyinterfaces eth0 line since user wants DHCP client
         content = content.replace("denyinterfaces eth0\n", "")
 
+    # Load no-default-route settings
+    no_gw_cfg = load_config("dhcp_no_gateway.yml", {"interfaces": {}})
+    no_gw_ifaces = no_gw_cfg.get("interfaces", {})
+
+    # eth0 DHCP client: check no_default_route
+    if dhcp_ifaces.get("eth0", False) and no_gw_ifaces.get("eth0", False):
+        content += (
+            "\n# DHCP client on eth0 (no default route)\n"
+            "interface eth0\n"
+            "nogateway\n"
+        )
+
     # Add any other DHCP-client-enabled interfaces (VLANs, etc.)
     for iface_name, enabled in dhcp_ifaces.items():
         if enabled and iface_name != "eth0":
+            no_gw = no_gw_ifaces.get(iface_name, False)
             content += (
-                f"\n# DHCP client on {iface_name}\n"
+                f"\n# DHCP client on {iface_name}{' (no default route)' if no_gw else ''}\n"
                 f"interface {iface_name}\n"
             )
+            if no_gw:
+                content += "nogateway\n"
 
     logger.log(f"Writing dhcpcd config to {DHCPCD_CONF}")
     write_system_file(DHCPCD_CONF, content)

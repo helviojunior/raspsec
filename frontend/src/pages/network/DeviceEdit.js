@@ -75,6 +75,7 @@ export default function DeviceEdit() {
         static_ip: data.ip || "",
         static_gw: data.gateway || "",
         wifi_mode: data.wifi_mode || "",
+        no_default_route: data.no_default_route || false,
         eth_mode: data.eth_mode || "client",
         eth_server_networking: data.eth_server_networking || {
           dhcp_enabled: true,
@@ -259,6 +260,20 @@ export default function DeviceEdit() {
                       placeholder="192.168.1.1"
                       className="font-mono"
                     />
+                  </div>
+                </div>
+              )}
+              {form.ipv4_mode === "dhcp" && (
+                <div className="flex items-center gap-2 mt-3">
+                  <Toggle
+                    checked={form.no_default_route}
+                    onChange={() => setForm({ ...form, no_default_route: !form.no_default_route })}
+                  />
+                  <div>
+                    <span className="text-sm text-muted-foreground">Não aceitar rota padrão do DHCP</span>
+                    <p className="text-xs text-muted-foreground/70">
+                      O gateway recebido será armazenado e utilizado apenas pelas rotas estáticas.
+                    </p>
                   </div>
                 </div>
               )}

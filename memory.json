@@ -748,6 +748,15 @@
     {
       "hash": "ea87b8e5d30dca909ea68feb5b4e72469dc93b3a",
       "message": "Routes only activate when interface comes up, gateway inherited"
+    },
+    {
+      "hash": "1d9dbea3e98b650d4646b5f5c4adc023564588ee",
+      "message": "Fix column width for no-IP interfaces in network banner",
+      "skipped": true
+    },
+    {
+      "hash": "bbb985f02912deaa462b48a910bcc8d3bffec7b1",
+      "message": "Add no-default-route option for DHCP client interfaces"
     }
   ]
 }
