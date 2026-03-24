@@ -670,9 +670,9 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
 
   const connectProfile = async (profile) => {
     try {
-      await api.post("/api/wifi-client/connect/", {
+      await api.post("/api/wifi-client/profiles/", {
         interface: profile.interface,
-        profile,
+        ssid: profile.ssid,
       });
       setSuccess(`Conectado a ${profile.ssid} via ${profile.interface}.`);
       fetchStatus();

@@ -785,6 +785,10 @@
     {
       "hash": "b94ef25ac9a54748f684b817a6edbf9bd079d8d0",
       "message": "Apply static routes with delayed retries on boot"
+    },
+    {
+      "hash": "9d09bd183c1a451c690270d9b38478c411553c05",
+      "message": "Fix connect button using saved credentials from server"
     }
   ]
 }

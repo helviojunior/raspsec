@@ -88,6 +88,22 @@ class WifiClientProfilesView(APIView):
         profiles = WifiClientService.get_profiles()
         return Response({"profiles": profiles})
 
+    def post(self, request):
+        """Connect using a saved profile (credentials from server, not client)."""
+        interface = request.data.get("interface", "")
+        ssid = request.data.get("ssid", "")
+
+        if not interface or not ssid:
+            return Response({"detail": "Interface e SSID são obrigatórios."}, status=400)
+
+        try:
+            WifiClientService.connect_saved_profile(interface, ssid)
+            return Response({"detail": f"Conectado a {ssid} via {interface}."})
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
+        except RuntimeError as e:
+            return Response({"detail": str(e)}, status=500)
+
     def delete(self, request):
         interface = request.data.get("interface", "")
         ssid = request.data.get("ssid", "")

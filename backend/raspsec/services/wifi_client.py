@@ -214,6 +214,16 @@ class WifiClientService:
         return safe
 
     @staticmethod
+    def connect_saved_profile(interface, ssid):
+        """Connect using a saved profile (with full credentials from YAML)."""
+        config = load_config(CONFIG_FILE, DEFAULT_CONFIG)
+        for p in config.get("profiles", []):
+            if p.get("interface") == interface and p.get("ssid") == ssid:
+                WifiClientService.connect(interface, p)
+                return
+        raise ValueError(f"Perfil '{ssid}' não encontrado para {interface}.")
+
+    @staticmethod
     def set_auto_connect(interface, ssid, enabled):
         """Enable or disable auto-connect for a saved profile.
 
