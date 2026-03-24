@@ -176,6 +176,26 @@ class IfaceNamesService:
         except Exception:
             pass
 
+        # IPv4 mode
+        try:
+            ipv4_cfg = load_config("ipv4_modes.yml", {"interfaces": {}})
+            modes = ipv4_cfg.get("interfaces", {})
+            if name in modes:
+                del modes[name]
+                save_config("ipv4_modes.yml", {"interfaces": modes})
+        except Exception:
+            pass
+
+        # No default route flag
+        try:
+            no_gw_cfg = load_config("dhcp_no_gateway.yml", {"interfaces": {}})
+            no_gw = no_gw_cfg.get("interfaces", {})
+            if name in no_gw:
+                del no_gw[name]
+                save_config("dhcp_no_gateway.yml", {"interfaces": no_gw})
+        except Exception:
+            pass
+
         # WiFi client profiles (for wlan interfaces)
         if name.startswith("wlan"):
             try:
@@ -186,6 +206,14 @@ class IfaceNamesService:
                     save_config("wifi_client.yml", {"profiles": profiles})
             except Exception:
                 pass
+
+        # Regenerate dhcpcd.conf (update allowinterfaces)
+        try:
+            from raspsec.libs.network import write_dhcpcd
+            write_dhcpcd()
+            Exec.execute("sudo /usr/bin/systemctl restart dhcpcd.service", raise_error=False)
+        except Exception:
+            pass
 
         logger.log(f"Cleaned up configs for {name}")
 

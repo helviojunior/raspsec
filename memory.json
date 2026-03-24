@@ -819,6 +819,10 @@
     {
       "hash": "98f2062462c144dec566b6f91d7d4a61e5cd73ad",
       "message": "Apply dongle auto-connect policy on reconnect, not just first plug"
+    },
+    {
+      "hash": "c7f0bea278af9e8d7ade08499078bdd700fe2996",
+      "message": "Clean ipv4_modes and dhcp_no_gateway on forget, regenerate dhcpcd"
     }
   ]
 }
