@@ -831,6 +831,14 @@
     {
       "hash": "63f8bd3c89af9ce844bb6c5dfa70b8c6eb173f16",
       "message": "Set ipv4_mode to none when dongle reconnects with policy none"
+    },
+    {
+      "hash": "38d2ad5378aee646e43da82aaac9dfdd4a14b191",
+      "message": "Default USB dongle policy to auto_connect with outside chain"
+    },
+    {
+      "hash": "44f0ccd68e44ce22f6ddd0308c8aee14fe5f235b",
+      "message": "Remove tracked migration file, already in gitignore"
     }
   ]
 }

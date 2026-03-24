@@ -16,8 +16,8 @@ POLICY_FILE = "dongle_policy.yml"
 UDEV_RULES_FILE = "/etc/udev/rules.d/80-raspsec-net.rules"
 
 DEFAULT_POLICY = {
-    "mode": "none",       # "none" or "auto_connect"
-    "default_chain": "",  # firewall chain for auto-connected dongles
+    "mode": "auto_connect",   # "none" or "auto_connect"
+    "default_chain": "outside",  # firewall chain for auto-connected dongles
 }
 
 logger = StrataLogger("IfaceNamesService")
