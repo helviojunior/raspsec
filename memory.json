@@ -765,6 +765,10 @@
     {
       "hash": "789521e5c54da670e3b8c3507e3b2a2b166ad07c",
       "message": "Clean old static routes before reapplying on network changes"
+    },
+    {
+      "hash": "13f851e9ec8e2d619af8946800eb91a3a1f5796e",
+      "message": "Fix nogateway not working: skip AP section when wlan0 is DHCP client, use dhcpcd instead of dhclient"
     }
   ]
 }

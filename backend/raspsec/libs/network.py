@@ -56,9 +56,13 @@ def write_dhcpcd():
         "denyinterfaces eth0\n"
     )
 
-    # wlan0 section (always present — interface keeps its IP even with AP off)
-    wnet = wifi.get("networking", _WIFI_NET_DEFAULTS)
-    content += _interface_section("wlan0", wnet)
+    # wlan0 section — only when in AP mode (managed as server with static IP)
+    # When wlan0 is in client mode (DHCP), this section must be omitted
+    dhcp_cfg_pre = load_config("dhcp_clients.yml", {"interfaces": {}})
+    wlan0_is_dhcp_client = dhcp_cfg_pre.get("interfaces", {}).get("wlan0", False)
+    if not wlan0_is_dhcp_client:
+        wnet = wifi.get("networking", _WIFI_NET_DEFAULTS)
+        content += _interface_section("wlan0", wnet)
 
     # usb0 section (only when USB gadget is enabled)
     if usb.get("enabled"):

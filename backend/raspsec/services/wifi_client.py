@@ -115,11 +115,10 @@ class WifiClientService:
         if ret != 0:
             raise RuntimeError(f"Falha ao iniciar wpa_supplicant: {out}")
 
-        # Request DHCP
-        Exec.execute(
-            f"sudo /usr/sbin/dhclient -v {interface}",
-            raise_error=False,
-        )
+        # Request DHCP via dhcpcd (respects nogateway in dhcpcd.conf)
+        # Kill any leftover dhclient to avoid conflicts
+        Exec.execute(f"sudo /usr/sbin/dhclient -r {interface}", raise_error=False)
+        Exec.execute(f"sudo /sbin/dhcpcd --rebind {interface}", raise_error=False)
 
         # Auto-set chain to 'implant' when wlan0 is used as client
         if interface == "wlan0":
@@ -148,10 +147,8 @@ class WifiClientService:
             f"sudo /usr/bin/pkill -f 'wpa_supplicant.*-i {interface}'",
             raise_error=False,
         )
-        Exec.execute(
-            f"sudo /usr/sbin/dhclient -r {interface}",
-            raise_error=False,
-        )
+        Exec.execute(f"sudo /usr/sbin/dhclient -r {interface}", raise_error=False)
+        Exec.execute(f"sudo /sbin/dhcpcd --release {interface}", raise_error=False)
         Exec.execute(
             f"sudo /sbin/ip addr flush dev {interface}",
             raise_error=False,

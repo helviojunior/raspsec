@@ -209,7 +209,7 @@ def _apply_network_configs():
                         f"sudo /usr/sbin/wpa_supplicant -B -i wlan0 -c {wpa_conf} -D nl80211,wext",
                         raise_error=False,
                     )
-                    Exec.execute("sudo /sbin/dhclient wlan0", raise_error=False)
+                    Exec.execute("sudo /sbin/dhcpcd --rebind wlan0", raise_error=False)
                     log.info("WiFi client mode restored from saved config.")
     except Exception as e:
         log.warning(f"Failed to apply WiFi config: {e}")
