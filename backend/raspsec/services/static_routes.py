@@ -205,8 +205,9 @@ class StaticRoutesService:
     def _get_interface_gateway(iface_name):
         """Get gateway for an interface.
 
-        First checks the routing table (normal DHCP). If not found (nogateway),
-        falls back to stored DHCP gateway from the dhcpcd hook.
+        1. Check routing table (normal DHCP with default route)
+        2. Read stored DHCP gateway from hook (dhcp_gateways.yml)
+        3. Parse dhcpcd lease directly (most reliable for nogateway)
         """
         # 1. Check current routing table
         ret, out = Exec.execute(f"/sbin/ip route show dev {iface_name}", raise_error=False)
@@ -215,12 +216,47 @@ class StaticRoutesService:
                 if line.startswith("default via "):
                     return line.split()[2]
 
-        # 2. Fallback: read stored DHCP gateway (for nogateway interfaces)
+        # 2. Read stored DHCP gateway from hook
         from raspsec.libs.config import load_config
         gw_cfg = load_config("dhcp_gateways.yml", {"interfaces": {}})
         stored_gw = gw_cfg.get("interfaces", {}).get(iface_name, "")
         if stored_gw:
             return stored_gw
+
+        # 3. Parse dhcpcd lease
+        ret, out = Exec.execute(
+            f"/sbin/dhcpcd --dumplease {iface_name}",
+            raise_error=False,
+        )
+        if ret == 0 and out.strip():
+            for line in out.strip().splitlines():
+                if line.startswith("routers="):
+                    gw = line.split("=", 1)[1].split()[0]
+                    if gw:
+                        return gw
+
+        # 4. Parse dhclient lease file
+        import re
+        ret, out = Exec.execute(
+            "/bin/cat /var/lib/dhcp/dhclient.leases",
+            raise_error=False,
+        )
+        if ret == 0:
+            # Find leases for this interface, get last routers value
+            current_iface = None
+            last_gw = ""
+            for line in out.splitlines():
+                line = line.strip()
+                if line.startswith("lease {"):
+                    current_iface = None
+                elif f'interface "{iface_name}"' in line:
+                    current_iface = iface_name
+                elif current_iface == iface_name and "option routers" in line:
+                    match = re.search(r"option routers\s+([\d.]+)", line)
+                    if match:
+                        last_gw = match.group(1)
+            if last_gw:
+                return last_gw
 
         return ""
 

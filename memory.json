@@ -777,6 +777,10 @@
     {
       "hash": "710bceecf118e1cc536f099b1f3a75a58826cb7f",
       "message": "Persist wpa_supplicant config on auto-connect, clean on disable"
+    },
+    {
+      "hash": "31b9dc8b001c8913351ec88d5affaccec147eb5a",
+      "message": "Fix gateway resolution for nogateway interfaces"
     }
   ]
 }
