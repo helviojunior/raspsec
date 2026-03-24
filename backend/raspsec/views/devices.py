@@ -406,6 +406,8 @@ class DeviceUpdateView(APIView):
             # Flush all IPs and routes
             Exec.execute(f"sudo /sbin/ip addr flush dev {name}", raise_error=False)
             Exec.execute(f"sudo /sbin/ip route flush dev {name}", raise_error=False)
+            # Keep interface up (dhcpcd --release may bring it down)
+            Exec.execute(f"sudo /sbin/ip link set {name} up", raise_error=False)
         elif ipv4_mode == "static":
             # Disable DHCP, set static IP
             if not _is_managed(name):

@@ -811,6 +811,10 @@
     {
       "hash": "7faddf470419350af37c5f609f6171e539a980df",
       "message": "Fully clean interface when setting IPv4 to none"
+    },
+    {
+      "hash": "45aa8718e400afebf5d0afea4d41974d262975f4",
+      "message": "Keep interface up after setting IPv4 to none"
     }
   ]
 }
