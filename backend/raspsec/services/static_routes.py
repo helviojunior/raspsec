@@ -87,12 +87,34 @@ class StaticRoutesService:
             StaticRoute.objects.filter(id=rid).update(priority=i)
 
     @staticmethod
+    def remove_all():
+        """Remove all managed static routes from the system."""
+        routes = StaticRoute.objects.all().order_by("priority")
+        chain_map = {cm.interface: cm.chain for cm in ChainMapping.objects.all()}
+        chain_ifaces = {}
+        for iface, chain in chain_map.items():
+            chain_ifaces.setdefault(chain, []).append(iface)
+
+        for route in routes:
+            interfaces = StaticRoutesService._resolve_interfaces(route, chain_ifaces)
+            # Also try removing by explicit interface if set
+            if route.interface and route.interface not in interfaces:
+                interfaces.append(route.interface)
+            for iface in interfaces:
+                StaticRoutesService._remove_route(route, iface)
+
+        logger.log("All managed static routes removed.")
+
+    @staticmethod
     def apply():
-        """Apply routes for all interfaces that are currently up.
+        """Remove all managed routes then re-apply for interfaces that are up.
 
         Routes are only active when their target interface is up.
         The gateway is inherited from the interface's default route.
         """
+        # Clean first
+        StaticRoutesService.remove_all()
+
         routes = StaticRoute.objects.filter(enabled=True).order_by("priority")
         chain_map = {cm.interface: cm.chain for cm in ChainMapping.objects.all()}
         chain_ifaces = {}

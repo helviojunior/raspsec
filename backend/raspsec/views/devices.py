@@ -502,6 +502,15 @@ class DeviceUpdateView(APIView):
         if errors:
             return Response({"detail": "; ".join(errors)}, status=400)
 
+        # Re-evaluate static routes after network config changes
+        changed_keys = {"wifi_mode", "eth_mode", "chain", "ipv4_mode", "no_default_route", "enabled"}
+        if changed_keys & set(data.keys()):
+            try:
+                from raspsec.services.static_routes import StaticRoutesService
+                StaticRoutesService.apply()
+            except Exception as e:
+                logger.log(f"Failed to reapply static routes: {e}")
+
         logger.log(f"Interface {name} updated: {list(data.keys())}")
         return Response({"detail": f"Interface {name} atualizada com sucesso."})
 
@@ -609,6 +618,13 @@ class DeviceWifiModeView(APIView):
         except Exception as e:
             logger.log(f"Failed to switch {name} to {mode}: {e}")
             return Response({"detail": f"Erro ao alternar modo: {e}"}, status=500)
+
+        # Re-evaluate static routes after mode change
+        try:
+            from raspsec.services.static_routes import StaticRoutesService
+            StaticRoutesService.apply()
+        except Exception as e:
+            logger.log(f"Failed to reapply static routes: {e}")
 
         label = "Access Point" if mode == "ap" else "Client"
         return Response({"detail": f"{name} alterada para modo {label}."})

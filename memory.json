@@ -761,6 +761,10 @@
     {
       "hash": "7c4d87bf986a8f2f57e0f79f7334844a97b434ef",
       "message": "Force DHCP release+rebind when no_default_route flag changes"
+    },
+    {
+      "hash": "789521e5c54da670e3b8c3507e3b2a2b166ad07c",
+      "message": "Clean old static routes before reapplying on network changes"
     }
   ]
 }
