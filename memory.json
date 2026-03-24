@@ -815,6 +815,10 @@
     {
       "hash": "45aa8718e400afebf5d0afea4d41974d262975f4",
       "message": "Keep interface up after setting IPv4 to none"
+    },
+    {
+      "hash": "98f2062462c144dec566b6f91d7d4a61e5cd73ad",
+      "message": "Apply dongle auto-connect policy on reconnect, not just first plug"
     }
   ]
 }

@@ -273,11 +273,15 @@ class IfaceNamesService:
         # Bring interface up
         Exec.execute(f"sudo /sbin/ip link set {name} up", raise_error=False)
 
-        # Enable DHCP client
+        # Enable DHCP client and persist ipv4 mode
         dhcp_cfg = load_config("dhcp_clients.yml", {"interfaces": {}})
         ifaces = dhcp_cfg.get("interfaces", {})
         ifaces[name] = True
         save_config("dhcp_clients.yml", {"interfaces": ifaces})
+
+        ipv4_modes = load_config("ipv4_modes.yml", {"interfaces": {}}).get("interfaces", {})
+        ipv4_modes[name] = "dhcp"
+        save_config("ipv4_modes.yml", {"interfaces": ipv4_modes})
 
         from raspsec.libs.network import write_dhcpcd
         write_dhcpcd()
@@ -342,6 +346,13 @@ class IfaceNamesService:
                 if interfaces[name].get("mac", "").lower() != mac:
                     interfaces[name]["mac"] = mac
                     save_config(CONFIG_FILE, {"interfaces": interfaces})
+                # For non-builtin interfaces, check if they need auto-connect
+                # (e.g. dongle was unplugged and replugged)
+                if not interfaces[name].get("builtin"):
+                    dhcp_cfg = load_config("dhcp_clients.yml", {"interfaces": {}})
+                    if not dhcp_cfg.get("interfaces", {}).get(name, False):
+                        # Not yet configured as DHCP client — apply policy
+                        IfaceNamesService._apply_auto_connect(name)
                 continue
 
             # Check if this MAC is registered under a different name
