@@ -39,6 +39,40 @@ def write_dhcpcd():
     wifi = load_config("managment_ap.yml", {})
     usb = load_config("ethernet_over_usb.yml", {})
 
+    # Build whitelist of interfaces that dhcpcd should manage
+    dhcp_cfg = load_config("dhcp_clients.yml", {"interfaces": {}})
+    dhcp_ifaces = dhcp_cfg.get("interfaces", {})
+    no_gw_cfg = load_config("dhcp_no_gateway.yml", {"interfaces": {}})
+    no_gw_ifaces = no_gw_cfg.get("interfaces", {})
+
+    # Allowed interfaces: server-managed (wlan0 AP, usb0 gadget, eth servers) + DHCP clients
+    allowed = set()
+
+    # wlan0: AP mode gets static IP, client mode gets DHCP
+    wlan0_is_dhcp_client = dhcp_ifaces.get("wlan0", False)
+    if not wlan0_is_dhcp_client:
+        allowed.add("wlan0")  # AP mode — managed as server
+    else:
+        allowed.add("wlan0")  # Client mode — DHCP
+
+    # usb0 gadget
+    if usb.get("enabled"):
+        allowed.add("usb0")
+
+    # Eth server interfaces
+    eth_servers = load_config("eth_servers.yml", {"interfaces": {}})
+    for iface_name, iface_cfg in eth_servers.get("interfaces", {}).items():
+        if iface_cfg.get("enabled") and iface_cfg.get("networking"):
+            allowed.add(iface_name)
+
+    # Explicit DHCP client interfaces
+    for iface_name, enabled in dhcp_ifaces.items():
+        if enabled:
+            allowed.add(iface_name)
+
+    # Build allowinterfaces line (only these get DHCP from dhcpcd)
+    allow_list = " ".join(sorted(allowed))
+
     content = (
         "# RaspSec default configuration\n"
         "hostname\n"
@@ -52,14 +86,11 @@ def write_dhcpcd():
         "slaac private\n"
         "nohook lookup-hostname\n"
         "\n"
-        "# Disable DHCP client on eth0 (wired uplink — managed externally)\n"
-        "denyinterfaces eth0\n"
+        f"# Only manage explicitly allowed interfaces\n"
+        f"allowinterfaces {allow_list}\n"
     )
 
-    # wlan0 section — only when in AP mode (managed as server with static IP)
-    # When wlan0 is in client mode (DHCP), this section must be omitted
-    dhcp_cfg_pre = load_config("dhcp_clients.yml", {"interfaces": {}})
-    wlan0_is_dhcp_client = dhcp_cfg_pre.get("interfaces", {}).get("wlan0", False)
+    # wlan0 section — only when in AP mode (static IP)
     if not wlan0_is_dhcp_client:
         wnet = wifi.get("networking", _WIFI_NET_DEFAULTS)
         content += _interface_section("wlan0", wnet)
@@ -69,53 +100,22 @@ def write_dhcpcd():
         unet = usb.get("networking", _USB_NET_DEFAULTS)
         content += _interface_section("usb0", unet)
 
-    # eth server interfaces (static IP for eth interfaces in server mode)
-    eth_servers = load_config("eth_servers.yml", {"interfaces": {}})
+    # eth server interfaces (static IP)
     for iface_name, iface_cfg in eth_servers.get("interfaces", {}).items():
         if iface_cfg.get("enabled") and iface_cfg.get("networking"):
             content += _interface_section(iface_name, iface_cfg["networking"])
-            # Remove denyinterfaces for this interface since we manage it
-            content = content.replace(f"denyinterfaces {iface_name}\n", "")
 
-    # Add DHCP client interfaces (e.g., eth0 when user enables DHCP)
-    dhcp_cfg = load_config("dhcp_clients.yml", {"interfaces": {}})
-    dhcp_ifaces = dhcp_cfg.get("interfaces", {})
-
-    # Build deny list: interfaces that are NOT DHCP clients
-    deny_list = []
+    # DHCP client interfaces with nogateway option
     for iface_name, enabled in dhcp_ifaces.items():
         if not enabled:
             continue
-    # eth0 gets DHCP client only if explicitly enabled
-    if not dhcp_ifaces.get("eth0", False):
-        # Already denied above in the base config
-        pass
-    else:
-        # Remove the denyinterfaces eth0 line since user wants DHCP client
-        content = content.replace("denyinterfaces eth0\n", "")
-
-    # Load no-default-route settings
-    no_gw_cfg = load_config("dhcp_no_gateway.yml", {"interfaces": {}})
-    no_gw_ifaces = no_gw_cfg.get("interfaces", {})
-
-    # eth0 DHCP client: check no_default_route
-    if dhcp_ifaces.get("eth0", False) and no_gw_ifaces.get("eth0", False):
+        no_gw = no_gw_ifaces.get(iface_name, False)
         content += (
-            "\n# DHCP client on eth0 (no default route)\n"
-            "interface eth0\n"
-            "nogateway\n"
+            f"\n# DHCP client on {iface_name}{' (no default route)' if no_gw else ''}\n"
+            f"interface {iface_name}\n"
         )
-
-    # Add any other DHCP-client-enabled interfaces (VLANs, etc.)
-    for iface_name, enabled in dhcp_ifaces.items():
-        if enabled and iface_name != "eth0":
-            no_gw = no_gw_ifaces.get(iface_name, False)
-            content += (
-                f"\n# DHCP client on {iface_name}{' (no default route)' if no_gw else ''}\n"
-                f"interface {iface_name}\n"
-            )
-            if no_gw:
-                content += "nogateway\n"
+        if no_gw:
+            content += "nogateway\n"
 
     logger.log(f"Writing dhcpcd config to {DHCPCD_CONF}")
     write_system_file(DHCPCD_CONF, content)

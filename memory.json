@@ -789,6 +789,10 @@
     {
       "hash": "9d09bd183c1a451c690270d9b38478c411553c05",
       "message": "Fix connect button using saved credentials from server"
+    },
+    {
+      "hash": "bc75ff2dea9fb3b39f01592fad2bacfa648b8d60",
+      "message": "Use allowinterfaces whitelist to prevent DHCP on unmanaged dongles"
     }
   ]
 }
