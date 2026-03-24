@@ -381,6 +381,12 @@ class IfaceNamesService:
                     if not dhcp_cfg.get("interfaces", {}).get(name, False):
                         # Not yet configured as DHCP client — apply policy
                         IfaceNamesService._apply_auto_connect(name)
+                        # If policy is none, ensure ipv4_mode reflects that
+                        policy = IfaceNamesService.get_policy()
+                        if policy.get("mode") != "auto_connect":
+                            ipv4_modes = load_config("ipv4_modes.yml", {"interfaces": {}}).get("interfaces", {})
+                            ipv4_modes[name] = "none"
+                            save_config("ipv4_modes.yml", {"interfaces": ipv4_modes})
                 continue
 
             # Check if this MAC is registered under a different name

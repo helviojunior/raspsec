@@ -827,6 +827,10 @@
     {
       "hash": "c8fc4605c717bf44f7e23e79853eb6563518b4e7",
       "message": "Bring all registered interfaces UP on boot"
+    },
+    {
+      "hash": "63f8bd3c89af9ce844bb6c5dfa70b8c6eb173f16",
+      "message": "Set ipv4_mode to none when dongle reconnects with policy none"
     }
   ]
 }
