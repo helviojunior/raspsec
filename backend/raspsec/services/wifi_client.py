@@ -215,13 +215,33 @@ class WifiClientService:
 
     @staticmethod
     def set_auto_connect(interface, ssid, enabled):
-        """Enable or disable auto-connect for a saved profile."""
+        """Enable or disable auto-connect for a saved profile.
+
+        When enabled, persists the wpa_supplicant config for boot fallback.
+        When disabled, removes the wpa_supplicant config to prevent boot connect.
+        """
         config = load_config(CONFIG_FILE, DEFAULT_CONFIG)
         profiles = config.get("profiles", [])
+        target_profile = None
         for p in profiles:
             if p.get("interface") == interface and p.get("ssid") == ssid:
                 p["auto_connect"] = bool(enabled)
+                target_profile = p
         save_config(CONFIG_FILE, config)
+
+        conf_path = _wpa_conf_path(interface)
+        if enabled and target_profile:
+            # Persist wpa_supplicant config for boot fallback
+            # Re-use existing cert files on disk (saved during connect)
+            cert_paths = _save_certificates(interface, target_profile)
+            conf_content = _generate_wpa_conf(target_profile, cert_paths)
+            write_system_file(conf_path, conf_content)
+            logger.log(f"Saved wpa_supplicant config for {ssid} on {interface} (auto-connect)")
+        elif not enabled:
+            # Remove wpa_supplicant config to prevent boot connect
+            Exec.execute(f"sudo /bin/rm -f {conf_path}", raise_error=False)
+            logger.log(f"Removed wpa_supplicant config for {interface} (auto-connect disabled)")
+
         logger.log(f"Auto-connect {'enabled' if enabled else 'disabled'} for {ssid} on {interface}")
 
     @staticmethod

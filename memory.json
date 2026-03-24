@@ -773,6 +773,10 @@
     {
       "hash": "f64c440c3aab0f1b19bf4a6875480a1ec4ea5b1b",
       "message": "Add connect button on saved WiFi profiles, fix auto-connect on reboot"
+    },
+    {
+      "hash": "710bceecf118e1cc536f099b1f3a75a58826cb7f",
+      "message": "Persist wpa_supplicant config on auto-connect, clean on disable"
     }
   ]
 }
