@@ -739,6 +739,15 @@
     {
       "hash": "8ee09d9bd7e938e0c47fb977e6689d5fa406540e",
       "message": "Add default IANA private routes via implant chain"
+    },
+    {
+      "hash": "cae6fc56f6b48c077d091be44c055c0ead53d47f",
+      "message": "Widen address columns in network info banner",
+      "skipped": true
+    },
+    {
+      "hash": "ea87b8e5d30dca909ea68feb5b4e72469dc93b3a",
+      "message": "Routes only activate when interface comes up, gateway inherited"
     }
   ]
 }

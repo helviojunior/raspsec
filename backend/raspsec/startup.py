@@ -238,8 +238,7 @@ def _apply_network_configs():
     try:
         from raspsec.services.static_routes import StaticRoutesService
         StaticRoutesService.ensure_defaults()
-        StaticRoutesService.apply()
-        log.info("Static routes applied.")
+        log.info("Static routes defaults ensured (routes activate when interfaces come up).")
     except Exception as e:
         log.warning(f"Failed to apply static routes: {e}")
 

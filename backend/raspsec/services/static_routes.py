@@ -82,60 +82,85 @@ class StaticRoutesService:
 
     @staticmethod
     def reorder_routes(ordered_ids):
-        """Set priorities from ordered ID list and re-apply."""
+        """Set priorities from ordered ID list."""
         for i, rid in enumerate(ordered_ids):
             StaticRoute.objects.filter(id=rid).update(priority=i)
-        StaticRoutesService.apply()
 
     @staticmethod
     def apply():
-        """Flush managed static routes and re-apply from DB."""
+        """Apply routes for all interfaces that are currently up.
+
+        Routes are only active when their target interface is up.
+        The gateway is inherited from the interface's default route.
+        """
         routes = StaticRoute.objects.filter(enabled=True).order_by("priority")
         chain_map = {cm.interface: cm.chain for cm in ChainMapping.objects.all()}
-        # Reverse map: chain → list of interfaces
         chain_ifaces = {}
         for iface, chain in chain_map.items():
             chain_ifaces.setdefault(chain, []).append(iface)
 
-        # Remove previously managed static routes (tagged with raspsec)
-        ret, out = Exec.execute("/sbin/ip route show", raise_error=False)
-        if ret == 0:
-            for line in out.strip().splitlines():
-                # We tag our routes with protocol static + specific metrics
-                # For safety, only remove routes we explicitly added
-                pass  # We'll use replace instead of flush
-
         for route in routes:
             interfaces = StaticRoutesService._resolve_interfaces(route, chain_ifaces)
             for iface in interfaces:
-                if not StaticRoutesService._iface_is_up(iface):
+                if not iface or not StaticRoutesService._iface_is_up(iface):
                     continue
-                StaticRoutesService._add_route(route, iface)
+                gateway = route.gateway or StaticRoutesService._get_interface_gateway(iface)
+                if not gateway:
+                    continue
+                StaticRoutesService._add_route(route, iface, gateway)
 
-        logger.log("Static routes applied.")
+        logger.log("Static routes applied for up interfaces.")
 
     @staticmethod
     def apply_for_interface(iface_name):
-        """Apply static routes that target a specific interface or its chain.
+        """Apply static routes when an interface comes up.
 
-        Called when an interface comes up.
+        Routes that target this interface (directly or via chain) are activated.
+        If the route has no explicit gateway, the interface's gateway is used.
         """
         routes = StaticRoute.objects.filter(enabled=True).order_by("priority")
         chain_map = {cm.interface: cm.chain for cm in ChainMapping.objects.all()}
         iface_chain = chain_map.get(iface_name, "")
 
-        chain_ifaces = {}
-        for iface, chain in chain_map.items():
-            chain_ifaces.setdefault(chain, []).append(iface)
+        iface_gw = StaticRoutesService._get_interface_gateway(iface_name)
+        if not iface_gw:
+            logger.log(f"No gateway found for {iface_name}, skipping static routes")
+            return
+
+        applied = 0
+        for route in routes:
+            match = False
+            if route.interface == iface_name:
+                match = True
+            elif route.chain and route.chain == iface_chain:
+                match = True
+            elif not route.interface and not route.chain:
+                match = True
+
+            if match:
+                gateway = route.gateway or iface_gw
+                StaticRoutesService._add_route(route, iface_name, gateway)
+                applied += 1
+
+        if applied:
+            logger.log(f"Applied {applied} static routes for {iface_name} (gw={iface_gw})")
+
+    @staticmethod
+    def remove_for_interface(iface_name):
+        """Remove static routes when an interface goes down."""
+        routes = StaticRoute.objects.filter(enabled=True).order_by("priority")
+        chain_map = {cm.interface: cm.chain for cm in ChainMapping.objects.all()}
+        iface_chain = chain_map.get(iface_name, "")
 
         for route in routes:
-            # Route targets this specific interface
+            match = False
             if route.interface == iface_name:
-                StaticRoutesService._add_route(route, iface_name)
-                continue
-            # Route targets the chain this interface belongs to
-            if route.chain and route.chain == iface_chain:
-                StaticRoutesService._add_route(route, iface_name)
+                match = True
+            elif route.chain and route.chain == iface_chain:
+                match = True
+
+            if match:
+                StaticRoutesService._remove_route(route, iface_name)
 
     @staticmethod
     def _resolve_interfaces(route, chain_ifaces):
@@ -144,39 +169,40 @@ class StaticRoutesService:
             return [route.interface]
         if route.chain:
             return chain_ifaces.get(route.chain, [])
-        return [""]  # No interface specified — let kernel decide
+        return []
 
     @staticmethod
     def _iface_is_up(iface_name):
         """Check if interface is UP."""
         if not iface_name:
-            return True  # No interface constraint
+            return False
         ret, out = Exec.execute(f"/sbin/ip link show {iface_name}", raise_error=False)
         return ret == 0 and "UP" in out
 
     @staticmethod
-    def _add_route(route, iface):
+    def _get_interface_gateway(iface_name):
+        """Get the default gateway of an interface from its current routing table."""
+        ret, out = Exec.execute(f"/sbin/ip route show dev {iface_name}", raise_error=False)
+        if ret != 0:
+            return ""
+        for line in out.strip().splitlines():
+            if line.startswith("default via "):
+                return line.split()[2]
+        return ""
+
+    @staticmethod
+    def _add_route(route, iface, gateway):
         """Add a single route to the system."""
-        cmd = f"sudo /sbin/ip route replace {route.destination}"
-        if route.gateway:
-            cmd += f" via {route.gateway}"
-        if iface:
-            cmd += f" dev {iface}"
-        cmd += f" metric {route.metric}"
+        cmd = f"sudo /sbin/ip route replace {route.destination} via {gateway} dev {iface} metric {route.metric}"
 
         ret, out = Exec.execute(cmd, raise_error=False)
         if ret != 0:
             logger.log(f"Failed to add route {route.destination}: {out}")
         else:
-            logger.log(f"Route added: {route.destination} via {route.gateway or 'on-link'} dev {iface or 'any'} metric {route.metric}")
+            logger.log(f"Route added: {route.destination} via {gateway} dev {iface} metric {route.metric}")
 
     @staticmethod
     def _remove_route(route, iface):
         """Remove a single route from the system."""
-        cmd = f"sudo /sbin/ip route del {route.destination}"
-        if route.gateway:
-            cmd += f" via {route.gateway}"
-        if iface:
-            cmd += f" dev {iface}"
-        cmd += f" metric {route.metric}"
+        cmd = f"sudo /sbin/ip route del {route.destination} dev {iface} metric {route.metric}"
         Exec.execute(cmd, raise_error=False)

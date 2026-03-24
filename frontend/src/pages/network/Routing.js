@@ -310,7 +310,9 @@ export default function Routing() {
                         </button>
                       </td>
                       <td className="px-3 py-2.5 font-mono text-foreground">{route.destination}</td>
-                      <td className="px-3 py-2.5 font-mono text-foreground">{route.gateway || "on-link"}</td>
+                      <td className="px-3 py-2.5 font-mono text-foreground">
+                        {route.gateway || <span className="text-muted-foreground italic">auto (interface gw)</span>}
+                      </td>
                       <td className="px-3 py-2.5">
                         {route.interface && (
                           <span className="font-mono text-foreground">{route.interface}</span>
@@ -409,7 +411,7 @@ function RouteForm({ route, interfaces, onSave, onCancel }) {
           <Input
             value={form.gateway}
             onChange={(e) => setForm({ ...form, gateway: e.target.value })}
-            placeholder="192.168.1.1 (vazio = on-link)"
+            placeholder="Vazio = herda gateway da interface"
             className="font-mono"
           />
         </div>
