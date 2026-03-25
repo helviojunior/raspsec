@@ -1053,6 +1053,11 @@
       "hash": "4dcd2edf7507e4e862719f8375bf1b9edc20fc52",
       "message": "Add strongswan swanctl and VICI packages to image build",
       "skipped": true
+    },
+    {
+      "hash": "8e5f947edfcbb92dcc354ed94b3d90e95eb4611e",
+      "message": "Include all commits in release notes, not just scoped ones",
+      "skipped": true
     }
   ],
   "last_build_hash": "557de647d023424b897237a2af85c81b9591b0ef"

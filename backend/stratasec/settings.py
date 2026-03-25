@@ -55,7 +55,7 @@ def _smart_cast(value: str):
 
 START_TIME = datetime.datetime.now()
 APP_STARTED = str(int(datetime.datetime.now().timestamp()))
-VERSION = '1.0.4'
+VERSION = '1.0.2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
