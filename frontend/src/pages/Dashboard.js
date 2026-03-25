@@ -40,8 +40,10 @@ const CHAIN_COLORS = { implant: "text-amber-400", outside: "text-red-400", inter
 const dashedV = { backgroundImage: "repeating-linear-gradient(to bottom, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)" };
 const dashedH = (active) => active ? {} : { backgroundImage: "repeating-linear-gradient(to right, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)", backgroundColor: "transparent" };
 
-const TreeBranchLeft = ({ active, isFirst, isLast, isOnly }) => {
+const TreeBranchLeft = ({ active, isFirst, isLast, isOnly, prevActive, nextActive }) => {
   const hColor = active ? "bg-emerald-500" : "bg-zinc-700";
+  const topActive = active && prevActive;
+  const bottomActive = active && nextActive;
   return (
     <div className="relative w-12 self-stretch flex items-center">
       {/* Horizontal branch */}
@@ -49,11 +51,13 @@ const TreeBranchLeft = ({ active, isFirst, isLast, isOnly }) => {
         style={dashedH(active)} />
       {/* Vertical trunk on right edge — top half */}
       {!isOnly && !isFirst && (
-        <div className="absolute w-0.5 top-0 bottom-1/2" style={{ right: 0, ...dashedV }} />
+        <div className={`absolute w-0.5 top-0 bottom-1/2 ${topActive ? "bg-emerald-500" : ""}`}
+          style={{ right: 0, ...(topActive ? {} : dashedV) }} />
       )}
       {/* Vertical trunk on right edge — bottom half */}
       {!isOnly && !isLast && (
-        <div className="absolute w-0.5 top-1/2 bottom-0" style={{ right: 0, ...dashedV }} />
+        <div className={`absolute w-0.5 top-1/2 bottom-0 ${bottomActive ? "bg-emerald-500" : ""}`}
+          style={{ right: 0, ...(bottomActive ? {} : dashedV) }} />
       )}
     </div>
   );
@@ -68,8 +72,10 @@ const TreeArmLeft = ({ anyActive }) => {
   );
 };
 
-const TreeBranchRight = ({ active, isFirst, isLast, isOnly }) => {
+const TreeBranchRight = ({ active, isFirst, isLast, isOnly, prevActive, nextActive }) => {
   const hColor = active ? "bg-emerald-500" : "bg-zinc-700";
+  const topActive = active && prevActive;
+  const bottomActive = active && nextActive;
   return (
     <div className="relative w-12 self-stretch flex items-center">
       {/* Horizontal branch */}
@@ -77,11 +83,13 @@ const TreeBranchRight = ({ active, isFirst, isLast, isOnly }) => {
         style={dashedH(active)} />
       {/* Vertical trunk on left edge — top half */}
       {!isOnly && !isFirst && (
-        <div className="absolute w-0.5 top-0 bottom-1/2" style={{ left: 0, ...dashedV }} />
+        <div className={`absolute w-0.5 top-0 bottom-1/2 ${topActive ? "bg-emerald-500" : ""}`}
+          style={{ left: 0, ...(topActive ? {} : dashedV) }} />
       )}
       {/* Vertical trunk on left edge — bottom half */}
       {!isOnly && !isLast && (
-        <div className="absolute w-0.5 top-1/2 bottom-0" style={{ left: 0, ...dashedV }} />
+        <div className={`absolute w-0.5 top-1/2 bottom-0 ${bottomActive ? "bg-emerald-500" : ""}`}
+          style={{ left: 0, ...(bottomActive ? {} : dashedV) }} />
       )}
     </div>
   );
@@ -322,7 +330,8 @@ export default function Dashboard() {
                     </div>
                     <Icon className="w-5 h-5 shrink-0" />
                   </div>
-                  <TreeBranchLeft active={row.active} isFirst={i === 0} isLast={i === leftCount - 1} isOnly={leftCount === 1} />
+                  <TreeBranchLeft active={row.active} isFirst={i === 0} isLast={i === leftCount - 1} isOnly={leftCount === 1}
+                    prevActive={i > 0 && leftRows[i - 1].active} nextActive={i < leftCount - 1 && leftRows[i + 1].active} />
                 </div>
               );
             })}
@@ -367,7 +376,8 @@ export default function Dashboard() {
               return (
                 <div key={row.key} className="flex items-center">
                   {/* Tree branch */}
-                  <TreeBranchRight active={row.active} isFirst={i === 0} isLast={i === rightCount - 1} isOnly={rightCount === 1} />
+                  <TreeBranchRight active={row.active} isFirst={i === 0} isLast={i === rightCount - 1} isOnly={rightCount === 1}
+                    prevActive={i > 0 && rightRows[i - 1].active} nextActive={i < rightCount - 1 && rightRows[i + 1].active} />
                   {/* Icon + Label */}
                   <div className={`flex items-center gap-2 transition-colors py-3 ${row.active ? "text-emerald-400" : "text-muted-foreground/40"}`}>
                     <Icon className="w-5 h-5 shrink-0" />
