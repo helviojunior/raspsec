@@ -162,6 +162,47 @@ ssh raspsec@172.21.254.1
 | `usb0` | USB-C Ethernet | `172.21.254.1/24` | Management / Internal |
 | `eth0` | Ethernet | DHCP | Implant / Uplink |
 
+### Firewall Chains
+
+RaspSec uses a chain-based routing model to separate network traffic by purpose. Each network interface is assigned to a chain that determines how traffic is routed and filtered.
+
+```
+                  ┌──────────────────────────────────────┐
+                  │             RaspSec                   │
+                  │                                      │
+  ┌─────────┐    │  ┌──────────┐    ┌──────────────┐    │    ┌──────────┐
+  │ Target   │◄──►│  │ Implant  │    │   Internal    │    │◄──►│ Attacker │
+  │ Network  │    │  │  Chain   │◄──►│    Chain      │    │    │ Machine  │
+  └─────────┘    │  └──────────┘    └──────────────┘    │    └──────────┘
+                  │                    ▲                  │
+                  │                    │                  │
+                  │                  ┌─┴────────┐        │
+                  │                  │ Outside   │        │
+                  │                  │  Chain    │        │
+                  │                  └──────────┘        │
+                  │                    ▲                  │
+                  └────────────────────│──────────────────┘
+                                       │
+                                  ┌────┴─────┐
+                                  │ Internet  │
+                                  └──────────┘
+```
+
+| Chain | Color | Purpose | Description |
+|-------|-------|---------|-------------|
+| **Internal** | Blue | Attack network | Interfaces that serve your attack machines (laptops, tablets). The WiFi AP and USB-C Ethernet are internal by default. Traffic from internal clients is routed to the implant and outside chains. |
+| **Outside** | Red | Internet uplink | Interfaces that provide internet connectivity (mobile tethering, WiFi client to an external network). Used for C2 callbacks, tool downloads, and exfiltration. |
+| **Implant** | Yellow | Target network | Interfaces connected to the target/client network being assessed. Typically the Ethernet port plugged into the target's infrastructure. Traffic between internal and implant is routed through the firewall. |
+
+**Typical deployment scenario:**
+
+1. Plug the Pi's **Ethernet** (`eth0`) into the target network switch &rarr; **Implant** chain
+2. Connect your phone/USB 4G dongle via **USB tethering** for internet &rarr; **Outside** chain
+3. Connect your laptop to the **WiFi AP** or **USB-C** &rarr; **Internal** chain
+4. Your laptop can now reach the target network through the Pi, while C2 traffic goes out through the phone's internet connection
+
+> Each interface's chain can be changed via **Network > Devices** in the web interface.
+
 ---
 
 ## Web Interface

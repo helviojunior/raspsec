@@ -980,6 +980,10 @@
     {
       "hash": "a5272bcebda1a5c7bfd7ca34e798c302421c6918",
       "message": "Add README.md and skip release when only non-build files change"
+    },
+    {
+      "hash": "64e41725fe31cf7d1b738f10c86299e271959d60",
+      "message": "Add firewall chains documentation to README"
     }
   ]
 }
