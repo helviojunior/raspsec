@@ -920,6 +920,10 @@
     {
       "hash": "99160de518a0d7c81dc240d8d8ecc9cc01e47810",
       "message": "Fix password eye icon shifting on hover due to global button transform"
+    },
+    {
+      "hash": "49709fcd64e5e5c66aa2b7aa99f7c7587db292bb",
+      "message": "Persist wifi_mode to config file so it survives page refresh"
     }
   ]
 }

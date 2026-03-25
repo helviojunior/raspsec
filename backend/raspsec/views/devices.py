@@ -20,6 +20,7 @@ logger = StrataLogger("DevicesView")
 # Interfaces always managed as servers (static IP, DHCP server)
 ALWAYS_MANAGED = {"usb0"}
 DHCP_CLIENT_CONFIG = "dhcp_clients.yml"
+WIFI_MODES_CONFIG = "wifi_modes.yml"
 
 
 def _is_managed(name):
@@ -485,6 +486,11 @@ class DeviceUpdateView(APIView):
         if "wifi_mode" in data:
             mode = data["wifi_mode"]
             if mode in ("ap", "client"):
+                # Persist desired mode
+                wifi_modes_cfg = load_config(WIFI_MODES_CONFIG, {"interfaces": {}})
+                wifi_modes_cfg.setdefault("interfaces", {})[name] = mode
+                save_config(WIFI_MODES_CONFIG, wifi_modes_cfg)
+
                 current_modes = _get_wifi_modes()
                 current_mode = current_modes.get(name, "none")
                 if current_mode != mode:
@@ -591,6 +597,11 @@ class DeviceWifiModeView(APIView):
             return Response({"detail": "Interface inválida."}, status=400)
         if mode not in ("ap", "client"):
             return Response({"detail": "Modo inválido. Use 'ap' ou 'client'."}, status=400)
+
+        # Persist desired mode
+        wifi_modes_cfg = load_config(WIFI_MODES_CONFIG, {"interfaces": {}})
+        wifi_modes_cfg.setdefault("interfaces", {})[name] = mode
+        save_config(WIFI_MODES_CONFIG, wifi_modes_cfg)
 
         current_modes = _get_wifi_modes()
         current_mode = current_modes.get(name, "none")
@@ -760,6 +771,12 @@ def _get_wifi_modes():
             )
             if ret == 0 and out.strip():
                 modes[iface] = "client"
+
+    # Fallback to persisted config for interfaces detected as "none"
+    saved = load_config(WIFI_MODES_CONFIG, {"interfaces": {}}).get("interfaces", {})
+    for iface, mode in list(modes.items()):
+        if mode == "none" and saved.get(iface) in ("ap", "client"):
+            modes[iface] = saved[iface]
 
     return modes
 
