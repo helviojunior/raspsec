@@ -3,7 +3,7 @@
 **RaspSec** is a security-focused operating system for Raspberry Pi, designed for network security operations, penetration testing, and red team engagements. It transforms a Raspberry Pi into a portable, fully managed network implant with a modern web interface.
 
 <!-- Screenshot: Dashboard overview -->
-<!-- ![Dashboard](docs/screenshots/dashboard.png) -->
+<!-- ![Dashboard](docs/screenshots/dashboard-stats.jpg) -->
 
 ---
 
@@ -22,9 +22,6 @@
 - **Packet Capture** — Built-in packet capture tools
 - **Spectrum Analyser** — WiFi spectrum analysis via WebSocket
 - **Web Shell** — Integrated terminal via browser
-
-<!-- Screenshot: Network topology diagram -->
-<!-- ![Topology](docs/screenshots/topology.png) -->
 
 ---
 
@@ -55,7 +52,7 @@ Flash it to a microSD card using one of these tools:
 
 ### 2. Boot and Connect
 
-Insert the microSD card into your Raspberry Pi and power it on. There are **three ways** to connect:
+Insert the microSD card into your Raspberry Pi and power it on. There are **two ways** to connect:
 
 ---
 
@@ -75,9 +72,6 @@ Connect to the `RASPSEC_XXXXXXXX` WiFi network, then open your browser:
 ```
 https://172.21.255.1
 ```
-
-<!-- Screenshot: WiFi connection -->
-<!-- ![WiFi](docs/screenshots/wifi-connect.png) -->
 
 ---
 
@@ -104,7 +98,7 @@ https://172.21.254.1
 > Your laptop will see a new network adapter named similar to "RaspSec USB-C XXXXXX" or "USB Ethernet/RNDIS Gadget". No drivers needed on Linux/macOS. Windows may require the RNDIS driver.
 
 <!-- Screenshot: USB-C connection diagram -->
-<!-- ![USB-C](docs/screenshots/usb-connection.png) -->
+<!-- ![USB-C](docs/screenshots/usb-connection.jpg) -->
 
 ---
 
@@ -118,12 +112,12 @@ Open `https://<IP>` in your browser and accept the self-signed certificate warni
 | **Password** | `@Pass123` |
 
 <!-- Screenshot: Login page -->
-<!-- ![Login](docs/screenshots/login.png) -->
+<!-- ![Login](docs/screenshots/login.jpg) -->
 
 > **Important:** Change the default password after your first login via **Admin > Settings**.
 
 <!-- Screenshot: Settings page -->
-<!-- ![Settings](docs/screenshots/settings.png) -->
+<!-- ![Settings](docs/screenshots/settings.jpg) -->
 
 ---
 

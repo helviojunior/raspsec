@@ -988,6 +988,10 @@
     {
       "hash": "9f43c2a4166d5a28f3e467d84f7bffa25458130a",
       "message": "Add dashboard, firewall and WiFi AP screenshots to README"
+    },
+    {
+      "hash": "243834b845cc9aa704f14ee9c1798c96cefe4d07",
+      "message": "Add login, settings and USB connection screenshots to README"
     }
   ]
 }
