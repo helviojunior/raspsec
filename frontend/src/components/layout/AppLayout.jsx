@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "contexts/AuthContext";
 import { cn } from "lib/utils";
+import { useTranslation } from "react-i18next";
 import WebShell from "components/WebShell";
 import { WebShellIcon, SliverIcon } from "components/icons";
 
@@ -38,51 +39,51 @@ const menuStructure = [
     id: "dashboard",
     path: "/dashboard",
     icon: LayoutDashboard,
-    label: "Dashboard",
+    label: "menu.dashboard",
     children: null,
   },
   {
     id: "networking",
     icon: Network,
-    label: "Networking",
+    label: "menu.networking",
     children: [
-      { id: "net-status", path: "/network/status", label: "General", icon: MonitorCheck },
-      { id: "devices", path: "/network/devices", label: "Devices", icon: EthernetPort },
-      { id: "routing", path: "/network/routing", label: "Roteamento", icon: Route },
-      { id: "firewall", path: "/network/firewall", label: "Firewall/NAT", icon: ShieldCheck },
-      { id: "wifi", path: "/network/wifi", label: "WiFi", icon: Network },
-      { id: "usb-gadget", path: "/network/usb-gadget", label: "USB Gadget", icon: Usb },
+      { id: "net-status", path: "/network/status", label: "menu.networking.general", icon: MonitorCheck },
+      { id: "devices", path: "/network/devices", label: "menu.networking.devices", icon: EthernetPort },
+      { id: "routing", path: "/network/routing", label: "menu.networking.routing", icon: Route },
+      { id: "firewall", path: "/network/firewall", label: "menu.networking.firewall", icon: ShieldCheck },
+      { id: "wifi", path: "/network/wifi", label: "menu.networking.wifi", icon: Network },
+      { id: "usb-gadget", path: "/network/usb-gadget", label: "menu.networking.usbGadget", icon: Usb },
     ],
   },
   {
     id: "services",
     icon: Plug,
-    label: "Serviços externos",
+    label: "menu.services",
     children: [
-      { id: "sliver-c2", path: "/services/sliver-c2", label: "Sliver C2", icon: SliverIcon },
+      { id: "sliver-c2", path: "/services/sliver-c2", label: "menu.services.sliverC2", icon: SliverIcon },
     ],
   },
   {
     id: "admin",
     icon: Shield,
-    label: "Admin",
+    label: "menu.admin",
     adminOnly: true,
     children: [
-      { id: "settings", path: "/admin/settings", label: "Configurações", icon: Settings },
+      { id: "settings", path: "/admin/settings", label: "menu.admin.settings", icon: Settings },
     ],
   },
   {
     id: "tools",
     icon: Wrench,
-    label: "Tools",
+    label: "menu.tools",
     children: [
-      { id: "device-status", path: "/tools/device-status", label: "Network Status", icon: Monitor },
-      { id: "connectivity", path: "/tools/connectivity", label: "Connectivity", icon: Radar },
-      { id: "packet-capture", path: "/tools/packet-capture", label: "Packet Capture", icon: Scan },
-      { id: "startup-script", path: "/tools/startup-script", label: "Startup Script", icon: FileCode },
-      { id: "spectrum", path: "/tools/spectrum", label: "Spectrum Analyser", icon: Radio },
-      { id: "files", path: "/tools/files", label: "Arquivos", icon: FolderOpen },
-      { id: "webshell", action: "webshell", label: "Web Shell", icon: WebShellIcon },
+      { id: "device-status", path: "/tools/device-status", label: "menu.tools.networkStatus", icon: Monitor },
+      { id: "connectivity", path: "/tools/connectivity", label: "menu.tools.connectivity", icon: Radar },
+      { id: "packet-capture", path: "/tools/packet-capture", label: "menu.tools.packetCapture", icon: Scan },
+      { id: "startup-script", path: "/tools/startup-script", label: "menu.tools.startupScript", icon: FileCode },
+      { id: "spectrum", path: "/tools/spectrum", label: "menu.tools.spectrum", icon: Radio },
+      { id: "files", path: "/tools/files", label: "menu.tools.files", icon: FolderOpen },
+      { id: "webshell", action: "webshell", label: "menu.tools.webshell", icon: WebShellIcon },
     ],
   },
 ];
@@ -108,6 +109,11 @@ const findActiveMenu = (pathname) => {
 
 export default function AppLayout({ darkMode, setDarkMode }) {
   const { user, loading, logout } = useAuth();
+  const { t, i18n } = useTranslation();
+  const toggleLang = () => {
+    const next = i18n.language.startsWith("pt") ? "en" : "pt-BR";
+    i18n.changeLanguage(next);
+  };
   const [shellOpen, setShellOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebarCollapsed");
@@ -201,7 +207,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
           >
             <Icon size={18} />
             {!effectiveCollapsed && (
-              <span className="font-medium text-sm">{item.label}</span>
+              <span className="font-medium text-sm">{t(item.label)}</span>
             )}
           </Link>
         </div>
@@ -230,7 +236,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
           <div className="flex items-center gap-3">
             <Icon size={18} />
             {!effectiveCollapsed && (
-              <span className="font-medium text-sm">{item.label}</span>
+              <span className="font-medium text-sm">{t(item.label)}</span>
             )}
           </div>
           {!effectiveCollapsed && (
@@ -260,7 +266,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
               <div className="absolute left-0 top-3 -ml-1.5 w-3 h-3 bg-popover border-l border-t border-border rotate-[-45deg]" style={{ zIndex: 99999 }} />
               <div className="bg-popover border border-border rounded-lg shadow-2xl py-2 ml-1">
                 <div className="px-3 py-2 border-b border-border">
-                  <span className="font-semibold text-sm">{item.label}</span>
+                  <span className="font-semibold text-sm">{t(item.label)}</span>
                 </div>
                 {item.children.map((child) => {
                   const isChildActive = child.id === activeSubMenuId;
@@ -271,7 +277,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
                         className="block w-full text-left px-4 py-2 text-sm transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
                         onClick={() => { setHoveredMenu(null); handleMenuAction(child.action); }}
                       >
-                        {child.label}
+                        {t(child.label)}
                       </button>
                     );
                   }
@@ -287,7 +293,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
                       )}
                       onClick={() => setHoveredMenu(null)}
                     >
-                      {child.label}
+                      {t(child.label)}
                     </Link>
                   );
                 })}
@@ -307,7 +313,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
                     onClick={() => handleMenuAction(child.action)}
                     className="block w-full text-left pl-11 pr-4 py-2 text-sm transition-colors text-muted-foreground/70 hover:text-foreground hover:bg-white/5"
                   >
-                    {child.label}
+                    {t(child.label)}
                   </button>
                 );
               }
@@ -322,7 +328,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
                       : "text-muted-foreground/70 hover:text-foreground hover:bg-white/5"
                   )}
                 >
-                  {child.label}
+                  {t(child.label)}
                 </Link>
               );
             })}
@@ -366,6 +372,17 @@ export default function AppLayout({ darkMode, setDarkMode }) {
 
           <div className="h-6 w-px bg-border" />
 
+          {/* Language Toggle */}
+          <button
+            onClick={toggleLang}
+            className="px-2 py-1 rounded-md text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title={i18n.language.startsWith("pt") ? "Switch to English" : "Mudar para Português"}
+          >
+            {i18n.language.startsWith("pt") ? "PT" : "EN"}
+          </button>
+
+          <div className="h-6 w-px bg-border" />
+
           {/* Dark Mode Toggle */}
           <button
             onClick={() => setDarkMode(!darkMode)}
@@ -382,7 +399,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <LogOut size={16} />
-            <span>Sair</span>
+            <span>{t("common.logout")}</span>
           </button>
         </div>
       </header>

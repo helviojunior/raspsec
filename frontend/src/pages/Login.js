@@ -5,10 +5,12 @@ import { Card, CardHeader, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "contexts/AuthContext";
 import api from "lib/api";
 
 function LoginForm({ onSuccess }) {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +29,7 @@ function LoginForm({ onSuccess }) {
       const message =
         err.response?.data?.detail ||
         err.response?.data?.error ||
-        "Usuário ou senha incorretos.";
+        t("login.errorDefault");
       setError(message);
     } finally {
       setLoading(false);
@@ -38,20 +40,20 @@ function LoginForm({ onSuccess }) {
     <div className="animate-fade-in">
       <CardHeader className="text-center pb-2">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Acessar o sistema
+          {t("login.title")}
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Entre com suas credenciais para continuar.
+          {t("login.subtitle")}
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username">Usuário</Label>
+            <Label htmlFor="username">{t("login.username")}</Label>
             <Input
               id="username"
               type="text"
-              placeholder="Usuário"
+              placeholder={t("login.usernamePlaceholder")}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               error={!!error}
@@ -61,12 +63,12 @@ function LoginForm({ onSuccess }) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password">{t("login.password")}</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Digite sua senha"
+                placeholder={t("login.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 error={!!error}
@@ -86,7 +88,7 @@ function LoginForm({ onSuccess }) {
           </div>
           {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
           <Button type="submit" className="w-full" size="lg" loading={loading}>
-            Entrar
+            {t("login.submit")}
           </Button>
         </form>
       </CardContent>
@@ -95,6 +97,7 @@ function LoginForm({ onSuccess }) {
 }
 
 function ChangePasswordStep({ tempToken, onSuccess }) {
+  const { t } = useTranslation();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNew, setShowNew] = useState(false);
@@ -103,11 +106,11 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
   const [errors, setErrors] = useState([]);
 
   const checks = [
-    { label: "Mínimo 8 caracteres", ok: newPassword.length >= 8 },
-    { label: "Letra maiúscula", ok: /[A-Z]/.test(newPassword) },
-    { label: "Letra minúscula", ok: /[a-z]/.test(newPassword) },
-    { label: "Caractere especial", ok: /[^a-zA-Z0-9]/.test(newPassword) },
-    { label: "Senhas coincidem", ok: newPassword && newPassword === confirmPassword },
+    { label: t("login.changePassword.checkMinLength"), ok: newPassword.length >= 8 },
+    { label: t("login.changePassword.checkUppercase"), ok: /[A-Z]/.test(newPassword) },
+    { label: t("login.changePassword.checkLowercase"), ok: /[a-z]/.test(newPassword) },
+    { label: t("login.changePassword.checkSpecial"), ok: /[^a-zA-Z0-9]/.test(newPassword) },
+    { label: t("login.changePassword.checkMatch"), ok: newPassword && newPassword === confirmPassword },
   ];
 
   const handleSubmit = async (e) => {
@@ -115,7 +118,7 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
     setErrors([]);
 
     if (newPassword !== confirmPassword) {
-      setErrors(["As senhas não coincidem."]);
+      setErrors([t("login.changePassword.errorMismatch")]);
       return;
     }
 
@@ -134,7 +137,7 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
       } else if (typeof detail === "string") {
         setErrors([detail]);
       } else {
-        setErrors(["Erro ao alterar a senha."]);
+        setErrors([t("login.changePassword.errorGeneric")]);
       }
     } finally {
       setLoading(false);
@@ -145,21 +148,21 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
     <div className="animate-fade-in">
       <CardHeader className="text-center pb-2">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Alterar Senha
+          {t("login.changePassword.title")}
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Sua senha precisa ser alterada antes de continuar.
+          {t("login.changePassword.subtitle")}
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="new-password">Nova Senha</Label>
+            <Label htmlFor="new-password">{t("login.changePassword.newPassword")}</Label>
             <div className="relative">
               <Input
                 id="new-password"
                 type={showNew ? "text" : "password"}
-                placeholder="Digite a nova senha"
+                placeholder={t("login.changePassword.newPasswordPlaceholder")}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
@@ -179,12 +182,12 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+            <Label htmlFor="confirm-password">{t("login.changePassword.confirmPassword")}</Label>
             <div className="relative">
               <Input
                 id="confirm-password"
                 type={showConfirm ? "text" : "password"}
-                placeholder="Confirme a nova senha"
+                placeholder={t("login.changePassword.confirmPlaceholder")}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -228,7 +231,7 @@ function ChangePasswordStep({ tempToken, onSuccess }) {
           )}
 
           <Button type="submit" className="w-full" size="lg" loading={loading}>
-            Alterar Senha
+            {t("login.changePassword.submit")}
           </Button>
         </form>
       </CardContent>

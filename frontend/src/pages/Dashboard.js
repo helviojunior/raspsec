@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -179,6 +180,7 @@ const BandBadge = ({ label, active }) => (
 // ── Main Dashboard ──
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -212,7 +214,7 @@ export default function Dashboard() {
         <Card><CardContent className="p-6">
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <RefreshCw className="w-8 h-8 text-emerald-500 animate-spin" />
-            <p className="text-sm text-muted-foreground">Carregando dashboard...</p>
+            <p className="text-sm text-muted-foreground">{t("dashboard.loading")}</p>
           </div>
         </CardContent></Card>
       </div>
@@ -264,7 +266,7 @@ export default function Dashboard() {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.title")}</h1>
         <Button variant="outline" size="sm" onClick={() => fetchDashboard(true)} disabled={refreshing}>
           <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
         </Button>
@@ -273,33 +275,33 @@ export default function Dashboard() {
       {/* ── System Stats Gauges ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
         <GaugeCard
-          title="Uso de CPU"
+          title={t("dashboard.cpuUsage")}
           percent={system.cpu_utilization || 0}
           color="#22c55e"
         >
-          <p><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5 align-middle" />Utilização: {system.cpu_utilization || 0} %</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Núcleos: {system.cpu_cores || 0}</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Vel./Núcleo: {system.cpu_speed_mhz || 0} MHz</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Threads: {system.cpu_threads || 0}</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Temp: {system.cpu_temp > 0 ? `${system.cpu_temp}°C` : "N/A"}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5 align-middle" />{t("dashboard.cpuUtilization")}: {system.cpu_utilization || 0} %</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{t("dashboard.cpuCores")}: {system.cpu_cores || 0}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{t("dashboard.cpuSpeed")}: {system.cpu_speed_mhz || 0} MHz</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{t("dashboard.cpuThreads")}: {system.cpu_threads || 0}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{t("dashboard.cpuTemp")}: {system.cpu_temp > 0 ? `${system.cpu_temp}°C` : "N/A"}</p>
         </GaugeCard>
 
         <GaugeCard
-          title="Memória"
+          title={t("dashboard.memory")}
           percent={system.memory_mb > 0 ? Math.round(system.memory_used_mb / system.memory_mb * 100) : 0}
           color="#3b82f6"
         >
-          <p><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5 align-middle" />Em uso: {system.memory_used_mb >= 1024 ? `${(system.memory_used_mb / 1024).toFixed(2)} GB` : `${system.memory_used_mb} MB`}</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Disponível: {system.memory_available_mb >= 1024 ? `${(system.memory_available_mb / 1024).toFixed(2)} GB` : `${system.memory_available_mb} MB`}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5 align-middle" />{t("dashboard.memoryInUse")}: {system.memory_used_mb >= 1024 ? `${(system.memory_used_mb / 1024).toFixed(2)} GB` : `${system.memory_used_mb} MB`}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{t("dashboard.memoryAvailable")}: {system.memory_available_mb >= 1024 ? `${(system.memory_available_mb / 1024).toFixed(2)} GB` : `${system.memory_available_mb} MB`}</p>
         </GaugeCard>
 
         <GaugeCard
-          title="Uso de Disco"
+          title={t("dashboard.diskUsage")}
           percent={system.disk_total_gb > 0 ? Math.round(system.disk_used_gb / system.disk_total_gb * 100) : 0}
           color="#38bdf8"
         >
-          <p><span className="inline-block w-2 h-2 rounded-full bg-sky-400 mr-1.5 align-middle" />Em uso: {system.disk_used_gb}G</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Disponível: {system.disk_total_gb}G</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-sky-400 mr-1.5 align-middle" />{t("dashboard.diskInUse")}: {system.disk_used_gb}G</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{t("dashboard.diskAvailable")}: {system.disk_total_gb}G</p>
         </GaugeCard>
       </div>
 
