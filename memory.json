@@ -904,6 +904,10 @@
     {
       "hash": "acb0f8182a221b4735c21208633beb928e837a9e",
       "message": "Fix left-side trunk lines using inline styles to avoid CSS specificity issues"
+    },
+    {
+      "hash": "20310cc58527931988c05bb9305aef352dfda2b9",
+      "message": "Fix trunk logic to use OR instead of AND so active interfaces connect to arm"
     }
   ]
 }

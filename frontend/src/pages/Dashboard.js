@@ -54,12 +54,12 @@ const TreeBranchLeft = ({ active, isFirst, isLast, isOnly, prevActive, nextActiv
       {/* Vertical trunk on right edge — top half */}
       {!isOnly && !isFirst && (
         <div className="absolute w-0.5 top-0 bottom-1/2"
-          style={trunkStyle("right", active && prevActive)} />
+          style={trunkStyle("right", active || prevActive)} />
       )}
       {/* Vertical trunk on right edge — bottom half */}
       {!isOnly && !isLast && (
         <div className="absolute w-0.5 top-1/2 bottom-0"
-          style={trunkStyle("right", active && nextActive)} />
+          style={trunkStyle("right", active || nextActive)} />
       )}
     </div>
   );
@@ -84,12 +84,12 @@ const TreeBranchRight = ({ active, isFirst, isLast, isOnly, prevActive, nextActi
       {/* Vertical trunk on left edge — top half */}
       {!isOnly && !isFirst && (
         <div className="absolute w-0.5 top-0 bottom-1/2"
-          style={trunkStyle("left", active && prevActive)} />
+          style={trunkStyle("left", active || prevActive)} />
       )}
       {/* Vertical trunk on left edge — bottom half */}
       {!isOnly && !isLast && (
         <div className="absolute w-0.5 top-1/2 bottom-0"
-          style={trunkStyle("left", active && nextActive)} />
+          style={trunkStyle("left", active || nextActive)} />
       )}
     </div>
   );
