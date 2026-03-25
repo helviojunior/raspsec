@@ -301,15 +301,6 @@ export default function Dashboard() {
           <p><span className="inline-block w-2 h-2 rounded-full bg-sky-400 mr-1.5 align-middle" />Em uso: {system.disk_used_gb}G</p>
           <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Disponível: {system.disk_total_gb}G</p>
         </GaugeCard>
-
-        <Card className="flex-1 min-w-0">
-          <CardContent className="p-4 flex items-center h-full">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-xs font-semibold text-foreground mb-1">Tempo Ativo</h3>
-              <p className="text-xs text-muted-foreground"><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{system.uptime || "N/A"}</p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <Card><CardContent className="p-6">
@@ -349,6 +340,7 @@ export default function Dashboard() {
                 {system.memory_mb > 0 && ` (${system.memory_mb >= 1024 ? `${Math.round(system.memory_mb / 1024)} GB` : `${system.memory_mb} MB`})`}
               </h3>
               <div className="mt-2 space-y-0.5 text-sm text-muted-foreground">
+                {system.uptime && <p>Uptime: <span className="text-foreground">{system.uptime}</span></p>}
                 {system.hostname && <p>Hostname: <span className="text-foreground">{system.hostname}</span></p>}
               </div>
             </div>

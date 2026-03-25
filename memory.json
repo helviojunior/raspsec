@@ -892,6 +892,10 @@
     {
       "hash": "f028af624576de6491a4f17d0a6da4eaf1d14b1a",
       "message": "Fix inverted disk usage label colors and rename to Em uso/Disponível"
+    },
+    {
+      "hash": "091c7cc68aa1970782486ce156a36de9e709b99a",
+      "message": "Move uptime info from separate card to center of topology diagram"
     }
   ]
 }
