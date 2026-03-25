@@ -888,6 +888,10 @@
     {
       "hash": "c5990d8ee43a3f9a1814951df43250705d5ac2b8",
       "message": "Fix missing green vertical trunk lines between active interfaces in topology diagram"
+    },
+    {
+      "hash": "f028af624576de6491a4f17d0a6da4eaf1d14b1a",
+      "message": "Fix inverted disk usage label colors and rename to Em uso/Disponível"
     }
   ]
 }

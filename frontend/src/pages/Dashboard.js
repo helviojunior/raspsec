@@ -298,8 +298,8 @@ export default function Dashboard() {
           percent={system.disk_total_gb > 0 ? Math.round(system.disk_used_gb / system.disk_total_gb * 100) : 0}
           color="#38bdf8"
         >
-          <p><span className="inline-block w-2 h-2 rounded-full bg-sky-400 mr-1.5 align-middle" />Total: {system.disk_total_gb}G</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Usado: {system.disk_used_gb}G</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-sky-400 mr-1.5 align-middle" />Em uso: {system.disk_used_gb}G</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Disponível: {system.disk_total_gb}G</p>
         </GaugeCard>
 
         <Card className="flex-1 min-w-0">
