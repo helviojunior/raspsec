@@ -908,6 +908,10 @@
     {
       "hash": "20310cc58527931988c05bb9305aef352dfda2b9",
       "message": "Fix trunk logic to use OR instead of AND so active interfaces connect to arm"
+    },
+    {
+      "hash": "5692297755ac5f791e18c7ff180857c16ef9f6c1",
+      "message": "Update login username placeholder to English"
     }
   ]
 }
