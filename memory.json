@@ -1044,6 +1044,10 @@
     {
       "hash": "b8900391f9bd9280f847b57cac8c6e7d8843c02d",
       "message": "Fix ESLint missing 't' dependency in hooks"
+    },
+    {
+      "hash": "2c7f2a894c74e9d1281c94a20fa6eaafba3959be",
+      "message": "Update dashboard, firewall, login, settings and wifi screenshots"
     }
   ],
   "last_build_hash": "e58e350554cf421df2dd414ffb68a22281c4c5a6"
