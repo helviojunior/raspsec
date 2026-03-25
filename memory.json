@@ -1014,5 +1014,6 @@
       "hash": "557de647d023424b897237a2af85c81b9591b0ef",
       "message": "Add multi-language support (EN/pt-BR) with react-i18next"
     }
-  ]
+  ],
+  "last_build_hash": "557de647d023424b897237a2af85c81b9591b0ef"
 }
