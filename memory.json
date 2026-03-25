@@ -863,6 +863,10 @@
     {
       "hash": "8c99b8be37ee3cdb0015dc81215849c582c7d7c1",
       "message": "Replace StrataSec branding with RaspSec"
+    },
+    {
+      "hash": "1b1134c305af1b871a05fb06379070219a033c35",
+      "message": "Regenerate favicons from raspsec_icon.png"
     }
   ]
 }
