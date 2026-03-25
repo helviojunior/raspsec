@@ -984,6 +984,10 @@
     {
       "hash": "64e41725fe31cf7d1b738f10c86299e271959d60",
       "message": "Add firewall chains documentation to README"
+    },
+    {
+      "hash": "9f43c2a4166d5a28f3e467d84f7bffa25458130a",
+      "message": "Add dashboard, firewall and WiFi AP screenshots to README"
     }
   ]
 }

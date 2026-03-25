@@ -65,12 +65,12 @@ The Raspberry Pi creates a WiFi network on boot:
 
 | Setting | Value                              |
 |---------|------------------------------------|
-| **SSID** | `RASPSEC_XXXXXX`                   |
+| **SSID** | `RASPSEC_XXXXXXXX`                   |
 | **Password** | `@Pass123`                         |
 | **Interface IP** | `172.21.255.1`                     |
 | **DHCP Range** | `172.21.255.50` - `172.21.255.100` |
 
-Connect to the `RASPSEC_XXXXXX` WiFi network, then open your browser:
+Connect to the `RASPSEC_XXXXXXXX` WiFi network, then open your browser:
 
 ```
 https://172.21.255.1
@@ -208,7 +208,7 @@ RaspSec uses a chain-based routing model to separate network traffic by purpose.
 ## Web Interface
 
 <!-- Screenshot: Dashboard with system stats -->
-<!-- ![Dashboard Stats](docs/screenshots/dashboard-stats.png) -->
+<!-- ![Dashboard Stats](docs/screenshots/dashboard-stats.jpg) -->
 
 The web interface provides:
 
@@ -225,10 +225,10 @@ The web interface provides:
 - **Admin > Settings** — Change password, system configuration
 
 <!-- Screenshot: Firewall configuration -->
-<!-- ![Firewall](docs/screenshots/firewall.png) -->
+<!-- ![Firewall](docs/screenshots/firewall.jpg) -->
 
 <!-- Screenshot: WiFi AP configuration -->
-<!-- ![WiFi AP](docs/screenshots/wifi-ap.png) -->
+<!-- ![WiFi AP](docs/screenshots/wifi-ap.jpg) -->
 
 ---
 
