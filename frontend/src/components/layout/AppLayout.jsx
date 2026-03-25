@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { version as appVersion } from "../../../package.json";
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import {
@@ -416,7 +417,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
             >
               {!effectiveCollapsed && (
                 <div className="text-xs text-muted-foreground">
-                  <div className="text-[11px] font-medium">RaspSec v1.0.0</div>
+                  <div className="text-[11px] font-medium">RaspSec v{appVersion}</div>
                   <div className="text-[10px] text-muted-foreground/60">
                     &copy; StrataSec 2026
                   </div>

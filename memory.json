@@ -924,6 +924,10 @@
     {
       "hash": "49709fcd64e5e5c66aa2b7aa99f7c7587db292bb",
       "message": "Persist wifi_mode to config file so it survives page refresh"
+    },
+    {
+      "hash": "84a6d69598497e273360d522ec12c284daf35b02",
+      "message": "Add GitHub deploy pipeline with auto-versioning and smart commits"
     }
   ]
 }
