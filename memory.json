@@ -871,6 +871,15 @@
     {
       "hash": "5ecc20347aefd877e6bce4a80eb422d1ab32a379",
       "message": "Regenerate favicons with higher resolution"
+    },
+    {
+      "hash": "a4eec6c1460f77a1cec56a15deb8dc2d0e5f34e4",
+      "message": "Write network banner to /etc/issue.d/IP.issue instead of /etc/issue",
+      "skipped": true
+    },
+    {
+      "hash": "2cf389ddd1e3e11df5f9acc51bd59ca0727cc1bf",
+      "message": "Rename default system user from stratasec to raspsec"
     }
   ]
 }

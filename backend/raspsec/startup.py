@@ -46,12 +46,12 @@ def _ensure_superadmin():
     from raspsec.models import User
     if not User.objects.filter(is_admin=True).exists():
         User.objects.create_superuser(
-            username='stratasec',
+            username='raspsec',
             password='@Pass123',
-            first_name='StrataSec',
+            first_name='RaspSec',
             last_name='Admin',
         )
-        log.info("Default superadmin 'stratasec' created.")
+        log.info("Default superadmin 'raspsec' created.")
 
 
 def on_startup():

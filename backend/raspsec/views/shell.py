@@ -88,7 +88,7 @@ class ShellInfoView(APIView):
     def get(self, request):
         import socket
         return Response({
-            "user": os.environ.get("USER", "stratasec"),
+            "user": os.environ.get("USER", "raspsec"),
             "hostname": socket.gethostname(),
             "home": os.path.expanduser("~"),
             "cwd": os.path.expanduser("~"),

@@ -79,8 +79,8 @@ async def shell_handler(websocket):
         env = {
             "TERM": "xterm-256color",
             "HOME": os.path.expanduser("~"),
-            "USER": os.environ.get("USER", "stratasec"),
-            "LOGNAME": os.environ.get("USER", "stratasec"),
+            "USER": os.environ.get("USER", "raspsec"),
+            "LOGNAME": os.environ.get("USER", "raspsec"),
             "SHELL": SHELL,
             "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
             "LANG": os.environ.get("LANG", "en_US.UTF-8"),
