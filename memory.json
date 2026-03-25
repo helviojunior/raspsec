@@ -992,6 +992,10 @@
     {
       "hash": "243834b845cc9aa704f14ee9c1798c96cefe4d07",
       "message": "Add login, settings and USB connection screenshots to README"
+    },
+    {
+      "hash": "741905997240bfc21d10edb5182298b8bd72d7db",
+      "message": "Enable screenshots and add 802.1X note to implant chain description"
     }
   ]
 }

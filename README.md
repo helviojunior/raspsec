@@ -2,8 +2,7 @@
 
 **RaspSec** is a security-focused operating system for Raspberry Pi, designed for network security operations, penetration testing, and red team engagements. It transforms a Raspberry Pi into a portable, fully managed network implant with a modern web interface.
 
-<!-- Screenshot: Dashboard overview -->
-<!-- ![Dashboard](docs/screenshots/dashboard-stats.jpg) -->
+![Dashboard](docs/screenshots/dashboard-stats.jpg)
 
 ---
 
@@ -97,8 +96,7 @@ https://172.21.254.1
 
 > Your laptop will see a new network adapter named similar to "RaspSec USB-C XXXXXX" or "USB Ethernet/RNDIS Gadget". No drivers needed on Linux/macOS. Windows may require the RNDIS driver.
 
-<!-- Screenshot: USB-C connection diagram -->
-<!-- ![USB-C](docs/screenshots/usb-connection.jpg) -->
+![USB-C Connection](docs/screenshots/usb-connection.jpg)
 
 ---
 
@@ -111,13 +109,11 @@ Open `https://<IP>` in your browser and accept the self-signed certificate warni
 | **Username** | `raspsec` |
 | **Password** | `@Pass123` |
 
-<!-- Screenshot: Login page -->
-<!-- ![Login](docs/screenshots/login.jpg) -->
+![Login](docs/screenshots/login.jpg)
 
 > **Important:** Change the default password after your first login via **Admin > Settings**.
 
-<!-- Screenshot: Settings page -->
-<!-- ![Settings](docs/screenshots/settings.jpg) -->
+![Settings](docs/screenshots/settings.jpg)
 
 ---
 
@@ -162,23 +158,23 @@ RaspSec uses a chain-based routing model to separate network traffic by purpose.
 
 ```
                   ┌──────────────────────────────────────┐
-                  │             RaspSec                   │
+                  │               RaspSec                │
                   │                                      │
-  ┌─────────┐    │  ┌──────────┐    ┌──────────────┐    │    ┌──────────┐
-  │ Target   │◄──►│  │ Implant  │    │   Internal    │    │◄──►│ Attacker │
-  │ Network  │    │  │  Chain   │◄──►│    Chain      │    │    │ Machine  │
-  └─────────┘    │  └──────────┘    └──────────────┘    │    └──────────┘
-                  │                    ▲                  │
-                  │                    │                  │
+   ┌─────────┐    │  ┌──────────┐    ┌──────────────┐    │    ┌──────────┐
+   │ Target  │◄──►│  │ Implant  │    │   Internal   │    │◄──►│ Attacker │
+   │ Network │    │  │  Chain   │◄──►│    Chain     │    │    │ Machine  │
+   └─────────┘    │  └──────────┘    └──────────────┘    │    └──────────┘
+                  │                    ▲                 │
+                  │                    │                 │
                   │                  ┌─┴────────┐        │
-                  │                  │ Outside   │        │
-                  │                  │  Chain    │        │
+                  │                  │ Outside  │        │
+                  │                  │  Chain   │        │
                   │                  └──────────┘        │
-                  │                    ▲                  │
-                  └────────────────────│──────────────────┘
+                  │                    ▲                 │
+                  └────────────────────│─────────────────┘
                                        │
                                   ┌────┴─────┐
-                                  │ Internet  │
+                                  │ Internet │
                                   └──────────┘
 ```
 
@@ -186,7 +182,7 @@ RaspSec uses a chain-based routing model to separate network traffic by purpose.
 |-------|-------|---------|-------------|
 | **Internal** | Blue | Attack network | Interfaces that serve your attack machines (laptops, tablets). The WiFi AP and USB-C Ethernet are internal by default. Traffic from internal clients is routed to the implant and outside chains. |
 | **Outside** | Red | Internet uplink | Interfaces that provide internet connectivity (mobile tethering, WiFi client to an external network). Used for C2 callbacks, tool downloads, and exfiltration. |
-| **Implant** | Yellow | Target network | Interfaces connected to the target/client network being assessed. Typically the Ethernet port plugged into the target's infrastructure. Traffic between internal and implant is routed through the firewall. |
+| **Implant** | Yellow | Target network | Interfaces connected to the target/client network being assessed. Typically the Ethernet port plugged into the target's infrastructure, or a WiFi network with 802.1X (RADIUS/TLS). Traffic between internal and implant is routed through the firewall. |
 
 **Typical deployment scenario:**
 
@@ -201,8 +197,7 @@ RaspSec uses a chain-based routing model to separate network traffic by purpose.
 
 ## Web Interface
 
-<!-- Screenshot: Dashboard with system stats -->
-<!-- ![Dashboard Stats](docs/screenshots/dashboard-stats.jpg) -->
+![Dashboard Stats](docs/screenshots/dashboard-stats.jpg)
 
 The web interface provides:
 
@@ -218,11 +213,9 @@ The web interface provides:
 - **Tools > Web Shell** — Browser-based terminal
 - **Admin > Settings** — Change password, system configuration
 
-<!-- Screenshot: Firewall configuration -->
-<!-- ![Firewall](docs/screenshots/firewall.jpg) -->
+![Firewall](docs/screenshots/firewall.jpg)
 
-<!-- Screenshot: WiFi AP configuration -->
-<!-- ![WiFi AP](docs/screenshots/wifi-ap.jpg) -->
+![WiFi AP](docs/screenshots/wifi-ap.jpg)
 
 ---
 
