@@ -839,6 +839,30 @@
     {
       "hash": "44f0ccd68e44ce22f6ddd0308c8aee14fe5f235b",
       "message": "Remove tracked migration file, already in gitignore"
+    },
+    {
+      "hash": "3ea3325eb99f649c1efc8cd452e3c3a845b9d678",
+      "message": "Add custom RPi kernel build stage to pipeline",
+      "skipped": true
+    },
+    {
+      "hash": "2377f29019a5bad9141c6298464d1f794bf86455",
+      "message": "Fix Dockerfile.kernel Python script parsed as FROM instruction",
+      "skipped": true
+    },
+    {
+      "hash": "30172fdba66a1e35e9742a4c937ee19f3b1d8e3a",
+      "message": "Add native gcc to kernel build for host tools compilation",
+      "skipped": true
+    },
+    {
+      "hash": "6026bc5a4e6933fae235adad38ac069b7f2f9755",
+      "message": "Fix kernel artifact extraction from scratch-based image",
+      "skipped": true
+    },
+    {
+      "hash": "8c99b8be37ee3cdb0015dc81215849c582c7d7c1",
+      "message": "Replace StrataSec branding with RaspSec"
     }
   ]
 }

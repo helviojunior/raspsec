@@ -41,13 +41,13 @@ class WifiService:
 
     @staticmethod
     def _generate_unique_ssid():
-        """Generate SSID from wlan0 MAC: STRATA_XXXXXXXX (last 8 hex digits)."""
+        """Generate SSID from wlan0 MAC: RASPSEC_XXXXXXXX (last 8 hex digits)."""
         try:
             with open("/sys/class/net/wlan0/address", "r") as f:
                 mac = f.read().strip()
-            # e.g. dc:a6:32:99:e4:fb → 3299e4fb → STRATA_3299E4FB
+            # e.g. dc:a6:32:99:e4:fb → 3299e4fb → RASPSEC_3299E4FB
             suffix = mac.replace(":", "")[-8:].upper()
-            return f"STRATA_{suffix}"
+            return f"RASPSEC_{suffix}"
         except (FileNotFoundError, IOError):
             logger.log("Could not read wlan0 MAC, keeping default SSID")
             return FACTORY_SSID

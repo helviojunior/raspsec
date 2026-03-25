@@ -51,7 +51,7 @@ export default function Startup() {
         {/* Header */}
         <div className="text-center mb-10">
           <img
-            src="/assets/stratasec_light.png"
+            src="/assets/raspsec_light.png"
             alt="RaspSec"
             className="h-12 mx-auto mb-6 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]"
           />

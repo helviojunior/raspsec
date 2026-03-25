@@ -348,8 +348,8 @@ export default function AppLayout({ darkMode, setDarkMode }) {
       <header className="flex items-center justify-between bg-card border-b border-border z-50">
         <div className="flex items-center justify-center px-4 py-3 border-r border-border w-52">
           <img
-            src="/assets/stratasec_light.png"
-            alt="StrataSec"
+            src="/assets/raspsec_light.png"
+            alt="RaspSec"
             className="h-7 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]"
           />
         </div>
