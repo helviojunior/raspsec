@@ -265,15 +265,6 @@ export default function Dashboard() {
       {/* ── System Stats Gauges ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <GaugeCard
-          title="Memória"
-          percent={system.memory_mb > 0 ? Math.round(system.memory_used_mb / system.memory_mb * 100) : 0}
-          color="#3b82f6"
-        >
-          <p><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5 align-middle" />Em uso: {system.memory_used_mb >= 1024 ? `${(system.memory_used_mb / 1024).toFixed(2)} GB` : `${system.memory_used_mb} MB`}</p>
-          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Disponível: {system.memory_available_mb >= 1024 ? `${(system.memory_available_mb / 1024).toFixed(2)} GB` : `${system.memory_available_mb} MB`}</p>
-        </GaugeCard>
-
-        <GaugeCard
           title="Uso de CPU"
           percent={system.cpu_utilization || 0}
           color="#22c55e"
@@ -286,6 +277,15 @@ export default function Dashboard() {
         </GaugeCard>
 
         <GaugeCard
+          title="Memória"
+          percent={system.memory_mb > 0 ? Math.round(system.memory_used_mb / system.memory_mb * 100) : 0}
+          color="#3b82f6"
+        >
+          <p><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5 align-middle" />Em uso: {system.memory_used_mb >= 1024 ? `${(system.memory_used_mb / 1024).toFixed(2)} GB` : `${system.memory_used_mb} MB`}</p>
+          <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />Disponível: {system.memory_available_mb >= 1024 ? `${(system.memory_available_mb / 1024).toFixed(2)} GB` : `${system.memory_available_mb} MB`}</p>
+        </GaugeCard>
+
+        <GaugeCard
           title="Uso de Disco"
           percent={system.disk_total_gb > 0 ? Math.round(system.disk_used_gb / system.disk_total_gb * 100) : 0}
           color="#38bdf8"
@@ -295,12 +295,10 @@ export default function Dashboard() {
         </GaugeCard>
 
         <Card className="flex-1 min-w-0">
-          <CardContent className="p-4 flex items-start h-full">
+          <CardContent className="p-4 flex items-center h-full">
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground mb-2">Tempo Ativo</h3>
-              <div className="space-y-0.5 text-xs text-muted-foreground">
-                <p><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{system.uptime || "N/A"}</p>
-              </div>
+              <h3 className="text-xs font-semibold text-foreground mb-1">Tempo Ativo</h3>
+              <p className="text-xs text-muted-foreground"><span className="inline-block w-2 h-2 rounded-full bg-zinc-500 mr-1.5 align-middle" />{system.uptime || "N/A"}</p>
             </div>
           </CardContent>
         </Card>

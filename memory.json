@@ -880,6 +880,10 @@
     {
       "hash": "2cf389ddd1e3e11df5f9acc51bd59ca0727cc1bf",
       "message": "Rename default system user from stratasec to raspsec"
+    },
+    {
+      "hash": "561bba6e634a0159c434f78e1853a7f634965cc5",
+      "message": "Reorder dashboard cards and reduce Tempo Ativo size"
     }
   ]
 }
