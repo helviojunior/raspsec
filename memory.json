@@ -867,6 +867,10 @@
     {
       "hash": "1b1134c305af1b871a05fb06379070219a033c35",
       "message": "Regenerate favicons from raspsec_icon.png"
+    },
+    {
+      "hash": "5ecc20347aefd877e6bce4a80eb422d1ab32a379",
+      "message": "Regenerate favicons with higher resolution"
     }
   ]
 }
