@@ -936,6 +936,41 @@
     {
       "hash": "e2d2421027d187d2cf0c322c53bd7751f973cf1d",
       "message": "Move require after imports to fix ESLint import/first error"
+    },
+    {
+      "hash": "36c3399bd320679987d958e620f66a8dcf1825c0",
+      "message": "Add xz-utils dependency to github-build Dockerfile for Node.js install",
+      "skipped": true
+    },
+    {
+      "hash": "ac0cc8f0bd2cdbd8ed506de472176bc21485654d",
+      "message": "Add libatomic1 dependency required by Node.js",
+      "skipped": true
+    },
+    {
+      "hash": "c4e54e0dba764f168e75395ead6c1e8d1b8b9e1f",
+      "message": "Fix argument list too long by writing prompt to temp file and piping to claude",
+      "skipped": true
+    },
+    {
+      "hash": "8ffefdcb6edee1f9971e9f0d63fcb6bc06af2784",
+      "message": "Add non-root user to github-build Dockerfile for Claude Code compatibility",
+      "skipped": true
+    },
+    {
+      "hash": "dbc1f8c39a85558785e249e265c3994f7cc6e779",
+      "message": "Rewrite GitHub deploy to replay GitLab commits individually",
+      "skipped": true
+    },
+    {
+      "hash": "1072f87e80aa99029db5b4ebd4beba7fa08a0faa",
+      "message": "Fix clean_github_files removing its own directory by adding -mindepth 1",
+      "skipped": true
+    },
+    {
+      "hash": "1695591597568aac8a4ecaf83414b7a2a60ee113",
+      "message": "Update build.sh to match Jenkinsfile stages including kernel and GitHub deploy",
+      "skipped": true
     }
   ]
 }
