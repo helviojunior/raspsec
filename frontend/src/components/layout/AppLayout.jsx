@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-
-const appVersion = require("../../../package.json").version;
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import {
@@ -32,6 +30,8 @@ import { useAuth } from "contexts/AuthContext";
 import { cn } from "lib/utils";
 import WebShell from "components/WebShell";
 import { WebShellIcon, SliverIcon } from "components/icons";
+
+const appVersion = require("../../../package.json").version; // eslint-disable-line import/first
 
 const menuStructure = [
   {

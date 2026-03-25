@@ -932,6 +932,10 @@
     {
       "hash": "7c77b3400f6615e4a7dc0b52777c3568e0a3be8f",
       "message": "Fix package.json import to use require for CRA compatibility"
+    },
+    {
+      "hash": "e2d2421027d187d2cf0c322c53bd7751f973cf1d",
+      "message": "Move require after imports to fix ESLint import/first error"
     }
   ]
 }
