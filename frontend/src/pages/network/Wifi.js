@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Save, Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -9,6 +10,7 @@ import { Toggle } from "components/ui/toggle";
 import { RouterIcon, NetworkStatusIcon as NetworkIcon } from "components/icons";
 
 export default function Wifi() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("ap");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -57,11 +59,11 @@ export default function Wifi() {
         setSelectedIface(wifiIfaces[0].name);
       }
     } catch (err) {
-      setError("Erro ao carregar configurações.");
+      setError(t("wifi.errorLoad"));
     } finally {
       setLoading(false);
     }
-  }, [selectedIface]);
+  }, [selectedIface, t]);
 
   useEffect(() => {
     fetchConfig();
@@ -77,9 +79,9 @@ export default function Wifi() {
     setSaving(true);
     try {
       await api.put("/api/wifi/ap/", ap);
-      setSuccess("Access Point salvo com sucesso.");
+      setSuccess(t("wifi.apSaved"));
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao salvar Access Point.");
+      setError(err.response?.data?.detail || t("wifi.errorSaveAp"));
     } finally {
       setSaving(false);
     }
@@ -90,9 +92,9 @@ export default function Wifi() {
     setSaving(true);
     try {
       await api.put("/api/wifi/networking/", net);
-      setSuccess("Configurações de rede salvas com sucesso.");
+      setSuccess(t("wifi.netSaved"));
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao salvar configurações de rede.");
+      setError(err.response?.data?.detail || t("wifi.errorSaveNet"));
     } finally {
       setSaving(false);
     }
@@ -111,8 +113,8 @@ export default function Wifi() {
   };
 
   const tabs = [
-    { id: "ap", label: "Management Access Point", icon: RouterIcon },
-    { id: "networking", label: "Networking", icon: NetworkIcon },
+    { id: "ap", label: t("wifi.tabs.ap"), icon: RouterIcon },
+    { id: "networking", label: t("wifi.tabs.networking"), icon: NetworkIcon },
   ];
 
   if (loading) {
@@ -125,7 +127,7 @@ export default function Wifi() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-2xl font-bold mb-6">WiFi</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("wifi.title")}</h1>
 
       {error && (
         <div className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
@@ -159,11 +161,11 @@ export default function Wifi() {
       {/* Interface selector */}
       {apInterfaces.length === 0 ? (
         <div className="mb-4 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
-          Nenhuma interface wireless em modo AP. Altere o modo em Devices &gt; Interfaces.
+          {t("wifi.noApInterface")}
         </div>
       ) : apInterfaces.length > 1 && (
         <div className="mb-4 flex items-center gap-3">
-          <Label className="text-sm whitespace-nowrap">Interface AP:</Label>
+          <Label className="text-sm whitespace-nowrap">{t("wifi.apInterface")}</Label>
           <select
             value={selectedIface}
             onChange={(e) => setSelectedIface(e.target.value)}
@@ -182,17 +184,17 @@ export default function Wifi() {
           <CardContent className="pt-6">
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="ssid">SSID</Label>
+                <Label htmlFor="ssid">{t("wifi.ssid")}</Label>
                 <Input
                   id="ssid"
                   value={ap.ssid}
                   onChange={(e) => setAp({ ...ap, ssid: e.target.value })}
-                  placeholder="Nome da rede"
+                  placeholder={t("wifi.ssidPlaceholder")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bssid">BSSID</Label>
+                <Label htmlFor="bssid">{t("wifi.bssid")}</Label>
                 <Input
                   id="bssid"
                   value={ap.bssid}
@@ -202,14 +204,14 @@ export default function Wifi() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">{t("wifi.password")}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={ap.password}
                     onChange={(e) => setAp({ ...ap, password: e.target.value })}
-                    placeholder="Senha do Access Point"
+                    placeholder={t("wifi.passwordPlaceholder")}
                     className="pr-10"
                   />
                   <button
@@ -224,7 +226,7 @@ export default function Wifi() {
               </div>
 
               <div className="flex items-center justify-between py-2">
-                <Label>Oculto</Label>
+                <Label>{t("wifi.hidden")}</Label>
                 <Toggle
                   checked={ap.hidden}
                   onChange={(val) => setAp({ ...ap, hidden: val })}
@@ -232,7 +234,7 @@ export default function Wifi() {
               </div>
 
               <div className="flex items-center justify-between py-2">
-                <Label>Habilitado</Label>
+                <Label>{t("common.enabled")}</Label>
                 <Toggle
                   checked={ap.enabled}
                   onChange={(val) => setAp({ ...ap, enabled: val })}
@@ -242,7 +244,7 @@ export default function Wifi() {
               <div className="pt-4 border-t border-border">
                 <Button onClick={handleSaveAp} loading={saving}>
                   <Save size={16} />
-                  Salvar
+                  {t("common.save")}
                 </Button>
               </div>
             </div>
@@ -256,7 +258,7 @@ export default function Wifi() {
           <CardContent className="pt-6">
             <div className="space-y-5">
               <div className="flex items-center justify-between py-2">
-                <Label>DHCP Server</Label>
+                <Label>{t("wifi.dhcpServer")}</Label>
                 <Toggle
                   checked={net.dhcp_enabled}
                   onChange={(val) => setNet({ ...net, dhcp_enabled: val })}
@@ -264,7 +266,7 @@ export default function Wifi() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="interface_ip">IP da Interface ({selectedIface || "wlan0"})</Label>
+                <Label htmlFor="interface_ip">{t("wifi.interfaceIp", { iface: selectedIface || "wlan0" })}</Label>
                 <Input
                   id="interface_ip"
                   value={net.interface_ip}
@@ -274,7 +276,7 @@ export default function Wifi() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="subnet_mask">Máscara de Sub-rede</Label>
+                <Label htmlFor="subnet_mask">{t("wifi.subnetMask")}</Label>
                 <Input
                   id="subnet_mask"
                   value={net.subnet_mask}
@@ -284,7 +286,7 @@ export default function Wifi() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="range_start">IP Início do Escopo</Label>
+                <Label htmlFor="range_start">{t("wifi.rangeStart")}</Label>
                 <Input
                   id="range_start"
                   value={net.range_start}
@@ -294,7 +296,7 @@ export default function Wifi() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="range_end">IP Final do Escopo</Label>
+                <Label htmlFor="range_end">{t("wifi.rangeEnd")}</Label>
                 <Input
                   id="range_end"
                   value={net.range_end}
@@ -305,7 +307,7 @@ export default function Wifi() {
 
               {/* DNS Mode */}
               <div className="space-y-3">
-                <Label>DNS Server</Label>
+                <Label>{t("wifi.dnsServer")}</Label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
@@ -315,7 +317,7 @@ export default function Wifi() {
                       onChange={() => setNet({ ...net, dns_mode: "system", dns_servers: [] })}
                       className="accent-emerald-500"
                     />
-                    Sistema
+                    {t("wifi.dnsSystem")}
                   </label>
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
@@ -325,7 +327,7 @@ export default function Wifi() {
                       onChange={() => setNet({ ...net, dns_mode: "custom" })}
                       className="accent-emerald-500"
                     />
-                    Customizado
+                    {t("wifi.dnsCustom")}
                   </label>
                 </div>
               </div>
@@ -336,7 +338,7 @@ export default function Wifi() {
                     <Input
                       value={newDns}
                       onChange={(e) => setNewDns(e.target.value)}
-                      placeholder="Ex: 8.8.8.8"
+                      placeholder={t("wifi.dnsPlaceholder")}
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDns())}
                     />
                     <Button variant="outline" size="sm" onClick={addDns} className="shrink-0 h-10">
@@ -355,7 +357,7 @@ export default function Wifi() {
                     </div>
                   ))}
                   {net.dns_servers.length === 0 && (
-                    <p className="text-xs text-muted-foreground">Nenhum DNS customizado adicionado.</p>
+                    <p className="text-xs text-muted-foreground">{t("wifi.noDnsCustom")}</p>
                   )}
                 </div>
               )}
@@ -363,7 +365,7 @@ export default function Wifi() {
               <div className="pt-4 border-t border-border">
                 <Button onClick={handleSaveNet} loading={saving}>
                   <Save size={16} />
-                  Salvar
+                  {t("common.save")}
                 </Button>
               </div>
             </div>

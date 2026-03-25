@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "contexts/AuthContext";
 import { Card, CardContent } from "components/ui/card";
 
@@ -13,14 +14,8 @@ const statusColor = {
   stopped: "bg-gray-500",
 };
 
-const statusLabel = {
-  healthy: "Saudável",
-  unhealthy: "Indisponível",
-  degraded: "Degradado",
-  stopped: "Parado",
-};
-
 export default function Startup() {
+  const { t } = useTranslation();
   const [services, setServices] = useState([]);
   const navigate = useNavigate();
   const { checkHealth } = useAuth();
@@ -56,7 +51,7 @@ export default function Startup() {
             className="h-12 mx-auto mb-6 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]"
           />
           <h1 className="text-2xl font-bold text-foreground">
-            RaspSec estará disponível em breve
+            {t("startup.title")}
           </h1>
         </div>
 
@@ -64,10 +59,10 @@ export default function Startup() {
         <Card className="mb-10">
           <CardContent className="py-6 text-center">
             <p className="text-foreground font-semibold mb-1">
-              Isso pode levar alguns minutos
+              {t("startup.mayTakeMinutes")}
             </p>
             <p className="text-sm text-primary">
-              Verificando status dos serviços...
+              {t("startup.checkingServices")}
             </p>
           </CardContent>
         </Card>
@@ -92,13 +87,13 @@ export default function Startup() {
                   <div>
                     <span className="text-sm font-medium text-foreground">Status: </span>
                     <span className="text-sm text-muted-foreground">
-                      {statusLabel[svc.status] || svc.status}
+                      {t(`startup.status.${svc.status}`, { defaultValue: svc.status })}
                     </span>
                   </div>
 
                   {svc.message && (
                     <div>
-                      <p className="text-sm font-medium text-foreground mb-1">Mensagem</p>
+                      <p className="text-sm font-medium text-foreground mb-1">{t("startup.message")}</p>
                       <p className="text-sm text-muted-foreground break-words">
                         {svc.message}
                       </p>

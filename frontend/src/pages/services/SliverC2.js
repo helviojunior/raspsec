@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Save, RefreshCw, Power, PowerOff, Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -9,6 +10,7 @@ import { Toggle } from "components/ui/toggle";
 import { cn } from "lib/utils";
 
 export default function SliverC2() {
+  const { t } = useTranslation();
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -22,11 +24,11 @@ export default function SliverC2() {
       const { data } = await api.get("/api/services/sliver/");
       setConfig(data);
     } catch {
-      setError("Erro ao carregar configuração.");
+      setError(t("sliverC2.errorLoad"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
   useEffect(() => { if (success) { const t = setTimeout(() => setSuccess(""), 4000); return () => clearTimeout(t); } }, [success]);
@@ -39,7 +41,7 @@ export default function SliverC2() {
       setSuccess(data.detail);
       fetchConfig();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao salvar.");
+      setError(err.response?.data?.detail || t("sliverC2.errorSave"));
     } finally {
       setSaving(false);
     }
@@ -52,7 +54,7 @@ export default function SliverC2() {
   if (loading || !config) {
     return (
       <div className="animate-fade-in">
-        <h1 className="text-2xl font-bold mb-6">Sliver C2</h1>
+        <h1 className="text-2xl font-bold mb-6">{t("sliverC2.title")}</h1>
         <div className="flex items-center justify-center py-20">
           <RefreshCw className="animate-spin text-muted-foreground" size={24} />
         </div>
@@ -63,7 +65,7 @@ export default function SliverC2() {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Sliver C2</h1>
+        <h1 className="text-2xl font-bold">{t("sliverC2.title")}</h1>
         <div className={cn(
           "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium",
           config.active
@@ -71,7 +73,7 @@ export default function SliverC2() {
             : "bg-zinc-500/10 text-zinc-400 border border-zinc-500/30"
         )}>
           {config.active ? <Power size={14} /> : <PowerOff size={14} />}
-          {config.active ? "Running" : "Stopped"}
+          {config.active ? t("sliverC2.running") : t("sliverC2.stopped")}
         </div>
       </div>
 
@@ -95,87 +97,87 @@ export default function SliverC2() {
               checked={config.enabled}
               onChange={() => updateField("enabled", !config.enabled)}
             />
-            <Label className="text-sm">Habilitar Sliver C2 Implant</Label>
+            <Label className="text-sm">{t("sliverC2.enableImplant")}</Label>
           </div>
 
           {/* C2 Server URL */}
           <div className="space-y-2">
-            <Label>URL do Servidor C2</Label>
+            <Label>{t("sliverC2.serverUrl")}</Label>
             <Input
               value={config.url || ""}
               onChange={(e) => updateField("url", e.target.value)}
-              placeholder="https://c2.example.com"
+              placeholder={t("sliverC2.serverUrlPlaceholder")}
               className="max-w-lg"
             />
             <p className="text-xs text-muted-foreground">
-              Endereço completo do servidor Sliver C2 (HTTP/HTTPS listener).
+              {t("sliverC2.serverUrlHint")}
             </p>
           </div>
 
           {/* Advanced settings */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Beacon Interval (seconds)</Label>
+              <Label>{t("sliverC2.beaconInterval")}</Label>
               <Input
                 type="number"
                 value={config.seconds || 10}
                 onChange={(e) => updateField("seconds", parseInt(e.target.value) || 10)}
                 min={1}
               />
-              <p className="text-xs text-muted-foreground">Intervalo entre beacons.</p>
+              <p className="text-xs text-muted-foreground">{t("sliverC2.beaconIntervalHint")}</p>
             </div>
 
             <div className="space-y-2">
-              <Label>Jitter (seconds)</Label>
+              <Label>{t("sliverC2.jitter")}</Label>
               <Input
                 type="number"
                 value={config.jitter || 5}
                 onChange={(e) => updateField("jitter", parseInt(e.target.value) || 5)}
                 min={0}
               />
-              <p className="text-xs text-muted-foreground">Variação aleatória do intervalo.</p>
+              <p className="text-xs text-muted-foreground">{t("sliverC2.jitterHint")}</p>
             </div>
 
             <div className="space-y-2">
-              <Label>Reconnect Interval</Label>
+              <Label>{t("sliverC2.reconnectInterval")}</Label>
               <Input
                 value={config.reconnect || "60s"}
                 onChange={(e) => updateField("reconnect", e.target.value)}
                 placeholder="60s"
               />
-              <p className="text-xs text-muted-foreground">Tempo de reconexão (ex: 60s, 5m).</p>
+              <p className="text-xs text-muted-foreground">{t("sliverC2.reconnectIntervalHint")}</p>
             </div>
           </div>
 
           {/* Network Interface */}
           <div className="space-y-2">
-            <Label>Interface de Saída</Label>
+            <Label>{t("sliverC2.outputInterface")}</Label>
             <select
               value={config.interface || ""}
               onChange={(e) => updateField("interface", e.target.value)}
               className="h-10 rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm max-w-lg w-full"
             >
-              <option value="">Default (auto)</option>
+              <option value="">{t("sliverC2.outputInterfaceDefault")}</option>
               {(config.interfaces || []).map((iface) => (
                 <option key={iface} value={iface}>{iface}</option>
               ))}
             </select>
-            <p className="text-xs text-muted-foreground">Interface de rede usada para comunicação com o C2.</p>
+            <p className="text-xs text-muted-foreground">{t("sliverC2.outputInterfaceHint")}</p>
           </div>
 
           {/* Proxy */}
           <div className="space-y-4 p-4 rounded-md border border-border">
-            <h3 className="text-sm font-semibold text-foreground">Proxy</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t("sliverC2.proxy")}</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Tipo</Label>
+                <Label>{t("sliverC2.proxyType")}</Label>
                 <select
                   value={config.proxy_type || ""}
                   onChange={(e) => updateField("proxy_type", e.target.value)}
                   className="h-10 rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm w-full"
                 >
-                  <option value="">Nenhum</option>
+                  <option value="">{t("sliverC2.proxyTypeNone")}</option>
                   <option value="http">HTTP</option>
                   <option value="https">HTTPS</option>
                   <option value="socks5">SOCKS5</option>
@@ -183,7 +185,7 @@ export default function SliverC2() {
               </div>
 
               <div className="space-y-2">
-                <Label>URL do Proxy</Label>
+                <Label>{t("sliverC2.proxyUrl")}</Label>
                 <Input
                   value={config.proxy_url || ""}
                   onChange={(e) => updateField("proxy_url", e.target.value)}
@@ -193,7 +195,7 @@ export default function SliverC2() {
               </div>
 
               <div className="space-y-2">
-                <Label>Usuário <span className="text-muted-foreground">(opcional)</span></Label>
+                <Label>{t("sliverC2.proxyUser")} <span className="text-muted-foreground">({t("common.optional")})</span></Label>
                 <Input
                   value={config.proxy_user || ""}
                   onChange={(e) => updateField("proxy_user", e.target.value)}
@@ -203,7 +205,7 @@ export default function SliverC2() {
               </div>
 
               <div className="space-y-2">
-                <Label>Senha <span className="text-muted-foreground">(opcional)</span></Label>
+                <Label>{t("sliverC2.proxyPass")} <span className="text-muted-foreground">({t("common.optional")})</span></Label>
                 <div className="relative">
                   <Input
                     type={showProxyPass ? "text" : "password"}
@@ -232,18 +234,18 @@ export default function SliverC2() {
               onChange={() => updateField("skip_verify", !config.skip_verify)}
             />
             <div>
-              <Label className="text-sm">Skip TLS Verification</Label>
-              <p className="text-xs text-muted-foreground">Ignorar verificação de certificado TLS do servidor C2.</p>
+              <Label className="text-sm">{t("sliverC2.skipTls")}</Label>
+              <p className="text-xs text-muted-foreground">{t("sliverC2.skipTlsHint")}</p>
             </div>
           </div>
 
           {/* Save */}
           <div className="flex items-center gap-3 pt-4 border-t border-border">
             <Button onClick={handleSave} loading={saving}>
-              <Save size={14} /> Salvar e Aplicar
+              <Save size={14} /> {t("sliverC2.saveApply")}
             </Button>
             <Button variant="outline" onClick={fetchConfig}>
-              <RefreshCw size={14} /> Refresh
+              <RefreshCw size={14} /> {t("common.refresh")}
             </Button>
           </div>
         </CardContent>

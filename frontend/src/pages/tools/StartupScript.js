@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Save, Play, Square, RefreshCw, FileCode, Loader2, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -8,6 +9,7 @@ import { Label } from "components/ui/label";
 import { cn } from "lib/utils";
 
 export default function StartupScript() {
+  const { t } = useTranslation();
   const [script, setScript] = useState("");
   const [enabled, setEnabled] = useState(false);
   const [status, setStatus] = useState(null);
@@ -25,11 +27,11 @@ export default function StartupScript() {
       setEnabled(data.enabled || false);
       setStatus(data.status || null);
     } catch {
-      setError("Erro ao carregar startup script.");
+      setError(t("startupScript.errorLoad"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { if (success) { const t = setTimeout(() => setSuccess(""), 4000); return () => clearTimeout(t); } }, [success]);
@@ -38,10 +40,10 @@ export default function StartupScript() {
     try {
       setSaving(true);
       await api.put("/api/tools/startup-script/", { script, enabled });
-      setSuccess("Startup script salvo.");
+      setSuccess(t("startupScript.saved"));
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao salvar.");
+      setError(err.response?.data?.detail || t("startupScript.errorSave"));
     } finally {
       setSaving(false);
     }
@@ -51,11 +53,11 @@ export default function StartupScript() {
     try {
       setRunning(true);
       await api.post("/api/tools/startup-script/run/");
-      setSuccess("Script executado.");
+      setSuccess(t("startupScript.executed"));
       // Refresh status after a short delay
       setTimeout(fetchData, 1500);
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao executar.");
+      setError(err.response?.data?.detail || t("startupScript.errorExecute"));
     } finally {
       setRunning(false);
     }
@@ -64,10 +66,10 @@ export default function StartupScript() {
   const stopScript = async () => {
     try {
       await api.delete("/api/tools/startup-script/run/");
-      setSuccess("Script parado.");
+      setSuccess(t("startupScript.stopped"));
       setTimeout(fetchData, 1000);
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao parar.");
+      setError(err.response?.data?.detail || t("startupScript.errorStop"));
     }
   };
 
@@ -84,22 +86,22 @@ export default function StartupScript() {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Startup Script</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("startupScript.title")}</h1>
         <div className="flex items-center gap-3">
           {isActive ? (
             <Button variant="destructive" size="sm" onClick={stopScript}>
               <Square size={14} />
-              <span className="ml-1.5">Parar</span>
+              <span className="ml-1.5">{t("startupScript.stop")}</span>
             </Button>
           ) : (
             <Button variant="outline" size="sm" onClick={runNow} disabled={running || !script.trim()}>
               {running ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-              <span className="ml-1.5">Executar Agora</span>
+              <span className="ml-1.5">{t("startupScript.runNow")}</span>
             </Button>
           )}
           <Button size="sm" onClick={save} disabled={saving}>
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-            <span className="ml-1.5">Salvar</span>
+            <span className="ml-1.5">{t("common.save")}</span>
           </Button>
         </div>
       </div>
@@ -129,7 +131,7 @@ export default function StartupScript() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold">Serviço systemd</h3>
+                  <h3 className="text-base font-semibold">{t("startupScript.systemdService")}</h3>
                   <span className={cn(
                     "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded",
                     isActive
@@ -148,12 +150,12 @@ export default function StartupScript() {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  O script é executado como serviço no boot, após rede, DHCP e demais serviços do RaspSec.
+                  {t("startupScript.serviceDescription")}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground">Habilitar no boot</Label>
+              <Label className="text-xs text-muted-foreground">{t("startupScript.enableOnBoot")}</Label>
               <Toggle checked={enabled} onChange={setEnabled} />
             </div>
           </div>
@@ -164,14 +166,14 @@ export default function StartupScript() {
       <Card className="mb-4">
         <CardHeader>
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <FileCode size={18} /> Script
+            <FileCode size={18} /> {t("startupScript.script")}
           </h2>
         </CardHeader>
         <CardContent className="p-0">
           <textarea
             value={script}
             onChange={(e) => setScript(e.target.value)}
-            placeholder={"#!/bin/bash\n# Exemplo: capturar pacotes na eth0\nsudo /usr/sbin/tcpdump -i eth0 -w /tmp/capture.pcap &\n"}
+            placeholder={t("startupScript.scriptPlaceholder")}
             spellCheck={false}
             className="w-full min-h-[400px] p-4 text-xs font-mono bg-black/30 text-foreground resize-y border-0 focus:outline-none focus:ring-0 rounded-b-lg leading-relaxed"
           />
@@ -184,15 +186,15 @@ export default function StartupScript() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold">Output Log</h2>
+                <h2 className="text-lg font-semibold">{t("startupScript.outputLog")}</h2>
                 {status?.log_path && (
                   <p className="text-xs text-muted-foreground font-mono mt-0.5">{status.log_path}</p>
                 )}
               </div>
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="sm" onClick={async () => {
-                  try { await api.delete("/api/tools/startup-script/log/"); setSuccess("Log limpo."); fetchData(); }
-                  catch { setError("Erro ao limpar log."); }
+                  try { await api.delete("/api/tools/startup-script/log/"); setSuccess(t("startupScript.logCleared")); fetchData(); }
+                  catch { setError(t("startupScript.errorClearLog")); }
                 }}>
                   <Trash2 size={14} />
                 </Button>
@@ -212,10 +214,44 @@ export default function StartupScript() {
 
       {/* Help */}
       <div className="mt-4 p-3 rounded-md bg-muted/50 border border-border text-xs text-muted-foreground space-y-1">
-        <p>O script é executado como <code className="text-foreground">bash</code> com privilégios root via systemd.</p>
-        <p>O serviço inicia após: <code className="text-foreground">network-online.target</code>, <code className="text-foreground">raspsec-backend.service</code>, <code className="text-foreground">dnsmasq.service</code>, <code className="text-foreground">dhcpcd.service</code>.</p>
-        <p>Para processos em background (ex: tcpdump), use <code className="text-foreground">&amp;</code> ao final do comando.</p>
-        <p>Output salvo em: <code className="text-foreground">/app/data/downloads/startup_script/output.log</code></p>
+        <p>{t("startupScript.helpExecMode", "The script runs as {{bash}} with root privileges via systemd.").replace("{{bash}}", "")}<code className="text-foreground">bash</code> {t("startupScript.helpExecMode", "").includes("bash") ? "" : "with root privileges via systemd."}</p>
+        <p>
+          {(() => {
+            // Render help dependencies with inline code elements
+            const parts = t("startupScript.helpDependencies").split(/<\d>|<\/\d>/);
+            const codes = ["network-online.target", "raspsec-backend.service", "dnsmasq.service", "dhcpcd.service"];
+            const result = [];
+            for (let i = 0; i < parts.length; i++) {
+              result.push(parts[i]);
+              if (i < codes.length) {
+                result.push(<code key={i} className="text-foreground">{codes[i]}</code>);
+              }
+            }
+            return result;
+          })()}
+        </p>
+        <p>
+          {(() => {
+            const parts = t("startupScript.helpBackground").split(/<\d>|<\/\d>/);
+            const result = [];
+            for (let i = 0; i < parts.length; i++) {
+              result.push(parts[i]);
+              if (i === 0) result.push(<code key="amp" className="text-foreground">&amp;</code>);
+            }
+            return result;
+          })()}
+        </p>
+        <p>
+          {(() => {
+            const parts = t("startupScript.helpOutputPath").split(/<\d>|<\/\d>/);
+            const result = [];
+            for (let i = 0; i < parts.length; i++) {
+              result.push(parts[i]);
+              if (i === 0) result.push(<code key="path" className="text-foreground">/app/data/downloads/startup_script/output.log</code>);
+            }
+            return result;
+          })()}
+        </p>
       </div>
     </div>
   );

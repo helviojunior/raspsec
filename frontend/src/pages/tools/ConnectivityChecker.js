@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Play, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -33,21 +34,22 @@ const TraceIcon = () => (
   </svg>
 );
 
-const tabs = [
-  { id: "ping", label: "Ping", icon: PingIcon },
-  { id: "dns", label: "DNS Check", icon: DnsTabIcon },
-  { id: "http", label: "HTTP Check", icon: HttpIcon },
-  { id: "traceroute", label: "Traceroute", icon: TraceIcon },
-];
-
 const DNS_TYPES = ["A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA", "PTR", "SRV"];
 
 export default function ConnectivityChecker() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("ping");
+
+  const tabs = [
+    { id: "ping", label: "Ping", icon: PingIcon },
+    { id: "dns", label: t("connectivity.dnsCheck"), icon: DnsTabIcon },
+    { id: "http", label: t("connectivity.httpCheck"), icon: HttpIcon },
+    { id: "traceroute", label: "Traceroute", icon: TraceIcon },
+  ];
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Connectivity Checker</h1>
+      <h1 className="text-2xl font-bold tracking-tight mb-6">{t("connectivity.title")}</h1>
 
       <div className="flex gap-1 mb-6 border-b border-border">
         {tabs.map((tab) => (
@@ -78,13 +80,13 @@ export default function ConnectivityChecker() {
 
 // ── Output display ──
 
-function OutputBox({ output, running }) {
+function OutputBox({ output, running, runningLabel }) {
   if (!output && !running) return null;
   return (
     <Card className="mt-4">
       <CardContent className="p-0">
         <pre className="p-4 text-xs font-mono text-foreground bg-black/30 rounded-lg overflow-x-auto whitespace-pre leading-relaxed max-h-[50vh] overflow-y-auto">
-          {running && !output ? "Executando..." : output}
+          {running && !output ? runningLabel : output}
         </pre>
       </CardContent>
     </Card>
@@ -95,6 +97,7 @@ function OutputBox({ output, running }) {
 // ── Ping ──
 
 function PingTab() {
+  const { t } = useTranslation();
   const [host, setHost] = useState("8.8.8.8");
   const [count, setCount] = useState(4);
   const [iface, setIface] = useState("");
@@ -115,9 +118,9 @@ function PingTab() {
       const payload = { host, count };
       if (iface) payload.interface = iface;
       const { data } = await api.post("/api/tools/ping/", payload);
-      setOutput(data.output || "Sem resposta.");
+      setOutput(data.output || t("connectivity.noResponse"));
     } catch (err) {
-      setOutput(err.response?.data?.output || "Erro ao executar ping.");
+      setOutput(err.response?.data?.output || t("connectivity.errorPing"));
     } finally {
       setRunning(false);
     }
@@ -129,16 +132,16 @@ function PingTab() {
         <CardContent className="pt-5">
           <div className="flex items-end gap-4 flex-wrap">
             <div className="flex-1 min-w-[200px]">
-              <Label>Host / IP</Label>
+              <Label>{t("connectivity.hostIp")}</Label>
               <Input
                 value={host}
                 onChange={(e) => setHost(e.target.value)}
-                placeholder="8.8.8.8 ou google.com"
+                placeholder={t("connectivity.hostPlaceholder")}
                 onKeyDown={(e) => e.key === "Enter" && run()}
               />
             </div>
             <div className="w-24">
-              <Label>Count</Label>
+              <Label>{t("connectivity.count")}</Label>
               <Input
                 type="number" min="1" max="20"
                 value={count}
@@ -146,7 +149,7 @@ function PingTab() {
               />
             </div>
             <div className="w-32">
-              <Label>Interface <span className="text-muted-foreground">(opt)</span></Label>
+              <Label>{t("common.interface")} <span className="text-muted-foreground">({t("common.optional")})</span></Label>
               <select
                 value={iface}
                 onChange={(e) => setIface(e.target.value)}
@@ -163,7 +166,7 @@ function PingTab() {
           </div>
         </CardContent>
       </Card>
-      <OutputBox output={output} running={running} />
+      <OutputBox output={output} running={running} runningLabel={t("connectivity.running")} />
     </div>
   );
 }
@@ -172,6 +175,7 @@ function PingTab() {
 // ── DNS Check ──
 
 function DnsCheckTab() {
+  const { t } = useTranslation();
   const [host, setHost] = useState("google.com");
   const [type, setType] = useState("A");
   const [server, setServer] = useState("");
@@ -183,9 +187,9 @@ function DnsCheckTab() {
     setOutput("");
     try {
       const { data } = await api.post("/api/tools/dns-check/", { host, type, server });
-      setOutput(data.output || "Sem resposta.");
+      setOutput(data.output || t("connectivity.noResponse"));
     } catch (err) {
-      setOutput(err.response?.data?.output || "Erro ao executar DNS check.");
+      setOutput(err.response?.data?.output || t("connectivity.errorDns"));
     } finally {
       setRunning(false);
     }
@@ -197,7 +201,7 @@ function DnsCheckTab() {
         <CardContent className="pt-5">
           <div className="flex items-end gap-4 flex-wrap">
             <div className="flex-1 min-w-[200px]">
-              <Label>Host</Label>
+              <Label>{t("connectivity.host")}</Label>
               <Input
                 value={host}
                 onChange={(e) => setHost(e.target.value)}
@@ -206,7 +210,7 @@ function DnsCheckTab() {
               />
             </div>
             <div className="w-28">
-              <Label>Type</Label>
+              <Label>{t("connectivity.type")}</Label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
@@ -216,7 +220,7 @@ function DnsCheckTab() {
               </select>
             </div>
             <div className="w-40">
-              <Label>DNS Server <span className="text-muted-foreground">(opcional)</span></Label>
+              <Label>{t("connectivity.dnsServer")} <span className="text-muted-foreground">({t("common.optional")})</span></Label>
               <Input
                 value={server}
                 onChange={(e) => setServer(e.target.value)}
@@ -230,7 +234,7 @@ function DnsCheckTab() {
           </div>
         </CardContent>
       </Card>
-      <OutputBox output={output} running={running} />
+      <OutputBox output={output} running={running} runningLabel={t("connectivity.running")} />
     </div>
   );
 }
@@ -239,6 +243,7 @@ function DnsCheckTab() {
 // ── HTTP Check ──
 
 function HttpCheckTab() {
+  const { t } = useTranslation();
   const [url, setUrl] = useState("https://www.google.com");
   const [method, setMethod] = useState("GET");
   const [output, setOutput] = useState("");
@@ -249,9 +254,9 @@ function HttpCheckTab() {
     setOutput("");
     try {
       const { data } = await api.post("/api/tools/http-check/", { url, method });
-      setOutput(data.output || "Sem resposta.");
+      setOutput(data.output || t("connectivity.noResponse"));
     } catch (err) {
-      setOutput(err.response?.data?.output || "Erro ao executar HTTP check.");
+      setOutput(err.response?.data?.output || t("connectivity.errorHttp"));
     } finally {
       setRunning(false);
     }
@@ -263,7 +268,7 @@ function HttpCheckTab() {
         <CardContent className="pt-5">
           <div className="flex items-end gap-4 flex-wrap">
             <div className="flex-1 min-w-[250px]">
-              <Label>URL</Label>
+              <Label>{t("connectivity.url")}</Label>
               <Input
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -272,7 +277,7 @@ function HttpCheckTab() {
               />
             </div>
             <div className="w-28">
-              <Label>Method</Label>
+              <Label>{t("connectivity.method")}</Label>
               <select
                 value={method}
                 onChange={(e) => setMethod(e.target.value)}
@@ -289,7 +294,7 @@ function HttpCheckTab() {
           </div>
         </CardContent>
       </Card>
-      <OutputBox output={output} running={running} />
+      <OutputBox output={output} running={running} runningLabel={t("connectivity.running")} />
     </div>
   );
 }
@@ -298,6 +303,7 @@ function HttpCheckTab() {
 // ── Traceroute ──
 
 function TracerouteTab() {
+  const { t } = useTranslation();
   const [host, setHost] = useState("8.8.8.8");
   const [maxHops, setMaxHops] = useState(20);
   const [output, setOutput] = useState("");
@@ -308,9 +314,9 @@ function TracerouteTab() {
     setOutput("");
     try {
       const { data } = await api.post("/api/tools/traceroute/", { host, max_hops: maxHops });
-      setOutput(data.output || "Sem resposta.");
+      setOutput(data.output || t("connectivity.noResponse"));
     } catch (err) {
-      setOutput(err.response?.data?.output || "Erro ao executar traceroute.");
+      setOutput(err.response?.data?.output || t("connectivity.errorTraceroute"));
     } finally {
       setRunning(false);
     }
@@ -322,16 +328,16 @@ function TracerouteTab() {
         <CardContent className="pt-5">
           <div className="flex items-end gap-4 flex-wrap">
             <div className="flex-1 min-w-[200px]">
-              <Label>Host / IP</Label>
+              <Label>{t("connectivity.hostIp")}</Label>
               <Input
                 value={host}
                 onChange={(e) => setHost(e.target.value)}
-                placeholder="8.8.8.8 ou google.com"
+                placeholder={t("connectivity.hostPlaceholder")}
                 onKeyDown={(e) => e.key === "Enter" && run()}
               />
             </div>
             <div className="w-28">
-              <Label>Max Hops</Label>
+              <Label>{t("connectivity.maxHops")}</Label>
               <Input
                 type="number" min="1" max="30"
                 value={maxHops}
@@ -345,7 +351,7 @@ function TracerouteTab() {
           </div>
         </CardContent>
       </Card>
-      <OutputBox output={output} running={running} />
+      <OutputBox output={output} running={running} runningLabel={t("connectivity.running")} />
     </div>
   );
 }

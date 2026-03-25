@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import {
   Plus, Trash2, Save, RefreshCw, Pencil, GripVertical, Route, ArrowRight,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -101,6 +102,7 @@ function useDragReorder({ items, onReorder }) {
 
 
 export default function Routing() {
+  const { t } = useTranslation();
   const [routes, setRoutes] = useState([]);
   const [interfaces, setInterfaces] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,11 +122,11 @@ export default function Routing() {
       setRoutes(routeRes.data.routes || []);
       setInterfaces((ifaceRes.data.interfaces || []).filter(i => i.type !== "vlan"));
     } catch {
-      setError("Erro ao carregar rotas.");
+      setError(t("routing.errorLoad"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { if (success) { const t = setTimeout(() => setSuccess(""), 4000); return () => clearTimeout(t); } }, [success]);
@@ -141,10 +143,10 @@ export default function Routing() {
       });
       setDirty(true);
     } catch {
-      setError("Erro ao reordenar.");
+      setError(t("routing.errorReorder"));
       fetchData();
     }
-  }, [routes, fetchData]);
+  }, [routes, fetchData, t]);
 
   const handleSaveRoute = async (data) => {
     try {
@@ -153,25 +155,25 @@ export default function Routing() {
       } else {
         await api.post("/api/network/routes/manage/", data);
       }
-      setSuccess("Rota salva com sucesso.");
+      setSuccess(t("routing.routeSaved"));
       setShowForm(false);
       setEditRoute(null);
       setDirty(true);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao salvar rota.");
+      setError(err.response?.data?.detail || t("routing.errorSave"));
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Remover esta rota?")) return;
+    if (!window.confirm(t("routing.confirmDelete"))) return;
     try {
       await api.delete("/api/network/routes/manage/", { data: { id } });
-      setSuccess("Rota removida.");
+      setSuccess(t("routing.routeRemoved"));
       setDirty(true);
       fetchData();
     } catch {
-      setError("Erro ao remover rota.");
+      setError(t("routing.errorDelete"));
     }
   };
 
@@ -181,17 +183,17 @@ export default function Routing() {
       setDirty(true);
       fetchData();
     } catch {
-      setError("Erro ao alterar estado.");
+      setError(t("routing.errorToggle"));
     }
   };
 
   const handleApply = async () => {
     try {
       await api.post("/api/network/routes/apply/");
-      setSuccess("Rotas aplicadas com sucesso.");
+      setSuccess(t("routing.routesApplied"));
       setDirty(false);
     } catch {
-      setError("Erro ao aplicar rotas.");
+      setError(t("routing.errorApply"));
     }
   };
 
@@ -200,7 +202,7 @@ export default function Routing() {
   if (loading) {
     return (
       <div className="animate-fade-in">
-        <h1 className="text-2xl font-bold text-foreground mb-6">Roteamento</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-6">{t("routing.title")}</h1>
         <div className="flex items-center justify-center py-20">
           <RefreshCw className="animate-spin text-muted-foreground" size={24} />
         </div>
@@ -212,7 +214,7 @@ export default function Routing() {
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Route size={24} /> Roteamento
+          <Route size={24} /> {t("routing.title")}
         </h1>
         <div className="flex items-center gap-2">
           <Button
@@ -220,11 +222,11 @@ export default function Routing() {
             size="sm"
             onClick={() => { setEditRoute(null); setShowForm(!showForm); }}
           >
-            <Plus size={14} /> Nova Rota
+            <Plus size={14} /> {t("routing.newRoute")}
           </Button>
           {dirty && (
             <Button size="sm" onClick={handleApply}>
-              <Save size={14} /> Aplicar
+              <Save size={14} /> {t("common.apply")}
             </Button>
           )}
         </div>
@@ -243,14 +245,14 @@ export default function Routing() {
       )}
       {dirty && (
         <div className="mb-4 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm flex items-center gap-2">
-          <Save size={14} /> Existem alterações pendentes. Clique em "Aplicar" para sincronizar com o sistema.
+          <Save size={14} /> {t("routing.pendingChanges")}
         </div>
       )}
 
       {showForm && (
         <Card className="mb-4">
           <CardHeader>
-            <h2 className="text-base font-semibold">{editRoute ? "Editar Rota" : "Nova Rota"}</h2>
+            <h2 className="text-base font-semibold">{editRoute ? t("routing.editRoute") : t("routing.newRoute")}</h2>
           </CardHeader>
           <CardContent>
             <RouteForm
@@ -270,19 +272,19 @@ export default function Routing() {
               <thead>
                 <tr className="border-b border-border text-muted-foreground text-left">
                   <th className="px-3 py-2.5 w-8"></th>
-                  <th className="px-3 py-2.5">Destino</th>
-                  <th className="px-3 py-2.5">Gateway</th>
-                  <th className="px-3 py-2.5">Interface / Chain</th>
-                  <th className="px-3 py-2.5 w-20">Métrica</th>
-                  <th className="px-3 py-2.5">Descrição</th>
-                  <th className="px-3 py-2.5 w-28 text-right">Ações</th>
+                  <th className="px-3 py-2.5">{t("routing.destination")}</th>
+                  <th className="px-3 py-2.5">{t("routing.gateway")}</th>
+                  <th className="px-3 py-2.5">{t("routing.interfaceChain")}</th>
+                  <th className="px-3 py-2.5 w-20">{t("routing.metric")}</th>
+                  <th className="px-3 py-2.5">{t("common.description")}</th>
+                  <th className="px-3 py-2.5 w-28 text-right">{t("routing.actions")}</th>
                 </tr>
               </thead>
               <tbody>
                 {routes.length === 0 && (
                   <tr>
                     <td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">
-                      Nenhuma rota estática configurada.
+                      {t("routing.noRoutes")}
                     </td>
                   </tr>
                 )}
@@ -311,7 +313,7 @@ export default function Routing() {
                       </td>
                       <td className="px-3 py-2.5 font-mono text-foreground">{route.destination}</td>
                       <td className="px-3 py-2.5 font-mono text-foreground">
-                        {route.gateway || <span className="text-muted-foreground italic">auto (interface gw)</span>}
+                        {route.gateway || <span className="text-muted-foreground italic">{t("routing.autoGateway")}</span>}
                       </td>
                       <td className="px-3 py-2.5">
                         {route.interface && (
@@ -382,6 +384,7 @@ export default function Routing() {
 // ── Route Form ──
 
 function RouteForm({ route, interfaces, onSave, onCancel }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     id: route?.id || "",
     destination: route?.destination || "",
@@ -398,25 +401,25 @@ function RouteForm({ route, interfaces, onSave, onCancel }) {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-1">
-          <Label className="text-xs">Destino (CIDR)</Label>
+          <Label className="text-xs">{t("routing.destinationCidr")}</Label>
           <Input
             value={form.destination}
             onChange={(e) => setForm({ ...form, destination: e.target.value })}
-            placeholder="10.0.0.0/8 ou default"
+            placeholder={t("routing.destinationPlaceholder")}
             className="font-mono"
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Gateway</Label>
+          <Label className="text-xs">{t("routing.gateway")}</Label>
           <Input
             value={form.gateway}
             onChange={(e) => setForm({ ...form, gateway: e.target.value })}
-            placeholder="Vazio = herda gateway da interface"
+            placeholder={t("routing.gatewayPlaceholder")}
             className="font-mono"
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Métrica</Label>
+          <Label className="text-xs">{t("routing.metric")}</Label>
           <Input
             type="number"
             value={form.metric}
@@ -430,7 +433,7 @@ function RouteForm({ route, interfaces, onSave, onCancel }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-1">
-          <Label className="text-xs">Saída via</Label>
+          <Label className="text-xs">{t("routing.outputVia")}</Label>
           <select
             value={form.target_type}
             onChange={(e) => {
@@ -439,21 +442,21 @@ function RouteForm({ route, interfaces, onSave, onCancel }) {
             }}
             className="h-9 w-full rounded-md border border-input bg-background text-foreground px-3 text-sm"
           >
-            <option value="any">Qualquer</option>
-            <option value="interface">Interface específica</option>
-            <option value="chain">Chain (qualquer interface da chain)</option>
+            <option value="any">{t("routing.outputAny")}</option>
+            <option value="interface">{t("routing.outputInterface")}</option>
+            <option value="chain">{t("routing.outputChain")}</option>
           </select>
         </div>
 
         {form.target_type === "interface" && (
           <div className="space-y-1">
-            <Label className="text-xs">Interface</Label>
+            <Label className="text-xs">{t("common.interface")}</Label>
             <select
               value={form.interface}
               onChange={(e) => setForm({ ...form, interface: e.target.value })}
               className="h-9 w-full rounded-md border border-input bg-background text-foreground px-3 text-sm"
             >
-              <option value="">Selecione...</option>
+              <option value="">{t("routing.selectPlaceholder")}</option>
               {interfaces.map((i) => (
                 <option key={i.name} value={i.name}>{i.name}</option>
               ))}
@@ -469,7 +472,7 @@ function RouteForm({ route, interfaces, onSave, onCancel }) {
               onChange={(e) => setForm({ ...form, chain: e.target.value })}
               className="h-9 w-full rounded-md border border-input bg-background text-foreground px-3 text-sm"
             >
-              <option value="">Selecione...</option>
+              <option value="">{t("routing.selectPlaceholder")}</option>
               {CHAINS.map((c) => (
                 <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
               ))}
@@ -478,11 +481,11 @@ function RouteForm({ route, interfaces, onSave, onCancel }) {
         )}
 
         <div className="space-y-1">
-          <Label className="text-xs">Descrição</Label>
+          <Label className="text-xs">{t("common.description")}</Label>
           <Input
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="Opcional"
+            placeholder={t("routing.descriptionOptional")}
           />
         </div>
       </div>
@@ -501,10 +504,10 @@ function RouteForm({ route, interfaces, onSave, onCancel }) {
             enabled: form.enabled,
           })}
         >
-          <Save size={14} /> {form.id ? "Atualizar" : "Criar"}
+          <Save size={14} /> {form.id ? t("common.update") : t("common.create")}
         </Button>
         <Button variant="outline" size="sm" onClick={onCancel}>
-          Cancelar
+          {t("common.cancel")}
         </Button>
       </div>
     </div>

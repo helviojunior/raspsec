@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Play, Square, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -22,6 +23,7 @@ function formatElapsed(seconds) {
 }
 
 export default function PacketCapture() {
+  const { t } = useTranslation();
   const [interfaces, setInterfaces] = useState([]);
   const [selectedIface, setSelectedIface] = useState("");
   const [filter, setFilter] = useState("");
@@ -98,7 +100,7 @@ export default function PacketCapture() {
       // Immediate status fetch
       setTimeout(fetchStatus, 500);
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao iniciar captura.");
+      setError(err.response?.data?.detail || t("packetCapture.errorStart"));
     }
   };
 
@@ -111,7 +113,7 @@ export default function PacketCapture() {
       });
 
       if (response.status === 204) {
-        setError("Captura vazia — nenhum pacote capturado.");
+        setError(t("packetCapture.errorEmptyCapture"));
       } else {
         // Trigger download
         const disposition = response.headers["content-disposition"] || "";
@@ -133,12 +135,12 @@ export default function PacketCapture() {
         try {
           const text = await err.response.data.text();
           const json = JSON.parse(text);
-          setError(json.detail || "Erro ao parar captura.");
+          setError(json.detail || t("packetCapture.errorStop"));
         } catch {
-          setError("Erro ao parar captura.");
+          setError(t("packetCapture.errorStop"));
         }
       } else {
-        setError(err.response?.data?.detail || "Erro ao parar captura.");
+        setError(err.response?.data?.detail || t("packetCapture.errorStop"));
       }
     } finally {
       setStopping(false);
@@ -149,7 +151,7 @@ export default function PacketCapture() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Packet Capture</h1>
+      <h1 className="text-2xl font-bold tracking-tight mb-6">{t("packetCapture.title")}</h1>
 
       {error && (
         <div className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-500 text-sm flex justify-between">
@@ -163,7 +165,7 @@ export default function PacketCapture() {
         <CardContent className="pt-5">
           <div className="flex items-end gap-4 flex-wrap">
             <div className="w-40">
-              <Label>Interface</Label>
+              <Label>{t("packetCapture.interface")}</Label>
               <select
                 value={selectedIface}
                 onChange={(e) => setSelectedIface(e.target.value)}
@@ -173,20 +175,20 @@ export default function PacketCapture() {
                 {interfaces.map((iface) => (
                   <option key={iface} value={iface}>{iface}</option>
                 ))}
-                <option value="any">any (todas)</option>
+                <option value="any">{t("packetCapture.anyAll")}</option>
               </select>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <Label>BPF Filter <span className="text-muted-foreground">(opcional)</span></Label>
+              <Label>{t("packetCapture.bpfFilter")} <span className="text-muted-foreground">({t("packetCapture.bpfFilterOptional")})</span></Label>
               <Input
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                placeholder="ex: port 80, host 10.0.0.1, tcp and port 443"
+                placeholder={t("packetCapture.bpfFilterPlaceholder")}
                 disabled={capturing}
               />
             </div>
             <div className="w-32">
-              <Label>Max Packets <span className="text-muted-foreground">(0=ilimitado)</span></Label>
+              <Label>{t("packetCapture.maxPackets")} <span className="text-muted-foreground">({t("packetCapture.maxPacketsUnlimited")})</span></Label>
               <Input
                 type="number"
                 min="0"
@@ -200,7 +202,7 @@ export default function PacketCapture() {
               {!capturing ? (
                 <Button onClick={startCapture} disabled={!selectedIface}>
                   <Play className="w-4 h-4" />
-                  <span className="ml-1.5">Start</span>
+                  <span className="ml-1.5">{t("packetCapture.start")}</span>
                 </Button>
               ) : (
                 <Button variant="destructive" onClick={stopCapture} disabled={stopping}>
@@ -209,7 +211,7 @@ export default function PacketCapture() {
                   ) : (
                     <Square className="w-4 h-4" />
                   )}
-                  <span className="ml-1.5">{stopping ? "Stopping..." : "Stop & Download"}</span>
+                  <span className="ml-1.5">{stopping ? t("packetCapture.stopping") : t("packetCapture.stopDownload")}</span>
                 </Button>
               )}
             </div>
@@ -226,25 +228,25 @@ export default function PacketCapture() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
               </div>
-              <span className="text-sm font-medium text-red-400">Capturando...</span>
+              <span className="text-sm font-medium text-red-400">{t("packetCapture.capturing")}</span>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <div className="text-[10px] text-muted-foreground uppercase">Interface</div>
+                <div className="text-[10px] text-muted-foreground uppercase">{t("packetCapture.statusInterface")}</div>
                 <div className="text-sm font-mono text-foreground">{status.interface}</div>
               </div>
               <div>
-                <div className="text-[10px] text-muted-foreground uppercase">Tempo</div>
+                <div className="text-[10px] text-muted-foreground uppercase">{t("packetCapture.statusTime")}</div>
                 <div className="text-sm font-mono text-foreground">{formatElapsed(status.elapsed)}</div>
               </div>
               <div>
-                <div className="text-[10px] text-muted-foreground uppercase">Tamanho</div>
+                <div className="text-[10px] text-muted-foreground uppercase">{t("packetCapture.statusSize")}</div>
                 <div className="text-sm font-mono text-foreground">{formatBytes(status.pcap_size)}</div>
               </div>
               {status.filter && (
                 <div>
-                  <div className="text-[10px] text-muted-foreground uppercase">Filtro</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">{t("packetCapture.statusFilter")}</div>
                   <div className="text-sm font-mono text-foreground truncate">{status.filter}</div>
                 </div>
               )}
@@ -256,17 +258,17 @@ export default function PacketCapture() {
       {/* Help */}
       <Card className="mt-4">
         <CardContent className="pt-5">
-          <h3 className="text-sm font-semibold text-foreground mb-3">BPF Filter Examples</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-3">{t("packetCapture.bpfExamples")}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
             {[
-              ["port 80", "Tráfego HTTP"],
-              ["port 443", "Tráfego HTTPS"],
-              ["tcp and port 22", "SSH"],
-              ["host 10.0.0.1", "Todo tráfego de/para um host"],
-              ["net 192.168.1.0/24", "Toda a subnet"],
-              ["icmp", "Apenas ICMP (ping)"],
-              ["udp and port 53", "DNS queries"],
-              ["not port 22", "Tudo exceto SSH"],
+              ["port 80", t("packetCapture.filterHttpTraffic")],
+              ["port 443", t("packetCapture.filterHttpsTraffic")],
+              ["tcp and port 22", t("packetCapture.filterSsh")],
+              ["host 10.0.0.1", t("packetCapture.filterHost")],
+              ["net 192.168.1.0/24", t("packetCapture.filterSubnet")],
+              ["icmp", t("packetCapture.filterIcmp")],
+              ["udp and port 53", t("packetCapture.filterDns")],
+              ["not port 22", t("packetCapture.filterNotSsh")],
             ].map(([filter, desc]) => (
               <button
                 key={filter}

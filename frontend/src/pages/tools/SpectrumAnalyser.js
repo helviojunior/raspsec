@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Radio, Pause, Play, Eye } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { getToken } from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -245,7 +246,7 @@ function SpectrumChart({ networks, band, highlightBssid, onNetworkClick }) {
 
 // ── Network List Sidebar ──
 
-function NetworkList({ networks, highlightBssid, onSelect }) {
+function NetworkList({ networks, highlightBssid, onSelect, t }) {
   const bssidList = [...new Set(networks.map((n) => n.bssid))];
   const colorMap = {};
   bssidList.forEach((b, i) => { colorMap[b] = getNetworkColor(i); });
@@ -275,7 +276,7 @@ function NetworkList({ networks, highlightBssid, onSelect }) {
             : "text-zinc-400 hover:bg-zinc-800"
         )}
       >
-        <Eye className="inline w-3 h-3 mr-1" /> Show All
+        <Eye className="inline w-3 h-3 mr-1" /> {t("spectrum.showAll")}
       </button>
       {entries.map(([name, nets]) => (
         <div key={name}>
@@ -318,6 +319,7 @@ function NetworkList({ networks, highlightBssid, onSelect }) {
 // ── Main Component ──
 
 export default function SpectrumAnalyser() {
+  const { t } = useTranslation();
   const [wsStatus, setWsStatus] = useState("disconnected"); // disconnected | connecting | connected
   const [interfaces, setInterfaces] = useState([]);
   const [selectedIface, setSelectedIface] = useState("");
@@ -362,7 +364,7 @@ export default function SpectrumAnalyser() {
               setSelectedIface(msg.interfaces[0]);
             }
           } else {
-            setError("Authentication failed");
+            setError(t("spectrum.authFailed"));
             setWsStatus("disconnected");
           }
         } else if (msg.type === "scan") {
@@ -381,7 +383,7 @@ export default function SpectrumAnalyser() {
     };
 
     ws.onerror = () => {
-      setError("WebSocket connection failed");
+      setError(t("spectrum.wsFailed"));
       wsRef.current = null;
       setWsStatus("disconnected");
     };
@@ -427,7 +429,7 @@ export default function SpectrumAnalyser() {
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
           <Radio className="w-5 h-5 text-emerald-400" />
-          Spectrum Analyser
+          {t("spectrum.title")}
         </h1>
         <div className="flex items-center gap-2">
           {/* Status indicator */}
@@ -438,8 +440,8 @@ export default function SpectrumAnalyser() {
             "bg-red-500"
           )} />
           <span className="text-xs text-zinc-500">
-            {wsStatus === "connected" ? `Connected${scanning ? ` · Scan #${scanCount}` : ""}` :
-             wsStatus === "connecting" ? "Connecting..." : "Disconnected"}
+            {wsStatus === "connected" ? `${t("spectrum.connected")}${scanning ? ` · ${t("spectrum.scanNum", { count: scanCount })}` : ""}` :
+             wsStatus === "connecting" ? t("spectrum.connecting") : t("spectrum.disconnected")}
           </span>
         </div>
       </div>
@@ -456,7 +458,7 @@ export default function SpectrumAnalyser() {
           <div className="flex flex-wrap items-center gap-3">
             {/* Interface selector */}
             <div className="flex items-center gap-2">
-              <label className="text-xs text-zinc-400">Interface</label>
+              <label className="text-xs text-zinc-400">{t("common.interface")}</label>
               <select
                 value={selectedIface}
                 onChange={(e) => setSelectedIface(e.target.value)}
@@ -467,7 +469,7 @@ export default function SpectrumAnalyser() {
                   <option key={iface} value={iface}>{iface}</option>
                 ))}
                 {interfaces.length === 0 && (
-                  <option value="">No WiFi interfaces</option>
+                  <option value="">{t("spectrum.noWifiInterfaces")}</option>
                 )}
               </select>
             </div>
@@ -506,7 +508,7 @@ export default function SpectrumAnalyser() {
                   disabled={wsStatus !== "connected" || !selectedIface}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1"
                 >
-                  <Play className="w-3.5 h-3.5" /> Start Scan
+                  <Play className="w-3.5 h-3.5" /> {t("spectrum.startScan")}
                 </Button>
               ) : (
                 <>
@@ -516,14 +518,14 @@ export default function SpectrumAnalyser() {
                     className="text-xs gap-1"
                   >
                     {paused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
-                    {paused ? "Resume" : "Pause"}
+                    {paused ? t("spectrum.resume") : t("spectrum.pause")}
                   </Button>
                   <Button
                     onClick={stopScan}
                     variant="outline"
                     className="text-xs gap-1 border-red-800 text-red-400 hover:bg-red-900/30"
                   >
-                    Stop
+                    {t("spectrum.stop")}
                   </Button>
                 </>
               )}
@@ -547,10 +549,10 @@ export default function SpectrumAnalyser() {
               <div className="flex items-center justify-center h-[350px] text-zinc-600 text-sm">
                 {scanning ? (
                   <span className="flex items-center gap-2">
-                    <Radio className="w-4 h-4 animate-pulse" /> Scanning...
+                    <Radio className="w-4 h-4 animate-pulse" /> {t("spectrum.scanning")}
                   </span>
                 ) : (
-                  "Start a scan to see WiFi spectrum"
+                  t("spectrum.startToSee")
                 )}
               </div>
             )}
@@ -561,17 +563,18 @@ export default function SpectrumAnalyser() {
         <Card>
           <CardContent className="p-3">
             <h3 className="text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
-              Networks ({bandNetworks.length})
+              {t("spectrum.networks", { count: bandNetworks.length })}
             </h3>
             {bandNetworks.length > 0 ? (
               <NetworkList
                 networks={bandNetworks}
                 highlightBssid={highlightBssid}
                 onSelect={setHighlightBssid}
+                t={t}
               />
             ) : (
               <p className="text-zinc-600 text-xs">
-                {scanning ? "Waiting for scan results..." : "No networks detected"}
+                {scanning ? t("spectrum.waitingScan") : t("spectrum.noNetworks")}
               </p>
             )}
           </CardContent>

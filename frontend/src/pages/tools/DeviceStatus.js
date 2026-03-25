@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { RefreshCw, Network, Cable, Globe, Router } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -8,18 +9,19 @@ const PRE_CLASSES =
   "p-4 text-xs font-mono text-foreground bg-black/30 rounded-lg overflow-x-auto whitespace-pre leading-relaxed max-h-[75vh] overflow-y-auto";
 
 export default function NetworkStatusPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("ifconfig");
 
   const tabs = [
     { id: "ifconfig", label: "Ifconfig", icon: Network },
     { id: "ethtool", label: "EthTool", icon: Cable },
-    { id: "arp", label: "ARP Table", icon: Globe },
-    { id: "route", label: "Route Table", icon: Router },
+    { id: "arp", label: t("deviceStatus.arpTable"), icon: Globe },
+    { id: "route", label: t("deviceStatus.routeTable"), icon: Router },
   ];
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Network Status</h1>
+      <h1 className="text-2xl font-bold tracking-tight mb-6">{t("deviceStatus.title")}</h1>
 
       <div className="flex gap-1 mb-6 border-b border-border">
         {tabs.map((tab) => (
@@ -49,6 +51,7 @@ export default function NetworkStatusPage() {
 // ── Ifconfig Tab ──
 
 function IfconfigTab() {
+  const { t } = useTranslation();
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -58,11 +61,11 @@ function IfconfigTab() {
       const { data } = await api.get("/api/tools/device-status/");
       setOutput(data.output || "");
     } catch {
-      setOutput("Erro ao carregar ifconfig.");
+      setOutput(t("deviceStatus.errorIfconfig"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetch_(); }, [fetch_]);
 
@@ -74,7 +77,7 @@ function IfconfigTab() {
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>
-        <pre className={PRE_CLASSES}>{loading ? "Carregando..." : output}</pre>
+        <pre className={PRE_CLASSES}>{loading ? t("common.loading") : output}</pre>
       </CardContent>
     </Card>
   );
@@ -83,6 +86,7 @@ function IfconfigTab() {
 // ── EthTool Tab ──
 
 function EthtoolTab() {
+  const { t } = useTranslation();
   const [interfaces, setInterfaces] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -110,15 +114,15 @@ function EthtoolTab() {
         </Button>
       </div>
       {loading ? (
-        <Card><CardContent className="p-0"><pre className={PRE_CLASSES}>Carregando...</pre></CardContent></Card>
+        <Card><CardContent className="p-0"><pre className={PRE_CLASSES}>{t("common.loading")}</pre></CardContent></Card>
       ) : ifaces.length === 0 ? (
-        <Card><CardContent className="p-4 text-sm text-muted-foreground">Nenhuma interface encontrada.</CardContent></Card>
+        <Card><CardContent className="p-4 text-sm text-muted-foreground">{t("deviceStatus.noInterfaces")}</CardContent></Card>
       ) : (
         ifaces.map(([name, output]) => (
           <Card key={name}>
             <CardContent className="p-0">
               <div className="px-4 py-2 border-b border-border text-sm font-semibold">{name}</div>
-              <pre className={PRE_CLASSES}>{output || "Sem dados."}</pre>
+              <pre className={PRE_CLASSES}>{output || t("deviceStatus.noData")}</pre>
             </CardContent>
           </Card>
         ))
@@ -130,6 +134,7 @@ function EthtoolTab() {
 // ── ARP Tab ──
 
 function ArpTab() {
+  const { t } = useTranslation();
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -139,11 +144,11 @@ function ArpTab() {
       const { data } = await api.get("/api/tools/arp/");
       setOutput(data.output || "");
     } catch {
-      setOutput("Erro ao carregar tabela ARP.");
+      setOutput(t("deviceStatus.errorArp"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetch_(); }, [fetch_]);
 
@@ -155,7 +160,7 @@ function ArpTab() {
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>
-        <pre className={PRE_CLASSES}>{loading ? "Carregando..." : output}</pre>
+        <pre className={PRE_CLASSES}>{loading ? t("common.loading") : output}</pre>
       </CardContent>
     </Card>
   );
@@ -164,6 +169,7 @@ function ArpTab() {
 // ── Route Tab ──
 
 function RouteTab() {
+  const { t } = useTranslation();
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -173,11 +179,11 @@ function RouteTab() {
       const { data } = await api.get("/api/tools/route/");
       setOutput(data.output || "");
     } catch {
-      setOutput("Erro ao carregar tabela de rotas.");
+      setOutput(t("deviceStatus.errorRoute"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetch_(); }, [fetch_]);
 
@@ -189,7 +195,7 @@ function RouteTab() {
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>
-        <pre className={PRE_CLASSES}>{loading ? "Carregando..." : output}</pre>
+        <pre className={PRE_CLASSES}>{loading ? t("common.loading") : output}</pre>
       </CardContent>
     </Card>
   );

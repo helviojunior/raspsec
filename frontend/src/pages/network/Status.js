@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { RefreshCw, ArrowUp, ArrowDown, Power, PowerOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -7,16 +8,17 @@ import { cn } from "lib/utils";
 import { NetworkStatusIcon as NetworkIcon, DnsIcon } from "components/icons";
 
 export default function NetworkStatus() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("status");
 
   const tabs = [
-    { id: "status", label: "Status", icon: NetworkIcon },
+    { id: "status", label: t("networkStatus.tabStatus"), icon: NetworkIcon },
     { id: "dns", label: "DNS", icon: DnsIcon },
   ];
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-2xl font-bold mb-6">Network General</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("networkStatus.title")}</h1>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">
@@ -45,6 +47,7 @@ export default function NetworkStatus() {
 // ── Status Tab ──
 
 function StatusTab() {
+  const { t } = useTranslation();
   const [interfaces, setInterfaces] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [gatewayConfig, setGatewayConfig] = useState([]);
@@ -126,24 +129,24 @@ function StatusTab() {
       <div className="flex justify-end">
         <Button variant="outline" size="sm" onClick={fetchStatus} loading={loading}>
           <RefreshCw size={14} />
-          Refresh
+          {t("common.refresh")}
         </Button>
       </div>
 
       {/* Interfaces */}
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold">Interfaces</h2>
+          <h2 className="text-lg font-semibold">{t("networkStatus.interfaces")}</h2>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
-                  <th className="text-left py-3 px-4 font-medium">Name</th>
-                  <th className="text-left py-3 px-4 font-medium">IP Address</th>
-                  <th className="text-left py-3 px-4 font-medium">MAC Address</th>
-                  <th className="text-left py-3 px-4 font-medium">Flags</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("networkStatus.name")}</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("networkStatus.ipAddress")}</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("networkStatus.macAddress")}</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("networkStatus.flags")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -154,14 +157,14 @@ function StatusTab() {
                       {iface.ip ? (
                         <span className="text-foreground">{iface.ip}</span>
                       ) : (
-                        <span className="text-muted-foreground italic">No IP Address</span>
+                        <span className="text-muted-foreground italic">{t("networkStatus.noIp")}</span>
                       )}
                     </td>
                     <td className="py-3 px-4">
                       {iface.mac && iface.mac !== "00:00:00:00:00:00" ? (
                         <span className="text-foreground">{iface.mac}</span>
                       ) : (
-                        <span className="text-muted-foreground italic">No MAC Address</span>
+                        <span className="text-muted-foreground italic">{t("networkStatus.noMac")}</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-foreground">{iface.flags}</td>
@@ -170,7 +173,7 @@ function StatusTab() {
                 {interfaces.length === 0 && !loading && (
                   <tr>
                     <td colSpan={4} className="py-6 text-center text-muted-foreground">
-                      Nenhuma interface encontrada.
+                      {t("networkStatus.noInterfaces")}
                     </td>
                   </tr>
                 )}
@@ -183,23 +186,23 @@ function StatusTab() {
       {/* Routing Table */}
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold">Routing Table</h2>
+          <h2 className="text-lg font-semibold">{t("networkStatus.routingTable")}</h2>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
-                  <th className="text-left py-3 px-4 font-medium">Destination</th>
-                  <th className="text-left py-3 px-4 font-medium">Gateway</th>
-                  <th className="text-left py-3 px-4 font-medium">Genmask</th>
-                  <th className="text-left py-3 px-4 font-medium">Interface</th>
-                  <th className="text-left py-3 px-4 font-medium">Flags</th>
-                  <th className="text-right py-3 px-4 font-medium">Metric</th>
-                  <th className="text-right py-3 px-4 font-medium">Ref</th>
-                  <th className="text-right py-3 px-4 font-medium">Use</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("networkStatus.destination")}</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("networkStatus.gateway")}</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("networkStatus.genmask")}</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("common.interface")}</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("networkStatus.flags")}</th>
+                  <th className="text-right py-3 px-4 font-medium">{t("networkStatus.metric")}</th>
+                  <th className="text-right py-3 px-4 font-medium">{t("networkStatus.ref")}</th>
+                  <th className="text-right py-3 px-4 font-medium">{t("networkStatus.use")}</th>
                   {hasMultipleDefaults && (
-                    <th className="text-center py-3 px-4 font-medium">Actions</th>
+                    <th className="text-center py-3 px-4 font-medium">{t("networkStatus.actions")}</th>
                   )}
                 </tr>
               </thead>
@@ -237,7 +240,7 @@ function StatusTab() {
                                 onClick={() => moveGateway(route, -1)}
                                 disabled={saving || idx <= 0}
                                 className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed text-muted-foreground hover:text-foreground transition-colors"
-                                title="Subir prioridade"
+                                title={t("networkStatus.priorityUp")}
                               >
                                 <ArrowUp size={14} />
                               </button>
@@ -245,7 +248,7 @@ function StatusTab() {
                                 onClick={() => moveGateway(route, 1)}
                                 disabled={saving || idx >= effectiveGateways.length - 1}
                                 className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed text-muted-foreground hover:text-foreground transition-colors"
-                                title="Baixar prioridade"
+                                title={t("networkStatus.priorityDown")}
                               >
                                 <ArrowDown size={14} />
                               </button>
@@ -258,7 +261,7 @@ function StatusTab() {
                                     ? "text-emerald-400 hover:text-red-400"
                                     : "text-red-400 hover:text-emerald-400"
                                 )}
-                                title={enabled ? "Desabilitar" : "Habilitar"}
+                                title={enabled ? t("networkStatus.disable") : t("networkStatus.enable")}
                               >
                                 {enabled ? <Power size={14} /> : <PowerOff size={14} />}
                               </button>
@@ -272,7 +275,7 @@ function StatusTab() {
                 {routes.length === 0 && !loading && (
                   <tr>
                     <td colSpan={hasMultipleDefaults ? 9 : 8} className="py-6 text-center text-muted-foreground">
-                      Nenhuma rota encontrada.
+                      {t("networkStatus.noRoutes")}
                     </td>
                   </tr>
                 )}
@@ -288,6 +291,7 @@ function StatusTab() {
 // ── DNS Tab ──
 
 function DnsTab() {
+  const { t } = useTranslation();
   const [servers, setServers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -353,9 +357,9 @@ function DnsTab() {
   };
 
   const statusLabel = (status) => {
-    if (status === "up") return "UP";
-    if (status === "down") return "DOWN";
-    return "Unknown";
+    if (status === "up") return t("networkStatus.dnsUp");
+    if (status === "down") return t("networkStatus.dnsDown");
+    return t("networkStatus.dnsUnknown");
   };
 
   return (
@@ -363,20 +367,20 @@ function DnsTab() {
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={syncFromDhcp} loading={loading}>
           <RefreshCw size={14} />
-          Sync DHCP
+          {t("networkStatus.syncDhcp")}
         </Button>
         <Button variant="outline" size="sm" onClick={fetchDns} loading={loading}>
           <RefreshCw size={14} />
-          Refresh
+          {t("common.refresh")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">DNS Forwarders (BIND9)</h2>
+            <h2 className="text-lg font-semibold">{t("networkStatus.dnsForwarders")}</h2>
             <p className="text-xs text-muted-foreground">
-              Ordem = prioridade no BIND. Health check via UDP/53 a cada 1 min.
+              {t("networkStatus.dnsOrderHint")}
             </p>
           </div>
         </CardHeader>
@@ -386,10 +390,10 @@ function DnsTab() {
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
                   <th className="text-center py-3 px-4 font-medium w-8">#</th>
-                  <th className="text-left py-3 px-4 font-medium">Server</th>
-                  <th className="text-left py-3 px-4 font-medium">Source</th>
-                  <th className="text-center py-3 px-4 font-medium">Status</th>
-                  <th className="text-center py-3 px-4 font-medium">Actions</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("networkStatus.server")}</th>
+                  <th className="text-left py-3 px-4 font-medium">{t("networkStatus.source")}</th>
+                  <th className="text-center py-3 px-4 font-medium">{t("networkStatus.status")}</th>
+                  <th className="text-center py-3 px-4 font-medium">{t("networkStatus.actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -416,7 +420,7 @@ function DnsTab() {
                           onClick={() => moveServer(i, -1)}
                           disabled={saving || i <= 0}
                           className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed text-muted-foreground hover:text-foreground transition-colors"
-                          title="Subir prioridade"
+                          title={t("networkStatus.priorityUp")}
                         >
                           <ArrowUp size={14} />
                         </button>
@@ -424,7 +428,7 @@ function DnsTab() {
                           onClick={() => moveServer(i, 1)}
                           disabled={saving || i >= servers.length - 1}
                           className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed text-muted-foreground hover:text-foreground transition-colors"
-                          title="Baixar prioridade"
+                          title={t("networkStatus.priorityDown")}
                         >
                           <ArrowDown size={14} />
                         </button>
@@ -437,7 +441,7 @@ function DnsTab() {
                               ? "text-emerald-400 hover:text-red-400"
                               : "text-red-400 hover:text-emerald-400"
                           )}
-                          title={srv.enabled ? "Desabilitar" : "Habilitar"}
+                          title={srv.enabled ? t("networkStatus.disable") : t("networkStatus.enable")}
                         >
                           {srv.enabled ? <Power size={14} /> : <PowerOff size={14} />}
                         </button>
@@ -448,7 +452,7 @@ function DnsTab() {
                 {servers.length === 0 && !loading && (
                   <tr>
                     <td colSpan={5} className="py-6 text-center text-muted-foreground">
-                      Nenhum servidor DNS encontrado. Clique em "Sync DHCP" para detectar.
+                      {t("networkStatus.noDns")}
                     </td>
                   </tr>
                 )}

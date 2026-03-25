@@ -4,6 +4,7 @@ import {
   Save, ArrowLeft, RefreshCw, EthernetPort, Wifi, Usb, Layers, Unplug,
   Cable, Server, Monitor, Trash2,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -48,6 +49,7 @@ const FieldRow = ({ label, help, children }) => (
 
 
 export default function DeviceEdit() {
+  const { t } = useTranslation();
   const { name } = useParams();
   const navigate = useNavigate();
   const [iface, setIface] = useState(null);
@@ -88,7 +90,7 @@ export default function DeviceEdit() {
         },
       });
     } catch {
-      setError("Erro ao carregar interface.");
+      setError(t("deviceEdit.errorLoad"));
     } finally {
       setLoading(false);
     }
@@ -102,10 +104,10 @@ export default function DeviceEdit() {
     setError("");
     try {
       await api.put(`/api/network/devices/${name}/update/`, form);
-      setSuccess("Interface atualizada com sucesso.");
+      setSuccess(t("deviceEdit.updated"));
       fetchDevice();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao salvar.");
+      setError(err.response?.data?.detail || t("deviceEdit.errorSave"));
     } finally {
       setSaving(false);
     }
@@ -116,9 +118,9 @@ export default function DeviceEdit() {
       <div className="animate-fade-in">
         <div className="flex items-center gap-3 mb-6">
           <Button variant="outline" size="sm" onClick={() => navigate("/network/devices")}>
-            <ArrowLeft size={14} /> Voltar
+            <ArrowLeft size={14} /> {t("deviceEdit.back")}
           </Button>
-          <h1 className="text-2xl font-bold">Interface</h1>
+          <h1 className="text-2xl font-bold">{t("common.interface")}</h1>
         </div>
         <div className="flex items-center justify-center py-20">
           <RefreshCw className="animate-spin text-muted-foreground" size={24} />
@@ -138,7 +140,7 @@ export default function DeviceEdit() {
             <ArrowLeft size={14} />
           </Button>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">Interfaces /</h1>
+            <h1 className="text-2xl font-bold">{t("devices.tabs.interfaces")} /</h1>
             <div className="flex items-center gap-2">
               <Icon size={20} className={iface.up ? "text-emerald-400" : "text-muted-foreground"} />
               <span className="text-2xl font-bold text-primary">{name}</span>
@@ -162,19 +164,19 @@ export default function DeviceEdit() {
       <Card>
         <CardContent className="pt-6">
           {/* General Configuration */}
-          <SectionHeader>General Configuration</SectionHeader>
+          <SectionHeader>{t("deviceEdit.generalConfig")}</SectionHeader>
 
-          <FieldRow label="Enable">
+          <FieldRow label={t("deviceEdit.enable")}>
             <div className="flex items-center gap-2">
               <Toggle
                 checked={form.enabled}
                 onChange={() => setForm({ ...form, enabled: !form.enabled })}
               />
-              <span className="text-sm text-muted-foreground">Enable interface</span>
+              <span className="text-sm text-muted-foreground">{t("deviceEdit.enableInterface")}</span>
             </div>
           </FieldRow>
 
-          <FieldRow label="Description" help="Enter a description (name) for the interface here.">
+          <FieldRow label={t("common.description")} help={t("deviceEdit.descriptionHelp")}>
             <Input
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -185,11 +187,11 @@ export default function DeviceEdit() {
 
           {/* Eth Mode selector for physical interfaces */}
           {iface.type === "physical" && name.startsWith("eth") && (
-            <FieldRow label="Modo" help="Client: recebe IP via DHCP ou estático. Server: fornece DHCP para dispositivos conectados.">
+            <FieldRow label={t("deviceEdit.mode")} help={t("deviceEdit.modeHelp")}>
               <div className="flex gap-2">
                 {[
-                  { value: "client", label: "Client", icon: Monitor, desc: "Recebe IP" },
-                  { value: "server", label: "Server", icon: Server, desc: "Fornece DHCP" },
+                  { value: "client", label: t("deviceEdit.modeClient"), icon: Monitor, desc: t("deviceEdit.modeClientDesc") },
+                  { value: "server", label: t("deviceEdit.modeServer"), icon: Server, desc: t("deviceEdit.modeServerDesc") },
                 ].map(({ value, label, icon: Icon, desc }) => (
                   <button
                     key={value}
@@ -222,7 +224,7 @@ export default function DeviceEdit() {
 
           {/* IPv4 config — only for client mode or non-eth interfaces */}
           {!(iface.type === "physical" && name.startsWith("eth") && form.eth_mode === "server") && (
-            <FieldRow label="Configuração IPv4">
+            <FieldRow label={t("deviceEdit.ipv4Config")}>
               <div className="flex items-center gap-3">
                 <select
                   value={form.ipv4_mode || "none"}
@@ -233,18 +235,18 @@ export default function DeviceEdit() {
                   disabled={iface.managed && form.eth_mode !== "server"}
                   className="h-10 rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm max-w-md w-full"
                 >
-                  <option value="none">Sem IP</option>
-                  <option value="static">IPv4 Estático</option>
+                  <option value="none">{t("deviceEdit.noIp")}</option>
+                  <option value="static">{t("deviceEdit.staticIpv4")}</option>
                   <option value="dhcp">DHCP</option>
                 </select>
                 {iface.managed && form.eth_mode !== "server" && (
-                  <span className="text-xs text-muted-foreground">(gerenciada como servidor)</span>
+                  <span className="text-xs text-muted-foreground">({t("deviceEdit.managedAsServer")})</span>
                 )}
               </div>
               {form.ipv4_mode === "static" && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Endereço IP / CIDR</Label>
+                    <Label className="text-xs">{t("deviceEdit.ipAddressCidr")}</Label>
                     <Input
                       value={form.static_ip}
                       onChange={(e) => setForm({ ...form, static_ip: e.target.value })}
@@ -253,7 +255,7 @@ export default function DeviceEdit() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Gateway</Label>
+                    <Label className="text-xs">{t("deviceEdit.gateway")}</Label>
                     <Input
                       value={form.static_gw}
                       onChange={(e) => setForm({ ...form, static_gw: e.target.value })}
@@ -270,9 +272,9 @@ export default function DeviceEdit() {
                     onChange={() => setForm({ ...form, no_default_route: !form.no_default_route })}
                   />
                   <div>
-                    <span className="text-sm text-muted-foreground">Não aceitar rota padrão do DHCP</span>
+                    <span className="text-sm text-muted-foreground">{t("deviceEdit.noDefaultRoute")}</span>
                     <p className="text-xs text-muted-foreground/70">
-                      O gateway recebido será armazenado e utilizado apenas pelas rotas estáticas.
+                      {t("deviceEdit.noDefaultRouteHelp")}
                     </p>
                   </div>
                 </div>
@@ -280,25 +282,25 @@ export default function DeviceEdit() {
             </FieldRow>
           )}
 
-          <FieldRow label="Firewall Chain">
+          <FieldRow label={t("deviceEdit.firewallChain")}>
             <select
               value={form.chain}
               onChange={(e) => setForm({ ...form, chain: e.target.value })}
               className="h-10 rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm max-w-md w-full"
             >
-              <option value="">Nenhuma</option>
+              <option value="">{t("deviceEdit.none")}</option>
               {CHAINS.map((c) => (
                 <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
               ))}
             </select>
             {form.chain && (
               <p className={cn("text-xs mt-1 font-medium", chainColor[form.chain])}>
-                Traffic from this interface will be processed by the {form.chain} chain.
+                {t("deviceEdit.chainTraffic", { chain: form.chain })}
               </p>
             )}
           </FieldRow>
 
-          <FieldRow label="MAC Address" help="The MAC address of a VLAN interface must be set on its parent interface.">
+          <FieldRow label={t("deviceEdit.macAddress")} help={t("deviceEdit.macAddressHelp")}>
             <Input
               value={form.mac}
               onChange={(e) => setForm({ ...form, mac: e.target.value })}
@@ -308,7 +310,7 @@ export default function DeviceEdit() {
             />
           </FieldRow>
 
-          <FieldRow label="MTU" help="If this field is blank, the adapter's default MTU will be used. This is typically 1500 bytes but can vary in some circumstances.">
+          <FieldRow label="MTU" help={t("deviceEdit.mtuHelp")}>
             <Input
               type="number"
               value={form.mtu}
@@ -323,9 +325,9 @@ export default function DeviceEdit() {
           {/* WiFi-specific */}
           {iface.type === "wireless" && (
             <>
-              <SectionHeader>Wireless Configuration</SectionHeader>
+              <SectionHeader>{t("deviceEdit.wirelessConfig")}</SectionHeader>
 
-              <FieldRow label="WiFi Mode">
+              <FieldRow label={t("deviceEdit.wifiMode")}>
                 <select
                   value={form.wifi_mode || "none"}
                   onChange={(e) => {
@@ -346,24 +348,24 @@ export default function DeviceEdit() {
           {/* Physical interface extras */}
           {iface.type === "physical" && (
             <>
-              <SectionHeader>Hardware Status</SectionHeader>
+              <SectionHeader>{t("deviceEdit.hardwareStatus")}</SectionHeader>
 
-              <FieldRow label="Link Status">
+              <FieldRow label={t("deviceEdit.linkStatus")}>
                 <div className="flex items-center gap-2">
                   <Cable size={14} className={iface.carrier ? "text-blue-400" : "text-muted-foreground"} />
                   <span className={cn("text-sm font-medium", iface.carrier ? "text-blue-400" : "text-muted-foreground")}>
-                    {iface.carrier ? "Cable connected" : "No cable detected"}
+                    {iface.carrier ? t("deviceEdit.cableConnected") : t("deviceEdit.noCable")}
                   </span>
                 </div>
               </FieldRow>
 
               {iface.speed && (
-                <FieldRow label="Speed and Duplex">
+                <FieldRow label={t("deviceEdit.speedDuplex")}>
                   <span className="text-sm text-foreground">
-                    {iface.speed} Mbps / {iface.duplex || "unknown"}
+                    {iface.speed} Mbps / {iface.duplex || t("deviceEdit.unknown")}
                   </span>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Speed and duplex are auto-negotiated by the adapter.
+                    {t("deviceEdit.speedDuplexHelp")}
                   </p>
                 </FieldRow>
               )}
@@ -373,9 +375,9 @@ export default function DeviceEdit() {
           {/* DHCP Server config — only for eth interfaces in server mode */}
           {iface.type === "physical" && name.startsWith("eth") && form.eth_mode === "server" && (
             <>
-              <SectionHeader>DHCP Server</SectionHeader>
+              <SectionHeader>{t("deviceEdit.dhcpServer")}</SectionHeader>
 
-              <FieldRow label="DHCP Server">
+              <FieldRow label={t("deviceEdit.dhcpServer")}>
                 <div className="flex items-center gap-2">
                   <Toggle
                     checked={form.eth_server_networking?.dhcp_enabled ?? true}
@@ -389,11 +391,11 @@ export default function DeviceEdit() {
                       })
                     }
                   />
-                  <span className="text-sm text-muted-foreground">Ativar servidor DHCP nesta interface</span>
+                  <span className="text-sm text-muted-foreground">{t("deviceEdit.enableDhcp")}</span>
                 </div>
               </FieldRow>
 
-              <FieldRow label="IP da Interface" help="Endereço IP estático desta interface no modo servidor (CIDR não necessário).">
+              <FieldRow label={t("deviceEdit.interfaceIp")} help={t("deviceEdit.interfaceIpHelp")}>
                 <Input
                   value={form.eth_server_networking?.interface_ip || ""}
                   onChange={(e) =>
@@ -410,7 +412,7 @@ export default function DeviceEdit() {
                 />
               </FieldRow>
 
-              <FieldRow label="Máscara de Sub-rede">
+              <FieldRow label={t("deviceEdit.subnetMask")}>
                 <Input
                   value={form.eth_server_networking?.subnet_mask || "255.255.255.0"}
                   onChange={(e) =>
@@ -429,10 +431,10 @@ export default function DeviceEdit() {
 
               {form.eth_server_networking?.dhcp_enabled && (
                 <>
-                  <FieldRow label="Range DHCP" help="Faixa de IPs que serão distribuídos pelo servidor DHCP.">
+                  <FieldRow label={t("deviceEdit.dhcpRange")} help={t("deviceEdit.dhcpRangeHelp")}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-xs">Início</Label>
+                        <Label className="text-xs">{t("deviceEdit.rangeStart")}</Label>
                         <Input
                           value={form.eth_server_networking?.range_start || ""}
                           onChange={(e) =>
@@ -449,7 +451,7 @@ export default function DeviceEdit() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Fim</Label>
+                        <Label className="text-xs">{t("deviceEdit.rangeEnd")}</Label>
                         <Input
                           value={form.eth_server_networking?.range_end || ""}
                           onChange={(e) =>
@@ -468,7 +470,7 @@ export default function DeviceEdit() {
                     </div>
                   </FieldRow>
 
-                  <FieldRow label="DNS" help="Modo de DNS para clientes DHCP.">
+                  <FieldRow label="DNS" help={t("deviceEdit.dnsHelp")}>
                     <select
                       value={form.eth_server_networking?.dns_mode || "system"}
                       onChange={(e) =>
@@ -482,8 +484,8 @@ export default function DeviceEdit() {
                       }
                       className="h-10 rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm max-w-md w-full"
                     >
-                      <option value="system">Usar DNS do sistema</option>
-                      <option value="custom">DNS personalizado</option>
+                      <option value="system">{t("deviceEdit.dnsSystem")}</option>
+                      <option value="custom">{t("deviceEdit.dnsCustom")}</option>
                     </select>
                     {form.eth_server_networking?.dns_mode === "custom" && (
                       <div className="mt-2">
@@ -501,7 +503,7 @@ export default function DeviceEdit() {
                           placeholder="8.8.8.8, 1.1.1.1"
                           className="max-w-md font-mono"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">Separe múltiplos servidores DNS por vírgula.</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("deviceEdit.dnsSeparator")}</p>
                       </div>
                     )}
                   </FieldRow>
@@ -514,10 +516,10 @@ export default function DeviceEdit() {
           <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
             <div className="flex items-center gap-3">
               <Button onClick={handleSave} loading={saving}>
-                <Save size={14} /> Salvar
+                <Save size={14} /> {t("common.save")}
               </Button>
               <Button variant="outline" onClick={() => navigate("/network/devices")}>
-                Cancelar
+                {t("common.cancel")}
               </Button>
             </div>
             {iface.registered && !iface.builtin && (
@@ -525,16 +527,16 @@ export default function DeviceEdit() {
                 variant="outline"
                 className="text-red-400 border-red-500/30 hover:bg-red-500/10"
                 onClick={async () => {
-                  if (!window.confirm(`Esquecer interface ${name}? Todas as configurações associadas serão removidas.`)) return;
+                  if (!window.confirm(t("deviceEdit.forgetConfirm", { name }))) return;
                   try {
                     await api.delete(`/api/network/devices/${name}/forget/`);
                     navigate("/network/devices");
                   } catch (err) {
-                    setError(err.response?.data?.detail || "Erro ao esquecer interface.");
+                    setError(err.response?.data?.detail || t("deviceEdit.errorForget"));
                   }
                 }}
               >
-                <Trash2 size={14} /> Esquecer Interface
+                <Trash2 size={14} /> {t("deviceEdit.forgetInterface")}
               </Button>
             )}
           </div>

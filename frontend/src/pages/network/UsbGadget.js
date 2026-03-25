@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Save, Plus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -9,6 +10,7 @@ import { Toggle } from "components/ui/toggle";
 import { UsbIcon, NetworkStatusIcon as NetworkIcon } from "components/icons";
 
 export default function UsbGadget() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("gadget");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -36,11 +38,11 @@ export default function UsbGadget() {
       setEnabled(data.enabled || false);
       setNet(data.networking);
     } catch (err) {
-      setError("Erro ao carregar configurações.");
+      setError(t("usbGadget.errorLoad"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchConfig();
@@ -56,9 +58,9 @@ export default function UsbGadget() {
     setSaving(true);
     try {
       await api.put("/api/usb-gadget/toggle/", { enabled });
-      setSuccess("USB Gadget Mode salvo com sucesso.");
+      setSuccess(t("usbGadget.gadgetSaved"));
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao salvar USB Gadget Mode.");
+      setError(err.response?.data?.detail || t("usbGadget.errorSaveGadget"));
     } finally {
       setSaving(false);
     }
@@ -69,9 +71,9 @@ export default function UsbGadget() {
     setSaving(true);
     try {
       await api.put("/api/usb-gadget/networking/", net);
-      setSuccess("Configurações de rede salvas com sucesso.");
+      setSuccess(t("usbGadget.netSaved"));
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao salvar configurações de rede.");
+      setError(err.response?.data?.detail || t("usbGadget.errorSaveNet"));
     } finally {
       setSaving(false);
     }
@@ -90,8 +92,8 @@ export default function UsbGadget() {
   };
 
   const tabs = [
-    { id: "gadget", label: "USB Gadget Mode", icon: UsbIcon },
-    { id: "networking", label: "Networking", icon: NetworkIcon },
+    { id: "gadget", label: t("usbGadget.tabs.gadget"), icon: UsbIcon },
+    { id: "networking", label: t("usbGadget.tabs.networking"), icon: NetworkIcon },
   ];
 
   if (loading) {
@@ -104,7 +106,7 @@ export default function UsbGadget() {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-2xl font-bold mb-6">USB Gadget Mode</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("usbGadget.title")}</h1>
 
       {error && (
         <div className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
@@ -142,9 +144,9 @@ export default function UsbGadget() {
             <div className="space-y-5">
               <div className="flex items-center justify-between py-2">
                 <div>
-                  <Label>Habilitado</Label>
+                  <Label>{t("common.enabled")}</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Ativa o modo Ethernet over USB (usb0) via dwc2 + g_ether
+                    {t("usbGadget.enabledDescription")}
                   </p>
                 </div>
                 <Toggle
@@ -156,7 +158,7 @@ export default function UsbGadget() {
               <div className="pt-4 border-t border-border">
                 <Button onClick={handleSaveGadget} loading={saving}>
                   <Save size={16} />
-                  Salvar
+                  {t("common.save")}
                 </Button>
               </div>
             </div>
@@ -170,7 +172,7 @@ export default function UsbGadget() {
           <CardContent className="pt-6">
             <div className="space-y-5">
               <div className="flex items-center justify-between py-2">
-                <Label>DHCP Server</Label>
+                <Label>{t("usbGadget.dhcpServer")}</Label>
                 <Toggle
                   checked={net.dhcp_enabled}
                   onChange={(val) => setNet({ ...net, dhcp_enabled: val })}
@@ -178,7 +180,7 @@ export default function UsbGadget() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="usb_interface_ip">IP da Interface (usb0)</Label>
+                <Label htmlFor="usb_interface_ip">{t("usbGadget.interfaceIp")}</Label>
                 <Input
                   id="usb_interface_ip"
                   value={net.interface_ip}
@@ -188,7 +190,7 @@ export default function UsbGadget() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="usb_subnet_mask">Máscara de Sub-rede</Label>
+                <Label htmlFor="usb_subnet_mask">{t("usbGadget.subnetMask")}</Label>
                 <Input
                   id="usb_subnet_mask"
                   value={net.subnet_mask}
@@ -198,7 +200,7 @@ export default function UsbGadget() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="usb_range_start">IP Início do Escopo</Label>
+                <Label htmlFor="usb_range_start">{t("usbGadget.rangeStart")}</Label>
                 <Input
                   id="usb_range_start"
                   value={net.range_start}
@@ -208,7 +210,7 @@ export default function UsbGadget() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="usb_range_end">IP Final do Escopo</Label>
+                <Label htmlFor="usb_range_end">{t("usbGadget.rangeEnd")}</Label>
                 <Input
                   id="usb_range_end"
                   value={net.range_end}
@@ -219,7 +221,7 @@ export default function UsbGadget() {
 
               {/* DNS Mode */}
               <div className="space-y-3">
-                <Label>DNS Server</Label>
+                <Label>{t("usbGadget.dnsServer")}</Label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
@@ -229,7 +231,7 @@ export default function UsbGadget() {
                       onChange={() => setNet({ ...net, dns_mode: "system", dns_servers: [] })}
                       className="accent-emerald-500"
                     />
-                    Sistema
+                    {t("usbGadget.dnsSystem")}
                   </label>
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
@@ -239,7 +241,7 @@ export default function UsbGadget() {
                       onChange={() => setNet({ ...net, dns_mode: "custom" })}
                       className="accent-emerald-500"
                     />
-                    Customizado
+                    {t("usbGadget.dnsCustom")}
                   </label>
                 </div>
               </div>
@@ -250,7 +252,7 @@ export default function UsbGadget() {
                     <Input
                       value={newDns}
                       onChange={(e) => setNewDns(e.target.value)}
-                      placeholder="Ex: 8.8.8.8"
+                      placeholder={t("usbGadget.dnsPlaceholder")}
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDns())}
                     />
                     <Button variant="outline" size="sm" onClick={addDns} className="shrink-0 h-10">
@@ -269,7 +271,7 @@ export default function UsbGadget() {
                     </div>
                   ))}
                   {net.dns_servers.length === 0 && (
-                    <p className="text-xs text-muted-foreground">Nenhum DNS customizado adicionado.</p>
+                    <p className="text-xs text-muted-foreground">{t("usbGadget.noDnsCustom")}</p>
                   )}
                 </div>
               )}
@@ -277,7 +279,7 @@ export default function UsbGadget() {
               <div className="pt-4 border-t border-border">
                 <Button onClick={handleSaveNet} loading={saving}>
                   <Save size={16} />
-                  Salvar
+                  {t("common.save")}
                 </Button>
               </div>
             </div>

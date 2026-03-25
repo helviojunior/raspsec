@@ -13,6 +13,7 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Toggle } from "components/ui/toggle";
 import { cn } from "lib/utils";
+import { useTranslation } from "react-i18next";
 
 const chainColor = {
   internal: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30",
@@ -28,15 +29,16 @@ const typeIcon = {
   bridge: Unplug,
 };
 
-const tabs = [
-  { id: "interfaces", label: "Interfaces", icon: EthernetPort },
-  { id: "vlans", label: "VLANs", icon: Layers },
-  { id: "bridge", label: "Bridge", icon: Unplug },
-  { id: "wifi-client", label: "WiFi Client", icon: Wifi },
-  { id: "dongle", label: "USB Dongle", icon: Usb },
+const tabDefs = [
+  { id: "interfaces", labelKey: "devices.tabs.interfaces", icon: EthernetPort },
+  { id: "vlans", labelKey: "devices.tabs.vlans", icon: Layers },
+  { id: "bridge", labelKey: "devices.tabs.bridge", icon: Unplug },
+  { id: "wifi-client", labelKey: "devices.tabs.wifiClient", icon: Wifi },
+  { id: "dongle", labelKey: "devices.tabs.dongle", icon: Usb },
 ];
 
 export default function Devices() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("interfaces");
   const [interfaces, setInterfaces] = useState([]);
   const [vlans, setVlans] = useState([]);
@@ -54,7 +56,7 @@ export default function Devices() {
       setVlans(data.vlans || []);
       setBridge(data.bridge || null);
     } catch {
-      setError("Erro ao carregar interfaces.");
+      setError(t("devices.errorLoad"));
     } finally {
       setLoading(false);
     }
@@ -67,20 +69,20 @@ export default function Devices() {
     try {
       const payload = { ...vlanForm, vlan_id: parseInt(vlanForm.vlan_id, 10) };
       await api.post("/api/network/vlans/manage/", payload);
-      setSuccess(`VLAN ${vlanForm.vlan_id} criada em ${vlanForm.parent}.`);
+      setSuccess(t("devices.vlanCreated", { id: vlanForm.vlan_id, parent: vlanForm.parent }));
       setVlanForm({ parent: "eth0", vlan_id: "", ip_address: "", enabled: true });
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao criar VLAN.");
+      setError(err.response?.data?.detail || t("devices.errorCreateVlan"));
     }
   };
 
   const removeVlan = async (parent, vlan_id) => {
     try {
       await api.delete("/api/network/vlans/manage/", { data: { parent, vlan_id } });
-      setSuccess(`VLAN ${vlan_id} removida de ${parent}.`);
+      setSuccess(t("devices.vlanRemoved", { id: vlan_id, parent }));
       fetchData();
-    } catch { setError("Erro ao remover VLAN."); }
+    } catch { setError(t("devices.errorRemoveVlan")); }
   };
 
   // WiFi Client: only show interfaces NOT in AP mode
@@ -96,7 +98,7 @@ export default function Devices() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-6">Devices</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-6">{t("devices.title")}</h1>
 
       {error && (
         <div className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-500 text-sm flex justify-between">
@@ -112,7 +114,7 @@ export default function Devices() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">
-        {tabs.map((tab) => (
+        {tabDefs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -124,7 +126,7 @@ export default function Devices() {
             )}
           >
             <tab.icon size={16} />
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
@@ -176,6 +178,7 @@ export default function Devices() {
 // ── Interfaces Tab ──
 
 function InterfacesTab({ interfaces }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -213,7 +216,7 @@ function InterfacesTab({ interfaces }) {
                           iface.carrier ? "bg-blue-500/15 text-blue-400" : "bg-muted text-muted-foreground"
                         )}>
                           <Cable size={10} />
-                          {iface.carrier ? "Conectado" : "Desconectado"}
+                          {iface.carrier ? t("devices.connected") : t("devices.disconnected")}
                         </span>
                       )}
                       {iface.type === "wireless" && wifiMode && (
@@ -265,18 +268,19 @@ function InterfacesTab({ interfaces }) {
 // ── VLANs Tab ──
 
 function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVlan }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Plus size={18} /> Nova VLAN
+            <Plus size={18} /> {t("devices.newVlan")}
           </h2>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
             <div>
-              <Label>Interface pai</Label>
+              <Label>{t("devices.parentInterface")}</Label>
               <select
                 value={vlanForm.parent}
                 onChange={(e) => setVlanForm({ ...vlanForm, parent: e.target.value })}
@@ -288,7 +292,7 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
               </select>
             </div>
             <div>
-              <Label>VLAN ID</Label>
+              <Label>{t("devices.vlanId")}</Label>
               <Input
                 type="number" min="1" max="4094"
                 value={vlanForm.vlan_id}
@@ -297,7 +301,7 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
               />
             </div>
             <div>
-              <Label>IP / CIDR</Label>
+              <Label>{t("devices.ipCidr")}</Label>
               <Input
                 value={vlanForm.ip_address}
                 onChange={(e) => setVlanForm({ ...vlanForm, ip_address: e.target.value })}
@@ -309,11 +313,11 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
                 checked={vlanForm.enabled}
                 onChange={() => setVlanForm({ ...vlanForm, enabled: !vlanForm.enabled })}
               />
-              <span className="text-sm text-muted-foreground">Habilitada</span>
+              <span className="text-sm text-muted-foreground">{t("devices.vlanEnabled")}</span>
             </div>
             <div>
               <Button onClick={addVlan} disabled={!vlanForm.vlan_id} className="w-full">
-                <Plus size={14} /> Criar VLAN
+                <Plus size={14} /> {t("devices.createVlan")}
               </Button>
             </div>
           </div>
@@ -323,7 +327,7 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
       {vlans.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            Nenhuma VLAN configurada.
+            {t("devices.noVlans")}
           </CardContent>
         </Card>
       ) : (
@@ -332,11 +336,11 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground text-left">
-                  <th className="pb-2 font-medium">Interface</th>
-                  <th className="pb-2 font-medium">VLAN ID</th>
+                  <th className="pb-2 font-medium">{t("devices.vlanInterface")}</th>
+                  <th className="pb-2 font-medium">{t("devices.vlanId")}</th>
                   <th className="pb-2 font-medium">IP</th>
-                  <th className="pb-2 font-medium">Status</th>
-                  <th className="pb-2 font-medium text-right">Ações</th>
+                  <th className="pb-2 font-medium">{t("devices.vlanStatus")}</th>
+                  <th className="pb-2 font-medium text-right">{t("devices.vlanActions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -353,7 +357,7 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
                           "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded",
                           sysIface?.up ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"
                         )}>
-                          {sysIface ? (sysIface.up ? "UP" : "DOWN") : "Não criada"}
+                          {sysIface ? (sysIface.up ? "UP" : "DOWN") : t("devices.vlanNotCreated")}
                         </span>
                       </td>
                       <td className="py-2.5 text-right">
@@ -380,6 +384,7 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
 // ── Bridge Tab ──
 
 function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
+  const { t } = useTranslation();
   const ethInterfaces = interfaces.filter((i) => i.type === "physical" && i.name.startsWith("eth"));
   const [port1, setPort1] = useState(ethInterfaces[0]?.name || "");
   const [port2, setPort2] = useState(ethInterfaces[1]?.name || "");
@@ -387,14 +392,14 @@ function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
 
   const createBridge = async () => {
     if (!port1 || !port2) return;
-    if (port1 === port2) { setError("Selecione duas interfaces diferentes."); return; }
+    if (port1 === port2) { setError(t("devices.selectDifferentInterfaces")); return; }
     try {
       setLoading(true);
       const { data } = await api.post("/api/network/devices/bridge/", { port1, port2 });
       setSuccess(data.detail);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao criar bridge.");
+      setError(err.response?.data?.detail || t("devices.errorCreateBridge"));
     } finally {
       setLoading(false);
     }
@@ -407,7 +412,7 @@ function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
       setSuccess(data.detail);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao remover bridge.");
+      setError(err.response?.data?.detail || t("devices.errorRemoveBridge"));
     } finally {
       setLoading(false);
     }
@@ -428,7 +433,7 @@ function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
                   <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                     {bridge.name}
                     <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
-                      Ativa
+                      {t("devices.bridgeActive")}
                     </span>
                   </h3>
                   <div className="mt-1 text-sm text-muted-foreground">
@@ -437,13 +442,13 @@ function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
                     <span className="font-mono text-foreground">{bridge.port2}</span>
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    Modo transparente · STP desabilitado · Bridge netfilter desabilitado
+                    {t("devices.bridgeTransparentMode")}
                   </div>
                 </div>
               </div>
               <Button variant="destructive" size="sm" onClick={removeBridge} disabled={loading}>
                 {loading ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                <span className="ml-1.5">Remover Bridge</span>
+                <span className="ml-1.5">{t("devices.removeBridge")}</span>
               </Button>
             </div>
           </CardContent>
@@ -454,20 +459,19 @@ function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
           <Card>
             <CardHeader>
               <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Plus size={18} /> Criar Bridge
+                <Plus size={18} /> {t("devices.createBridge")}
               </h2>
             </CardHeader>
             <CardContent>
               {ethInterfaces.length < 2 ? (
                 <div className="p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
-                  São necessárias pelo menos 2 interfaces ethernet cabeada para criar uma bridge.
-                  Conecte um adaptador USB-Ethernet adicional.
+                  {t("devices.bridgeNeedTwoInterfaces")}
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 items-end">
                     <div>
-                      <Label>Interface 1</Label>
+                      <Label>{t("devices.interface1")}</Label>
                       <select
                         value={port1}
                         onChange={(e) => setPort1(e.target.value)}
@@ -479,7 +483,7 @@ function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
                       </select>
                     </div>
                     <div>
-                      <Label>Interface 2</Label>
+                      <Label>{t("devices.interface2")}</Label>
                       <select
                         value={port2}
                         onChange={(e) => setPort2(e.target.value)}
@@ -493,15 +497,15 @@ function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
                     <div>
                       <Button onClick={createBridge} disabled={loading || !port1 || !port2} className="w-full">
                         {loading ? <Loader2 size={14} className="animate-spin" /> : <Unplug size={14} />}
-                        <span className="ml-1.5">Criar Bridge</span>
+                        <span className="ml-1.5">{t("devices.createBridge")}</span>
                       </Button>
                     </div>
                   </div>
 
                   <div className="p-3 rounded-md bg-muted/50 border border-border text-xs text-muted-foreground space-y-1">
-                    <p>A bridge conecta duas interfaces ethernet em modo transparente (Layer 2), permitindo que o tráfego passe entre elas sem roteamento IP.</p>
-                    <p>As interfaces serão colocadas em modo promíscuo e qualquer IP atribuído a elas será removido.</p>
-                    <p>Configurações aplicadas: STP off, forward delay 0, bridge netfilter desabilitado.</p>
+                    <p>{t("devices.bridgeHelpTransparent")}</p>
+                    <p>{t("devices.bridgeHelpPromiscuous")}</p>
+                    <p>{t("devices.bridgeHelpSettings")}</p>
                   </div>
                 </div>
               )}
@@ -517,12 +521,12 @@ function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
 // ── WiFi Client Tab ──
 
 const AUTH_TYPES = [
-  { value: "open", label: "Open (sem senha)" },
-  { value: "wpa-psk", label: "WPA / WPA2 PSK" },
-  { value: "wpa3-sae", label: "WPA3 SAE" },
-  { value: "802.1x-peap", label: "802.1X PEAP (MSCHAPv2)" },
-  { value: "802.1x-ttls", label: "802.1X TTLS" },
-  { value: "802.1x-tls", label: "802.1X TLS (certificado)" },
+  { value: "open", labelKey: "devices.authOpen" },
+  { value: "wpa-psk", labelKey: "devices.authWpaPsk" },
+  { value: "wpa3-sae", labelKey: "devices.authWpa3Sae" },
+  { value: "802.1x-peap", labelKey: "devices.auth8021xPeap" },
+  { value: "802.1x-ttls", labelKey: "devices.auth8021xTtls" },
+  { value: "802.1x-tls", labelKey: "devices.auth8021xTls" },
 ];
 
 const PHASE2_OPTIONS = [
@@ -550,6 +554,7 @@ const INITIAL_FORM = {
 };
 
 function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
+  const { t } = useTranslation();
   const [selectedIface, setSelectedIface] = useState(
     wirelessInterfaces.length > 0 ? wirelessInterfaces[0].name : ""
   );
@@ -595,7 +600,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
       setNetworks(nets);
       if (nets.length === 0) setScanEmpty(true);
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao escanear redes.");
+      setError(err.response?.data?.detail || t("devices.errorScan"));
     } finally {
       setScanning(false);
     }
@@ -624,13 +629,13 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
         interface: selectedIface,
         profile: form,
       });
-      setSuccess(`Conectado a ${form.ssid} via ${selectedIface}.`);
+      setSuccess(t("devices.connectedToSsid", { ssid: form.ssid, iface: selectedIface }));
       setShowForm(false);
       setForm({ ...INITIAL_FORM });
       fetchStatus();
       fetchProfiles();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao conectar.");
+      setError(err.response?.data?.detail || t("devices.errorConnect"));
     } finally {
       setConnecting(false);
     }
@@ -640,31 +645,31 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
     if (!selectedIface) return;
     try {
       await api.post("/api/wifi-client/disconnect/", { interface: selectedIface });
-      setSuccess(`Desconectado de ${selectedIface}.`);
+      setSuccess(t("devices.disconnectedFrom", { iface: selectedIface }));
       setConnStatus(null);
       fetchStatus();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao desconectar.");
+      setError(err.response?.data?.detail || t("devices.errorDisconnect"));
     }
   };
 
   const deleteProfile = async (iface, ssid) => {
     try {
       await api.delete("/api/wifi-client/profiles/", { data: { interface: iface, ssid } });
-      setSuccess(`Perfil '${ssid}' removido.`);
+      setSuccess(t("devices.profileRemoved", { ssid }));
       fetchProfiles();
     } catch {
-      setError("Erro ao remover perfil.");
+      setError(t("devices.errorRemoveProfile"));
     }
   };
 
   const toggleAutoConnect = async (iface, ssid, current) => {
     try {
       await api.put("/api/wifi-client/profiles/", { interface: iface, ssid, auto_connect: !current });
-      setSuccess(`Auto-connect ${!current ? "habilitado" : "desabilitado"} para '${ssid}'.`);
+      setSuccess(!current ? t("devices.autoConnectEnabled", { ssid }) : t("devices.autoConnectDisabled", { ssid }));
       fetchProfiles();
     } catch {
-      setError("Erro ao alterar auto-connect.");
+      setError(t("devices.errorAutoConnect"));
     }
   };
 
@@ -674,10 +679,10 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
         interface: profile.interface,
         ssid: profile.ssid,
       });
-      setSuccess(`Conectado a ${profile.ssid} via ${profile.interface}.`);
+      setSuccess(t("devices.connectedToSsid", { ssid: profile.ssid, iface: profile.interface }));
       fetchStatus();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao conectar.");
+      setError(err.response?.data?.detail || t("devices.errorConnect"));
     }
   };
 
@@ -728,8 +733,8 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
-          <p>Nenhuma interface wireless disponível para modo Client.</p>
-          <p className="text-xs mt-2">Altere o modo de uma interface wireless para Client na aba Interfaces.</p>
+          <p>{t("devices.noWirelessClient")}</p>
+          <p className="text-xs mt-2">{t("devices.noWirelessClientHint")}</p>
         </CardContent>
       </Card>
     );
@@ -742,14 +747,14 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
         <CardContent className="pt-5 pb-5">
           <div className="flex items-end gap-4 flex-wrap">
             <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Interface</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">{t("common.interface")}</Label>
               <select
                 value={selectedIface}
                 onChange={(e) => { setSelectedIface(e.target.value); setNetworks([]); setConnStatus(null); }}
                 className="block h-9 rounded-md border border-border bg-background px-3 text-sm min-w-[140px]"
               >
                 {wirelessInterfaces.length === 0 && (
-                  <option value="">Nenhuma interface disponível</option>
+                  <option value="">{t("devices.noInterfaceAvailable")}</option>
                 )}
                 {wirelessInterfaces.map((i) => (
                   <option key={i.name} value={i.name}>{i.name}</option>
@@ -759,24 +764,24 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
 
             <Button variant="outline" onClick={scan} disabled={scanning || !selectedIface}>
               {scanning ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
-              <span className="ml-1.5">Scan</span>
+              <span className="ml-1.5">{t("devices.scan")}</span>
             </Button>
 
             <Button variant="outline" onClick={fetchStatus} disabled={!selectedIface}>
               <RefreshCw size={14} />
-              <span className="ml-1.5">Status</span>
+              <span className="ml-1.5">{t("devices.status")}</span>
             </Button>
 
             {connStatus?.connected && (
               <Button variant="destructive" size="sm" onClick={disconnect}>
                 <X size={14} />
-                <span className="ml-1.5">Desconectar</span>
+                <span className="ml-1.5">{t("common.disconnect")}</span>
               </Button>
             )}
 
             <Button variant="outline" onClick={() => { setShowForm(true); setForm({ ...INITIAL_FORM }); }}>
               <Plus size={14} />
-              <span className="ml-1.5">Manual</span>
+              <span className="ml-1.5">{t("devices.manual")}</span>
             </Button>
           </div>
 
@@ -791,14 +796,14 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
               {connStatus.connected ? (
                 <div className="flex items-center gap-3 flex-wrap">
                   <Wifi size={16} />
-                  <span className="font-medium">Conectado a {connStatus.ssid}</span>
+                  <span className="font-medium">{t("devices.connectedTo", { ssid: connStatus.ssid })}</span>
                   <span className="text-xs opacity-70">BSSID: {connStatus.bssid}</span>
                   {connStatus.ip && <span className="text-xs opacity-70">IP: {connStatus.ip}</span>}
                   {connStatus.freq && <span className="text-xs opacity-70">{connStatus.freq} MHz</span>}
                   <span className="text-xs opacity-70">{connStatus.key_mgmt}</span>
                 </div>
               ) : (
-                <span>Não conectado ({connStatus.wpa_state || "DISCONNECTED"})</span>
+                <span>{t("devices.notConnected", { state: connStatus.wpa_state || "DISCONNECTED" })}</span>
               )}
             </div>
           )}
@@ -812,7 +817,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
           <CardHeader>
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <ShieldCheck size={18} /> Conectar à rede
+                <ShieldCheck size={18} /> {t("devices.connectToNetwork")}
               </h2>
               <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground">
                 <X size={18} />
@@ -824,15 +829,15 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
               {/* SSID */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>SSID</Label>
+                  <Label>{t("devices.ssid")}</Label>
                   <Input
                     value={form.ssid}
                     onChange={(e) => updateForm("ssid", e.target.value)}
-                    placeholder="Nome da rede"
+                    placeholder={t("devices.ssidPlaceholder")}
                   />
                 </div>
                 <div>
-                  <Label>BSSID <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Label>{t("devices.bssidOptional")} <span className="text-muted-foreground">({t("common.optional")})</span></Label>
                   <Input
                     value={form.bssid}
                     onChange={(e) => updateForm("bssid", e.target.value)}
@@ -844,14 +849,14 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
 
               {/* Auth type */}
               <div>
-                <Label>Autenticação</Label>
+                <Label>{t("devices.authentication")}</Label>
                 <select
                   value={form.auth_type}
                   onChange={(e) => updateForm("auth_type", e.target.value)}
                   className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm"
                 >
                   {AUTH_TYPES.map((a) => (
-                    <option key={a.value} value={a.value}>{a.label}</option>
+                    <option key={a.value} value={a.value}>{t(a.labelKey)}</option>
                   ))}
                 </select>
               </div>
@@ -860,19 +865,19 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
               {needsIdentity && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Identidade (username)</Label>
+                    <Label>{t("devices.identity")}</Label>
                     <Input
                       value={form.identity}
                       onChange={(e) => updateForm("identity", e.target.value)}
-                      placeholder="usuario@dominio.com"
+                      placeholder={t("devices.identityPlaceholder")}
                     />
                   </div>
                   <div>
-                    <Label>Identidade anônima <span className="text-muted-foreground">(opcional)</span></Label>
+                    <Label>{t("devices.anonymousIdentity")} <span className="text-muted-foreground">({t("common.optional")})</span></Label>
                     <Input
                       value={form.anonymous_identity}
                       onChange={(e) => updateForm("anonymous_identity", e.target.value)}
-                      placeholder="anonymous@dominio.com"
+                      placeholder={t("devices.anonymousIdentityPlaceholder")}
                     />
                   </div>
                 </div>
@@ -881,13 +886,13 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
               {/* Password */}
               {needsPassword && (
                 <div>
-                  <Label>Senha</Label>
+                  <Label>{t("devices.networkPassword")}</Label>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
                       value={form.password}
                       onChange={(e) => updateForm("password", e.target.value)}
-                      placeholder="Senha da rede"
+                      placeholder={t("devices.networkPasswordPlaceholder")}
                       className="pr-10"
                     />
                     <button
@@ -904,7 +909,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
               {/* Phase 2 (PEAP / TTLS) */}
               {needsPhase2 && (
                 <div>
-                  <Label>Phase 2 (autenticação interna)</Label>
+                  <Label>{t("devices.phase2")}</Label>
                   <select
                     value={form.phase2}
                     onChange={(e) => updateForm("phase2", e.target.value)}
@@ -921,7 +926,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
               {needsCaCert && (
                 <div>
                   <Label className="flex items-center gap-1.5">
-                    <FileText size={14} /> Certificado CA <span className="text-muted-foreground">(opcional)</span>
+                    <FileText size={14} /> {t("devices.caCertificate")} <span className="text-muted-foreground">({t("common.optional")})</span>
                   </Label>
                   <input
                     type="file"
@@ -930,7 +935,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
                     className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-border file:bg-background file:text-sm file:font-medium file:text-foreground hover:file:bg-accent file:cursor-pointer file:transition-colors"
                   />
                   {form.ca_cert_content && (
-                    <span className="text-[10px] text-emerald-400 mt-1 block">Certificado CA carregado</span>
+                    <span className="text-[10px] text-emerald-400 mt-1 block">{t("devices.caCertLoaded")}</span>
                   )}
                 </div>
               )}
@@ -940,7 +945,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
                 <>
                   <div>
                     <Label className="flex items-center gap-1.5">
-                      <FileText size={14} /> Certificado do cliente
+                      <FileText size={14} /> {t("devices.clientCertificate")}
                     </Label>
                     <input
                       type="file"
@@ -949,12 +954,12 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
                       className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-border file:bg-background file:text-sm file:font-medium file:text-foreground hover:file:bg-accent file:cursor-pointer file:transition-colors"
                     />
                     {form.client_cert_content && (
-                      <span className="text-[10px] text-emerald-400 mt-1 block">Certificado do cliente carregado</span>
+                      <span className="text-[10px] text-emerald-400 mt-1 block">{t("devices.clientCertLoaded")}</span>
                     )}
                   </div>
                   <div>
                     <Label className="flex items-center gap-1.5">
-                      <Key size={14} /> Chave privada
+                      <Key size={14} /> {t("devices.privateKey")}
                     </Label>
                     <input
                       type="file"
@@ -963,16 +968,16 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
                       className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-border file:bg-background file:text-sm file:font-medium file:text-foreground hover:file:bg-accent file:cursor-pointer file:transition-colors"
                     />
                     {form.private_key_content && (
-                      <span className="text-[10px] text-emerald-400 mt-1 block">Chave privada carregada</span>
+                      <span className="text-[10px] text-emerald-400 mt-1 block">{t("devices.privateKeyLoaded")}</span>
                     )}
                   </div>
                   <div>
-                    <Label>Senha da chave privada <span className="text-muted-foreground">(opcional)</span></Label>
+                    <Label>{t("devices.privateKeyPassword")} <span className="text-muted-foreground">({t("common.optional")})</span></Label>
                     <Input
                       type="password"
                       value={form.private_key_password}
                       onChange={(e) => updateForm("private_key_password", e.target.value)}
-                      placeholder="Senha da chave privada"
+                      placeholder={t("devices.privateKeyPasswordPlaceholder")}
                     />
                   </div>
                 </>
@@ -984,17 +989,17 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
                   checked={form.hidden}
                   onChange={(v) => updateForm("hidden", v)}
                 />
-                <Label className="cursor-pointer">Rede oculta (hidden SSID)</Label>
+                <Label className="cursor-pointer">{t("devices.hiddenNetwork")}</Label>
               </div>
 
               {/* Actions */}
               <div className="flex gap-3 pt-2">
                 <Button onClick={connect} disabled={connecting || !form.ssid}>
                   {connecting ? <Loader2 size={14} className="animate-spin" /> : <Wifi size={14} />}
-                  <span className="ml-1.5">Conectar</span>
+                  <span className="ml-1.5">{t("common.connect")}</span>
                 </Button>
                 <Button variant="outline" onClick={() => setShowForm(false)}>
-                  Cancelar
+                  {t("common.cancel")}
                 </Button>
               </div>
             </div>
@@ -1005,7 +1010,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
       {/* Scan empty warning */}
       {scanEmpty && networks.length === 0 && !scanning && (
         <div className="p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
-          Nenhuma rede encontrada. Tente novamente em alguns segundos.
+          {t("devices.noNetworksFound")}
         </div>
       )}
 
@@ -1014,7 +1019,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Signal size={18} /> Redes disponíveis
+              <Signal size={18} /> {t("devices.availableNetworks")}
               <span className="text-xs font-normal text-muted-foreground">({networks.length})</span>
             </h2>
           </CardHeader>
@@ -1065,7 +1070,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Key size={18} /> Perfis salvos
+              <Key size={18} /> {t("devices.savedProfiles")}
             </h2>
           </CardHeader>
           <CardContent>
@@ -1099,7 +1104,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
                       className="text-[10px] font-medium px-2 py-1 rounded border border-primary/30 text-primary hover:bg-primary/10 transition-colors whitespace-nowrap"
                     >
                       <Wifi size={10} className="inline mr-1" />
-                      Conectar
+                      {t("common.connect")}
                     </button>
                     <Toggle
                       checked={p.auto_connect}
@@ -1136,6 +1141,7 @@ const chainBadge = {
 };
 
 function DonglePolicyTab({ setError, setSuccess }) {
+  const { t } = useTranslation();
   const [policy, setPolicy] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1143,7 +1149,7 @@ function DonglePolicyTab({ setError, setSuccess }) {
   useEffect(() => {
     api.get("/api/network/devices/dongle-policy/")
       .then(({ data }) => setPolicy(data))
-      .catch(() => setError("Erro ao carregar política de dongle."))
+      .catch(() => setError(t("devices.errorLoadDonglePolicy")))
       .finally(() => setLoading(false));
   }, [setError]);
 
@@ -1151,9 +1157,9 @@ function DonglePolicyTab({ setError, setSuccess }) {
     setSaving(true);
     try {
       await api.put("/api/network/devices/dongle-policy/", policy);
-      setSuccess("Política de dongle atualizada.");
+      setSuccess(t("devices.donglePolicyUpdated"));
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao salvar.");
+      setError(err.response?.data?.detail || t("devices.errorSaveDonglePolicy"));
     } finally {
       setSaving(false);
     }
@@ -1172,29 +1178,29 @@ function DonglePolicyTab({ setError, setSuccess }) {
       <Card>
         <CardHeader>
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Usb size={18} /> USB Dongle Behaviour
+            <Usb size={18} /> {t("devices.dongleTitle")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Define o comportamento padrão quando um novo adaptador USB de rede é conectado.
+            {t("devices.dongleDescription")}
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Mode selector */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Ao detectar novo dongle</Label>
+            <Label className="text-sm font-medium">{t("devices.dongleOnDetect")}</Label>
             <div className="flex flex-col gap-2">
               {[
                 {
                   value: "none",
-                  label: "None",
-                  desc: "Apenas registrar o nome. Nenhuma ação automática.",
+                  labelKey: "devices.dongleModeNone",
+                  descKey: "devices.dongleModeNoneDesc",
                 },
                 {
                   value: "auto_connect",
-                  label: "Auto Connect",
-                  desc: "Ativar interface, habilitar DHCP client e aplicar chain padrão.",
+                  labelKey: "devices.dongleModeAutoConnect",
+                  descKey: "devices.dongleModeAutoConnectDesc",
                 },
-              ].map(({ value, label, desc }) => (
+              ].map(({ value, labelKey, descKey }) => (
                 <button
                   key={value}
                   type="button"
@@ -1215,8 +1221,8 @@ function DonglePolicyTab({ setError, setSuccess }) {
                     )}
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-foreground">{label}</div>
-                    <div className="text-xs text-muted-foreground">{desc}</div>
+                    <div className="text-sm font-medium text-foreground">{t(labelKey)}</div>
+                    <div className="text-xs text-muted-foreground">{t(descKey)}</div>
                   </div>
                 </button>
               ))}
@@ -1226,20 +1232,20 @@ function DonglePolicyTab({ setError, setSuccess }) {
           {/* Chain selector — only when auto_connect */}
           {policy.mode === "auto_connect" && (
             <div className="space-y-2 pl-7">
-              <Label className="text-sm font-medium">Firewall Chain padrão</Label>
+              <Label className="text-sm font-medium">{t("devices.dongleDefaultChain")}</Label>
               <select
                 value={policy.default_chain || ""}
                 onChange={(e) => setPolicy({ ...policy, default_chain: e.target.value })}
                 className="h-10 rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm max-w-md w-full"
               >
-                <option value="">Nenhuma</option>
+                <option value="">{t("devices.dongleChainNone")}</option>
                 {CHAINS.map((c) => (
                   <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
                 ))}
               </select>
               {policy.default_chain && (
                 <p className={cn("text-xs font-medium", chainBadge[policy.default_chain])}>
-                  Novos dongles serão atribuídos à chain {policy.default_chain}.
+                  {t("devices.dongleChainAssigned", { chain: policy.default_chain })}
                 </p>
               )}
             </div>
@@ -1248,7 +1254,7 @@ function DonglePolicyTab({ setError, setSuccess }) {
           {/* Save */}
           <div className="pt-2 border-t border-border">
             <Button onClick={handleSave} loading={saving}>
-              Salvar
+              {t("common.save")}
             </Button>
           </div>
         </CardContent>

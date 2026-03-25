@@ -1021,6 +1021,20 @@
     {
       "hash": "7bc1d09eb9c3ab9f05369418003e0e0347300592",
       "message": "Add i18n translations for Settings page (system, profile, SSH keys)"
+    },
+    {
+      "hash": "ca8950c7a92aec62fe5ace08a46004e672b341ab",
+      "message": "Add RTL8812AU WiFi driver to kernel build",
+      "skipped": true
+    },
+    {
+      "hash": "38d60c07ddfc576cc7f00e349744ccc90b2778d5",
+      "message": "Add wireless security and pentesting tools to image build",
+      "skipped": true
+    },
+    {
+      "hash": "fb16689c998785cb4554ad2b23956712da1f767a",
+      "message": "Add i18n translations to all remaining pages"
     }
   ],
   "last_build_hash": "e58e350554cf421df2dd414ffb68a22281c4c5a6"

@@ -3,6 +3,7 @@ import {
   Folder, File, FolderSymlink, Download, Trash2, RefreshCw,
   ChevronRight, ArrowLeft, HardDrive, Loader2,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -25,6 +26,7 @@ function formatDate(ts) {
 }
 
 export default function Files() {
+  const { t } = useTranslation();
   const [path, setPath] = useState("");
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,11 +42,11 @@ export default function Files() {
       setPath(data.path || "");
       setEntries(data.entries || []);
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao listar arquivos.");
+      setError(err.response?.data?.detail || t("files.errorList"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchDir(""); }, [fetchDir]);
   useEffect(() => { if (success) { const t = setTimeout(() => setSuccess(""), 4000); return () => clearTimeout(t); } }, [success]);
@@ -91,10 +93,10 @@ export default function Files() {
         // Try to parse error from blob
         if (err.response?.data instanceof Blob) {
           err.response.data.text().then((text) => {
-            try { setError(JSON.parse(text).detail); } catch { setError("Erro ao baixar arquivo."); }
+            try { setError(JSON.parse(text).detail); } catch { setError(t("files.errorDownload")); }
           });
         } else {
-          setError(err.response?.data?.detail || "Erro ao baixar arquivo.");
+          setError(err.response?.data?.detail || t("files.errorDownload"));
         }
       });
   };
@@ -103,10 +105,10 @@ export default function Files() {
     const filePath = path ? `${path}/${name}` : name;
     try {
       await api.delete("/api/tools/files/delete/", { data: { path: filePath } });
-      setSuccess(`${name} removido.`);
+      setSuccess(t("files.deleted", { name }));
       fetchDir(path);
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao remover arquivo.");
+      setError(err.response?.data?.detail || t("files.errorDelete"));
     }
   };
 
@@ -120,7 +122,7 @@ export default function Files() {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Arquivos</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("files.title")}</h1>
         <Button variant="outline" size="sm" onClick={() => fetchDir(path)} disabled={loading}>
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
         </Button>
@@ -171,17 +173,17 @@ export default function Files() {
             </div>
           ) : sorted.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground text-sm">
-              Diretório vazio.
+              {t("files.emptyDirectory")}
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground text-left text-xs">
                   <th className="px-4 py-2.5 font-medium w-10"></th>
-                  <th className="px-2 py-2.5 font-medium">Nome</th>
-                  <th className="px-2 py-2.5 font-medium text-right w-24">Tamanho</th>
-                  <th className="px-2 py-2.5 font-medium text-right w-40">Modificado</th>
-                  <th className="px-4 py-2.5 font-medium text-right w-20">Ações</th>
+                  <th className="px-2 py-2.5 font-medium">{t("files.name")}</th>
+                  <th className="px-2 py-2.5 font-medium text-right w-24">{t("files.size")}</th>
+                  <th className="px-2 py-2.5 font-medium text-right w-40">{t("files.modified")}</th>
+                  <th className="px-4 py-2.5 font-medium text-right w-20">{t("files.actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -245,14 +247,14 @@ export default function Files() {
                             <button
                               onClick={() => downloadFile(entry.name)}
                               className="p-1 text-muted-foreground hover:text-primary transition-colors"
-                              title="Download"
+                              title={t("files.download")}
                             >
                               <Download size={14} />
                             </button>
                             <button
                               onClick={() => deleteFile(entry.name)}
                               className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
-                              title="Remover"
+                              title={t("files.remove")}
                             >
                               <Trash2 size={14} />
                             </button>
@@ -269,9 +271,9 @@ export default function Files() {
       </Card>
 
       <div className="mt-4 p-3 rounded-md bg-muted/50 border border-border text-xs text-muted-foreground space-y-1">
-        <p><strong>captures/</strong> — Arquivos .pcap gerados pelo Packet Capture</p>
-        <p><strong>startup_script/</strong> — Output do Startup Script</p>
-        <p><strong>logs/</strong> — Link simbólico para /var/log (somente leitura)</p>
+        <p><strong>captures/</strong> — {t("files.helpCaptures").replace(/<\d>|<\/\d>/g, "").replace("captures/ — ", "")}</p>
+        <p><strong>startup_script/</strong> — {t("files.helpStartupScript").replace(/<\d>|<\/\d>/g, "").replace("startup_script/ — ", "")}</p>
+        <p><strong>logs/</strong> — {t("files.helpLogs").replace(/<\d>|<\/\d>/g, "").replace("logs/ — ", "")}</p>
       </div>
     </div>
   );

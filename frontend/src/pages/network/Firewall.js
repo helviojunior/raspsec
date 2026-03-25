@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Trash2, Save, RefreshCw, ArrowRightLeft, Pencil, GripVertical, Lock, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import api from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -138,16 +139,17 @@ function useDragReorder({ items, onReorder, canDrag = () => true }) {
 
 
 export default function Firewall() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("rules");
 
   const tabs = [
-    { id: "rules", label: "Regras", icon: RulesIcon },
-    { id: "nat", label: "NAT", icon: NatIcon },
+    { id: "rules", label: t("firewall.tabs.rules"), icon: RulesIcon },
+    { id: "nat", label: t("firewall.tabs.nat"), icon: NatIcon },
   ];
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-2xl font-bold mb-6">Firewall</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("firewall.title")}</h1>
 
       <div className="flex gap-1 mb-6 border-b border-border">
         {tabs.map((tab) => (
@@ -175,6 +177,7 @@ export default function Firewall() {
 // ── Rules Tab ──
 
 function RulesTab() {
+  const { t } = useTranslation();
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -235,19 +238,19 @@ function RulesTab() {
     <div className="space-y-6">
       {dirty && (
         <div className="flex items-center justify-between p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
-          <span>Existem alterações pendentes que não foram aplicadas ao firewall.</span>
+          <span>{t("firewall.pendingChanges")}</span>
           <Button size="sm" onClick={applyChanges} loading={applying}>
-            <ShieldCheck size={14} /> Aplicar
+            <ShieldCheck size={14} /> {t("common.apply")}
           </Button>
         </div>
       )}
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={fetchRules} loading={loading}>
-          <RefreshCw size={14} /> Refresh
+          <RefreshCw size={14} /> {t("common.refresh")}
         </Button>
         <Button size="sm" onClick={() => { setEditRule(null); setShowForm(true); }}>
-          <Plus size={14} /> Nova Regra
+          <Plus size={14} /> {t("firewall.newRule")}
         </Button>
       </div>
 
@@ -276,6 +279,7 @@ function RulesTab() {
 }
 
 function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDelete, onReorderDone }) {
+  const { t } = useTranslation();
   const systemRules = chainRules.filter(r => r.is_system);
   const userRules = chainRules.filter(r => !r.is_system);
 
@@ -326,7 +330,7 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
       >
         <td className="py-2 px-1 text-center">
           {rule.is_system ? (
-            <Lock size={12} className="text-blue-400 mx-auto" title="Regra do sistema" />
+            <Lock size={12} className="text-blue-400 mx-auto" title={t("firewall.systemRuleTooltip")} />
           ) : (
             <GripVertical size={14} className={cn("mx-auto transition-colors", isDragging && dragId === rule.id ? "text-primary" : "text-muted-foreground/50")} />
           )}
@@ -346,8 +350,8 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
               {!rule.is_system && (
                 <>
                   <Toggle checked={rule.enabled} onChange={() => onToggle(rule)} className="scale-75" />
-                  <button onClick={() => onEdit(rule)} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Editar"><Pencil size={13} /></button>
-                  <button onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) onDelete(rule.id); }} className="p-1 text-muted-foreground hover:text-red-500 transition-colors" title="Remover"><Trash2 size={13} /></button>
+                  <button onClick={() => onEdit(rule)} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title={t("firewall.editTooltip")}><Pencil size={13} /></button>
+                  <button onClick={() => { if (window.confirm(t("firewall.confirmDeleteRule"))) onDelete(rule.id); }} className="p-1 text-muted-foreground hover:text-red-500 transition-colors" title={t("firewall.removeTooltip")}><Trash2 size={13} /></button>
                 </>
               )}
             </div>
@@ -420,7 +424,7 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
             {chainRules.length === 0 && (
               <tr>
                 <td colSpan={7} className="py-4 text-center text-muted-foreground text-xs">
-                  Nenhuma regra nesta chain.
+                  {t("firewall.noRulesInChain")}
                 </td>
               </tr>
             )}
@@ -444,6 +448,7 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
 
 
 function RuleForm({ rule, onSave, onCancel }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     chain: rule?.chain || "internal",
     protocol: rule?.protocol || "any",
@@ -511,8 +516,8 @@ function RuleForm({ rule, onSave, onCancel }) {
           </div>
         </div>
         <div className="flex gap-2 mt-4">
-          <Button onClick={handleSave} loading={saving} size="sm"><Save size={14} /> {form.id ? "Atualizar" : "Criar"}</Button>
-          <Button variant="outline" size="sm" onClick={onCancel}>Cancelar</Button>
+          <Button onClick={handleSave} loading={saving} size="sm"><Save size={14} /> {form.id ? t("common.update") : t("common.create")}</Button>
+          <Button variant="outline" size="sm" onClick={onCancel}>{t("common.cancel")}</Button>
         </div>
       </CardContent>
     </Card>
@@ -522,6 +527,7 @@ function RuleForm({ rule, onSave, onCancel }) {
 // ── NAT Tab ──
 
 function NatTab() {
+  const { t } = useTranslation();
   const [natRules, setNatRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -623,7 +629,7 @@ function NatTab() {
     >
       <td className="py-2 px-1 text-center">
         {rule.is_system ? (
-          <Lock size={12} className="text-blue-400 mx-auto" title="Regra do sistema" />
+          <Lock size={12} className="text-blue-400 mx-auto" title={t("firewall.systemRuleTooltip")} />
         ) : (
           <GripVertical size={14} className={cn("mx-auto transition-colors", isDragging && dragId === rule.id ? "text-primary" : "text-muted-foreground/50")} />
         )}
@@ -641,8 +647,8 @@ function NatTab() {
             {!rule.is_system && (
               <>
                 <Toggle checked={rule.enabled} onChange={() => toggleRule(rule)} className="scale-75" />
-                <button onClick={() => { setEditRule(rule); setShowForm(true); }} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Editar"><Pencil size={13} /></button>
-                <button onClick={() => { if (window.confirm("Tem certeza que deseja excluir esta regra?")) deleteRule(rule.id); }} className="p-1 text-muted-foreground hover:text-red-500 transition-colors" title="Remover"><Trash2 size={13} /></button>
+                <button onClick={() => { setEditRule(rule); setShowForm(true); }} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title={t("firewall.editTooltip")}><Pencil size={13} /></button>
+                <button onClick={() => { if (window.confirm(t("firewall.confirmDeleteRule"))) deleteRule(rule.id); }} className="p-1 text-muted-foreground hover:text-red-500 transition-colors" title={t("firewall.removeTooltip")}><Trash2 size={13} /></button>
               </>
             )}
           </div>
@@ -675,19 +681,19 @@ function NatTab() {
     <div className="space-y-6">
       {dirty && (
         <div className="flex items-center justify-between p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
-          <span>Existem alterações pendentes que não foram aplicadas ao firewall.</span>
+          <span>{t("firewall.pendingChanges")}</span>
           <Button size="sm" onClick={applyChanges} loading={applying}>
-            <ShieldCheck size={14} /> Aplicar
+            <ShieldCheck size={14} /> {t("common.apply")}
           </Button>
         </div>
       )}
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={fetchNat} loading={loading}>
-          <RefreshCw size={14} /> Refresh
+          <RefreshCw size={14} /> {t("common.refresh")}
         </Button>
         <Button size="sm" onClick={() => { setEditRule(null); setShowForm(true); }}>
-          <Plus size={14} /> Nova Regra NAT
+          <Plus size={14} /> {t("firewall.newNatRule")}
         </Button>
       </div>
 
@@ -701,7 +707,7 @@ function NatTab() {
 
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold">NAT Rules</h2>
+          <h2 className="text-lg font-semibold">{t("firewall.natRulesTitle")}</h2>
         </CardHeader>
         <CardContent className="relative">
           {reordering && (
@@ -730,7 +736,7 @@ function NatTab() {
               {natRules.length === 0 && !loading && (
                 <tr>
                   <td colSpan={9} className="py-6 text-center text-muted-foreground">
-                    Nenhuma regra NAT configurada.
+                    {t("firewall.noNatRules")}
                   </td>
                 </tr>
               )}
@@ -754,6 +760,7 @@ function NatTab() {
 }
 
 function NatForm({ rule, onSave, onCancel }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     source_chain: rule?.source_chain || "implant",
     dest_chain: rule?.dest_chain || "outside",
@@ -833,8 +840,8 @@ function NatForm({ rule, onSave, onCancel }) {
           </div>
         </div>
         <div className="flex gap-2 mt-4">
-          <Button onClick={handleSave} loading={saving} size="sm"><Save size={14} /> {form.id ? "Atualizar" : "Criar"}</Button>
-          <Button variant="outline" size="sm" onClick={onCancel}>Cancelar</Button>
+          <Button onClick={handleSave} loading={saving} size="sm"><Save size={14} /> {form.id ? t("common.update") : t("common.create")}</Button>
+          <Button variant="outline" size="sm" onClick={onCancel}>{t("common.cancel")}</Button>
         </div>
       </CardContent>
     </Card>
