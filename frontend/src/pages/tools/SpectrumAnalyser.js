@@ -387,7 +387,7 @@ export default function SpectrumAnalyser() {
       wsRef.current = null;
       setWsStatus("disconnected");
     };
-  }, [selectedIface]);
+  }, [selectedIface, t]);
 
   const disconnectWs = useCallback(() => {
     if (wsRef.current) {

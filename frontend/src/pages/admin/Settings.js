@@ -38,7 +38,7 @@ function SystemTab() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [t]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -220,7 +220,7 @@ function SSHKeysTab() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchKeys(); }, [fetchKeys]);
   useEffect(() => { if (success) { const t = setTimeout(() => setSuccess(""), 4000); return () => clearTimeout(t); } }, [success]);

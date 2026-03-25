@@ -1035,6 +1035,15 @@
     {
       "hash": "fb16689c998785cb4554ad2b23956712da1f767a",
       "message": "Add i18n translations to all remaining pages"
+    },
+    {
+      "hash": "639cca8347f4fa5d8f5718e59a41f97b03c448be",
+      "message": "Add strongswan and openvpn to image build",
+      "skipped": true
+    },
+    {
+      "hash": "b8900391f9bd9280f847b57cac8c6e7d8843c02d",
+      "message": "Fix ESLint missing 't' dependency in hooks"
     }
   ],
   "last_build_hash": "e58e350554cf421df2dd414ffb68a22281c4c5a6"

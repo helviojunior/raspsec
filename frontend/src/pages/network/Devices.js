@@ -60,7 +60,7 @@ export default function Devices() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { if (success) { const t = setTimeout(() => setSuccess(""), 4000); return () => clearTimeout(t); } }, [success]);
@@ -1151,7 +1151,7 @@ function DonglePolicyTab({ setError, setSuccess }) {
       .then(({ data }) => setPolicy(data))
       .catch(() => setError(t("devices.errorLoadDonglePolicy")))
       .finally(() => setLoading(false));
-  }, [setError]);
+  }, [setError, t]);
 
   const handleSave = async () => {
     setSaving(true);

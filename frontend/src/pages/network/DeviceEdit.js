@@ -94,7 +94,7 @@ export default function DeviceEdit() {
     } finally {
       setLoading(false);
     }
-  }, [name]);
+  }, [name, t]);
 
   useEffect(() => { fetchDevice(); }, [fetchDevice]);
   useEffect(() => { if (success) { const t = setTimeout(() => setSuccess(""), 4000); return () => clearTimeout(t); } }, [success]);
