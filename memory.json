@@ -928,6 +928,10 @@
     {
       "hash": "84a6d69598497e273360d522ec12c284daf35b02",
       "message": "Add GitHub deploy pipeline with auto-versioning and smart commits"
+    },
+    {
+      "hash": "7c77b3400f6615e4a7dc0b52777c3568e0a3be8f",
+      "message": "Fix package.json import to use require for CRA compatibility"
     }
   ]
 }

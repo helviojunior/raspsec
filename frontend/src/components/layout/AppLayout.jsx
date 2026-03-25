@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { version as appVersion } from "../../../package.json";
+
+const appVersion = require("../../../package.json").version;
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import {
