@@ -51,7 +51,7 @@ function LoginForm({ onSuccess }) {
             <Input
               id="username"
               type="text"
-              placeholder="username"
+              placeholder="Usuário"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               error={!!error}

@@ -912,6 +912,10 @@
     {
       "hash": "5692297755ac5f791e18c7ff180857c16ef9f6c1",
       "message": "Update login username placeholder to English"
+    },
+    {
+      "hash": "d6745e5ed223afdb375a25f26ddfc9ed89dd95a8",
+      "message": "Update login username placeholder to Usuário"
     }
   ]
 }
