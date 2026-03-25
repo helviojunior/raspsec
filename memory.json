@@ -996,6 +996,15 @@
     {
       "hash": "741905997240bfc21d10edb5182298b8bd72d7db",
       "message": "Enable screenshots and add 802.1X note to implant chain description"
+    },
+    {
+      "hash": "fab8a2ac35979eedc44113b919425af9dfe8e139",
+      "message": "Add docs/ to scoped paths for GitHub commit replay",
+      "skipped": true
+    },
+    {
+      "hash": "23ab77e1f98539fa84f388146043f73c44e2f5ce",
+      "message": "Images"
     }
   ]
 }
