@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Navigate } from "react-router-dom";
 import { Settings as SettingsIcon, Save, Eye, EyeOff, User, Key, Plus, Trash2, Server } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "contexts/AuthContext";
 import api, { setToken } from "lib/api";
 import { Card, CardContent, CardHeader } from "components/ui/card";
@@ -11,12 +12,13 @@ import { Toggle } from "components/ui/toggle";
 import { cn } from "lib/utils";
 
 const tabs = [
-  { id: "system", label: "Sistema", icon: Server },
-  { id: "profile", label: "Perfil", icon: User },
-  { id: "ssh", label: "SSH Keys", icon: Key },
+  { id: "system", label: "settings.tabs.system", icon: Server },
+  { id: "profile", label: "settings.tabs.profile", icon: User },
+  { id: "ssh", label: "settings.tabs.ssh", icon: Key },
 ];
 
 function SystemTab() {
+  const { t } = useTranslation();
   const [hostname, setHostname] = useState("");
   const [original, setOriginal] = useState("");
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ function SystemTab() {
         setHostname(data.hostname || "");
         setOriginal(data.hostname || "");
       } catch {
-        setError("Erro ao carregar configurações.");
+        setError(t("settings.system.loadError"));
       } finally {
         setLoading(false);
       }
@@ -43,10 +45,10 @@ function SystemTab() {
     setError("");
     try {
       const { data } = await api.put("/api/admin/system/", { hostname });
-      setSuccess(data.detail || "Hostname atualizado.");
+      setSuccess(data.detail || t("settings.system.hostnameUpdated"));
       setOriginal(hostname);
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao salvar.");
+      setError(err.response?.data?.detail || t("settings.system.saveError"));
     } finally {
       setSaving(false);
     }
@@ -56,7 +58,7 @@ function SystemTab() {
     <Card>
       <CardHeader>
         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <Server size={18} /> Sistema
+          <Server size={18} /> {t("settings.system.title")}
         </h2>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -68,7 +70,7 @@ function SystemTab() {
         )}
 
         <div className="space-y-2 max-w-md">
-          <Label>Hostname</Label>
+          <Label>{t("settings.system.hostname")}</Label>
           <Input
             value={hostname}
             onChange={(e) => setHostname(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
@@ -76,13 +78,13 @@ function SystemTab() {
             disabled={loading}
           />
           <p className="text-xs text-muted-foreground">
-            Nome do dispositivo na rede. Apenas letras minúsculas, números e hifens.
+            {t("settings.system.hostnameHint")}
           </p>
         </div>
 
         <div className="flex justify-end">
           <Button onClick={handleSave} loading={saving} disabled={hostname === original || !hostname}>
-            <Save size={14} /> Salvar
+            <Save size={14} /> {t("common.save")}
           </Button>
         </div>
       </CardContent>
@@ -91,6 +93,7 @@ function SystemTab() {
 }
 
 function ProfileTab({ user, loginUser }) {
+  const { t } = useTranslation();
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -108,11 +111,11 @@ function ProfileTab({ user, loginUser }) {
     setSuccess("");
 
     if (newPassword && newPassword !== confirmPassword) {
-      setError("As senhas não coincidem.");
+      setError(t("settings.profile.errorMismatch"));
       return;
     }
     if (newPassword && !currentPassword) {
-      setError("Informe a senha atual para alterar a senha.");
+      setError(t("settings.profile.errorCurrentRequired"));
       return;
     }
 
@@ -126,12 +129,12 @@ function ProfileTab({ user, loginUser }) {
       const { data } = await api.put("/api/auth/me/", payload);
       if (data.token) setToken(data.token);
       if (data.user) loginUser(data.user, data.token || undefined);
-      setSuccess(data.detail || "Perfil atualizado.");
+      setSuccess(data.detail || t("settings.profile.updated"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao atualizar perfil.");
+      setError(err.response?.data?.detail || t("settings.profile.errorUpdate"));
     } finally {
       setSaving(false);
     }
@@ -141,7 +144,7 @@ function ProfileTab({ user, loginUser }) {
     <Card>
       <CardHeader>
         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <User size={18} /> Perfil do Usuário
+          <User size={18} /> {t("settings.profile.title")}
         </h2>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -158,22 +161,22 @@ function ProfileTab({ user, loginUser }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Nome</Label>
-            <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Nome" />
+            <Label>{t("settings.profile.firstName")}</Label>
+            <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t("settings.profile.firstNamePlaceholder")} />
           </div>
           <div className="space-y-2">
-            <Label>Sobrenome</Label>
-            <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Sobrenome" />
+            <Label>{t("settings.profile.lastName")}</Label>
+            <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t("settings.profile.lastNamePlaceholder")} />
           </div>
         </div>
 
         <div className="border-t border-border pt-6">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase mb-4">Alterar Senha</h3>
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase mb-4">{t("settings.profile.changePassword")}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { id: "cur", label: "Senha Atual", value: currentPassword, set: setCurrentPassword, show: showCurrent, toggle: () => setShowCurrent(!showCurrent) },
-              { id: "new", label: "Nova Senha", value: newPassword, set: setNewPassword, show: showNew, toggle: () => setShowNew(!showNew) },
-              { id: "conf", label: "Confirmar", value: confirmPassword, set: setConfirmPassword, show: showConfirm, toggle: () => setShowConfirm(!showConfirm) },
+              { id: "cur", label: t("settings.profile.currentPassword"), value: currentPassword, set: setCurrentPassword, show: showCurrent, toggle: () => setShowCurrent(!showCurrent) },
+              { id: "new", label: t("settings.profile.newPassword"), value: newPassword, set: setNewPassword, show: showNew, toggle: () => setShowNew(!showNew) },
+              { id: "conf", label: t("settings.profile.confirmPassword"), value: confirmPassword, set: setConfirmPassword, show: showConfirm, toggle: () => setShowConfirm(!showConfirm) },
             ].map((f) => (
               <div key={f.id} className="space-y-2">
                 <Label>{f.label}</Label>
@@ -186,11 +189,11 @@ function ProfileTab({ user, loginUser }) {
               </div>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground mt-2">Deixe em branco para manter a senha atual.</p>
+          <p className="text-xs text-muted-foreground mt-2">{t("settings.profile.passwordHint")}</p>
         </div>
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} loading={saving}><Save size={14} /> Salvar</Button>
+          <Button onClick={handleSave} loading={saving}><Save size={14} /> {t("common.save")}</Button>
         </div>
       </CardContent>
     </Card>
@@ -198,6 +201,7 @@ function ProfileTab({ user, loginUser }) {
 }
 
 function SSHKeysTab() {
+  const { t } = useTranslation();
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
@@ -212,7 +216,7 @@ function SSHKeysTab() {
       const { data } = await api.get("/api/admin/ssh-keys/");
       setKeys(data.keys || []);
     } catch {
-      setError("Erro ao carregar chaves SSH.");
+      setError(t("settings.ssh.loadError"));
     } finally {
       setLoading(false);
     }
@@ -231,7 +235,7 @@ function SSHKeysTab() {
       setKeyValue("");
       fetchKeys();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao adicionar chave.");
+      setError(err.response?.data?.detail || t("settings.ssh.addError"));
     } finally {
       setSaving(false);
     }
@@ -243,13 +247,13 @@ function SSHKeysTab() {
   };
 
   const deleteKey = async (index) => {
-    if (!window.confirm("Tem certeza que deseja remover esta chave SSH?")) return;
+    if (!window.confirm(t("settings.ssh.deleteConfirm"))) return;
     try {
       const { data } = await api.delete("/api/admin/ssh-keys/", { data: { index } });
       setSuccess(data.detail);
       fetchKeys();
     } catch (err) {
-      setError(err.response?.data?.detail || "Erro ao remover chave.");
+      setError(err.response?.data?.detail || t("settings.ssh.deleteError"));
     }
   };
 
@@ -271,21 +275,21 @@ function SSHKeysTab() {
       <Card>
         <CardHeader>
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Plus size={18} /> Adicionar Chave SSH
+            <Plus size={18} /> {t("settings.ssh.addTitle")}
           </h2>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div className="space-y-2">
-              <Label>Nome</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: MacBook Pro" />
+              <Label>{t("settings.ssh.name")}</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("settings.ssh.namePlaceholder")} />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label>Chave Pública</Label>
-              <Input value={keyValue} onChange={(e) => setKeyValue(e.target.value)} placeholder="ssh-ed25519 AAAA..." className="font-mono text-xs" />
+              <Label>{t("settings.ssh.publicKey")}</Label>
+              <Input value={keyValue} onChange={(e) => setKeyValue(e.target.value)} placeholder={t("settings.ssh.publicKeyPlaceholder")} className="font-mono text-xs" />
             </div>
             <Button onClick={addKey} loading={saving} disabled={!name || !keyValue}>
-              <Plus size={14} /> Adicionar
+              <Plus size={14} /> {t("settings.ssh.add")}
             </Button>
           </div>
         </CardContent>
@@ -295,14 +299,14 @@ function SSHKeysTab() {
       <Card>
         <CardHeader>
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Key size={18} /> Chaves Cadastradas
+            <Key size={18} /> {t("settings.ssh.registeredTitle")}
           </h2>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-muted-foreground text-sm py-4 text-center">Carregando...</p>
+            <p className="text-muted-foreground text-sm py-4 text-center">{t("settings.ssh.loading")}</p>
           ) : keys.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-4 text-center">Nenhuma chave SSH cadastrada.</p>
+            <p className="text-muted-foreground text-sm py-4 text-center">{t("settings.ssh.empty")}</p>
           ) : (
             <div className="space-y-2">
               {keys.map((k, i) => (
@@ -324,7 +328,7 @@ function SSHKeysTab() {
                     <button
                       onClick={() => deleteKey(i)}
                       className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
-                      title="Remover"
+                      title={t("settings.ssh.remove")}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -340,6 +344,7 @@ function SSHKeysTab() {
 }
 
 export default function Settings() {
+  const { t } = useTranslation();
   const { user, loginUser } = useAuth();
   const [activeTab, setActiveTab] = useState("system");
 
@@ -350,10 +355,10 @@ export default function Settings() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Configurações Gerais</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("settings.title")}</h1>
         <p className="text-muted-foreground mt-2 flex items-center gap-2">
           <SettingsIcon className="w-4 h-4" />
-          Configure os parâmetros gerais do sistema
+          {t("settings.subtitle")}
         </p>
       </div>
 
@@ -371,7 +376,7 @@ export default function Settings() {
             )}
           >
             <tab.icon size={16} />
-            {tab.label}
+            {t(tab.label)}
           </button>
         ))}
       </div>

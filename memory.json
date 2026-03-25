@@ -1017,6 +1017,10 @@
     {
       "hash": "e58e350554cf421df2dd414ffb68a22281c4c5a6",
       "message": "Track last_build_hash in memory.json and fix i18next peer deps"
+    },
+    {
+      "hash": "7bc1d09eb9c3ab9f05369418003e0e0347300592",
+      "message": "Add i18n translations for Settings page (system, profile, SSH keys)"
     }
   ],
   "last_build_hash": "e58e350554cf421df2dd414ffb68a22281c4c5a6"
