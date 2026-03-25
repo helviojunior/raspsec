@@ -900,6 +900,10 @@
     {
       "hash": "b20ee1a7f2effc814fc45ccf95ac971d30993567",
       "message": "Adjust dashboard gauge grid to 3 columns to fill page width"
+    },
+    {
+      "hash": "acb0f8182a221b4735c21208633beb928e837a9e",
+      "message": "Fix left-side trunk lines using inline styles to avoid CSS specificity issues"
     }
   ]
 }

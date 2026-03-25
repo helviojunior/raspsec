@@ -40,10 +40,12 @@ const CHAIN_COLORS = { implant: "text-amber-400", outside: "text-red-400", inter
 const dashedV = { backgroundImage: "repeating-linear-gradient(to bottom, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)" };
 const dashedH = (active) => active ? {} : { backgroundImage: "repeating-linear-gradient(to right, rgb(63,63,70) 0px, rgb(63,63,70) 6px, transparent 6px, transparent 10px)", backgroundColor: "transparent" };
 
+const trunkStyle = (side, active) => active
+  ? { [side]: 0, backgroundColor: "rgb(16,185,129)" }
+  : { [side]: 0, ...dashedV };
+
 const TreeBranchLeft = ({ active, isFirst, isLast, isOnly, prevActive, nextActive }) => {
   const hColor = active ? "bg-emerald-500" : "bg-zinc-700";
-  const topActive = active && prevActive;
-  const bottomActive = active && nextActive;
   return (
     <div className="relative w-12 self-stretch flex items-center">
       {/* Horizontal branch */}
@@ -51,13 +53,13 @@ const TreeBranchLeft = ({ active, isFirst, isLast, isOnly, prevActive, nextActiv
         style={dashedH(active)} />
       {/* Vertical trunk on right edge — top half */}
       {!isOnly && !isFirst && (
-        <div className={`absolute w-0.5 top-0 bottom-1/2 ${topActive ? "bg-emerald-500" : ""}`}
-          style={{ right: 0, ...(topActive ? {} : dashedV) }} />
+        <div className="absolute w-0.5 top-0 bottom-1/2"
+          style={trunkStyle("right", active && prevActive)} />
       )}
       {/* Vertical trunk on right edge — bottom half */}
       {!isOnly && !isLast && (
-        <div className={`absolute w-0.5 top-1/2 bottom-0 ${bottomActive ? "bg-emerald-500" : ""}`}
-          style={{ right: 0, ...(bottomActive ? {} : dashedV) }} />
+        <div className="absolute w-0.5 top-1/2 bottom-0"
+          style={trunkStyle("right", active && nextActive)} />
       )}
     </div>
   );
@@ -74,8 +76,6 @@ const TreeArmLeft = ({ anyActive }) => {
 
 const TreeBranchRight = ({ active, isFirst, isLast, isOnly, prevActive, nextActive }) => {
   const hColor = active ? "bg-emerald-500" : "bg-zinc-700";
-  const topActive = active && prevActive;
-  const bottomActive = active && nextActive;
   return (
     <div className="relative w-12 self-stretch flex items-center">
       {/* Horizontal branch */}
@@ -83,13 +83,13 @@ const TreeBranchRight = ({ active, isFirst, isLast, isOnly, prevActive, nextActi
         style={dashedH(active)} />
       {/* Vertical trunk on left edge — top half */}
       {!isOnly && !isFirst && (
-        <div className={`absolute w-0.5 top-0 bottom-1/2 ${topActive ? "bg-emerald-500" : ""}`}
-          style={{ left: 0, ...(topActive ? {} : dashedV) }} />
+        <div className="absolute w-0.5 top-0 bottom-1/2"
+          style={trunkStyle("left", active && prevActive)} />
       )}
       {/* Vertical trunk on left edge — bottom half */}
       {!isOnly && !isLast && (
-        <div className={`absolute w-0.5 top-1/2 bottom-0 ${bottomActive ? "bg-emerald-500" : ""}`}
-          style={{ left: 0, ...(bottomActive ? {} : dashedV) }} />
+        <div className="absolute w-0.5 top-1/2 bottom-0"
+          style={trunkStyle("left", active && nextActive)} />
       )}
     </div>
   );
