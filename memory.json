@@ -971,6 +971,15 @@
       "hash": "1695591597568aac8a4ecaf83414b7a2a60ee113",
       "message": "Update build.sh to match Jenkinsfile stages including kernel and GitHub deploy",
       "skipped": true
+    },
+    {
+      "hash": "46ce6365748bbf066ed5220e459452129f57747b",
+      "message": "Preserve VERSION in settings.py across commit replay to avoid false diffs",
+      "skipped": true
+    },
+    {
+      "hash": "a5272bcebda1a5c7bfd7ca34e798c302421c6918",
+      "message": "Add README.md and skip release when only non-build files change"
     }
   ]
 }
