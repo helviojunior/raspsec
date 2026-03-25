@@ -55,15 +55,15 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-button {
+button:not(.btn-icon) {
   transition: all 0.2s ease;
 }
 
-button:hover {
+button:not(.btn-icon):hover {
   transform: translateY(-1px);
 }
 
-button:active {
+button:not(.btn-icon):active {
   transform: translateY(0);
 }
 

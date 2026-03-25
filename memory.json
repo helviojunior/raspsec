@@ -916,6 +916,10 @@
     {
       "hash": "d6745e5ed223afdb375a25f26ddfc9ed89dd95a8",
       "message": "Update login username placeholder to Usuário"
+    },
+    {
+      "hash": "99160de518a0d7c81dc240d8d8ecc9cc01e47810",
+      "message": "Fix password eye icon shifting on hover due to global button transform"
     }
   ]
 }
