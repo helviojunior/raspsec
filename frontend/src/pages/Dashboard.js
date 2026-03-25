@@ -271,7 +271,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── System Stats Gauges ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
         <GaugeCard
           title="Uso de CPU"
           percent={system.cpu_utilization || 0}
