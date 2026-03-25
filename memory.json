@@ -1048,6 +1048,11 @@
     {
       "hash": "2c7f2a894c74e9d1281c94a20fa6eaafba3959be",
       "message": "Update dashboard, firewall, login, settings and wifi screenshots"
+    },
+    {
+      "hash": "4dcd2edf7507e4e862719f8375bf1b9edc20fc52",
+      "message": "Add strongswan swanctl and VICI packages to image build",
+      "skipped": true
     }
   ],
   "last_build_hash": "2c7f2a894c74e9d1281c94a20fa6eaafba3959be"
