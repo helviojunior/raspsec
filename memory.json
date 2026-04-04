@@ -1058,6 +1058,10 @@
       "hash": "8e5f947edfcbb92dcc354ed94b3d90e95eb4611e",
       "message": "Include all commits in release notes, not just scoped ones",
       "skipped": true
+    },
+    {
+      "hash": "3f3ad2a87827618cfa858c5ab1bc71093c1daae0",
+      "message": "Fix API 500 errors during startup and add proper error handlers"
     }
   ],
   "last_build_hash": "8e5f947edfcbb92dcc354ed94b3d90e95eb4611e"

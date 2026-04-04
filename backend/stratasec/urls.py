@@ -29,8 +29,8 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-#Custom Handlers
+# Custom Handlers
+handler400 = 'raspsec.views.handlers.handler400'
+handler403 = 'raspsec.views.handlers.handler403'
 handler404 = 'raspsec.views.handlers.handler404'
 handler500 = 'raspsec.views.handlers.handler500'
-handler403 = 'raspsec.views.handlers.handler500'
-handler400 = 'raspsec.views.handlers.handler500'

@@ -91,21 +91,34 @@ def on_startup():
         # Ensure downloads directory structure
         _ensure_downloads_dir()
 
-        # Apply network configurations
+        # Apply network configurations in a background thread so uWSGI
+        # workers remain available to serve API requests (e.g. /api/health/)
+        # during the potentially long network setup process.
+        import threading
+        threading.Thread(
+            target=_apply_network_configs_background,
+            daemon=True,
+        ).start()
+
+        log.info("Startup ok (network config running in background).")
+    except Exception:
+        log.exception("Fail running startup tasks.")
+
+
+def _apply_network_configs_background():
+    """Run network configs + watchdog in a background thread."""
+    try:
         _apply_network_configs()
 
-        # Start watchdog cron
         _start_watchdog()
-
-        # Run watchdog immediately so services are healthy before first cron tick
         _run_watchdog_now()
 
         from django.core.cache import cache
         cache.set("app:healthy", True, timeout=60)
 
-        log.info("Startup ok.")
+        log.info("Background network startup complete.")
     except Exception:
-        log.exception("Fail running startup tasks.")
+        log.exception("Fail running background network startup.")
 
 
 DEFAULT_SERVICES = [

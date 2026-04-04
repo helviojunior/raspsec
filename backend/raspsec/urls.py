@@ -148,3 +148,9 @@ urlpatterns = [
     path('api/services/sliver/', SliverConfigView.as_view(), name='sliver-config'),
 
 ]
+
+# Error handlers (effective in ROOT_URLCONF, kept here for reference)
+handler400 = 'raspsec.views.handlers.handler400'
+handler403 = 'raspsec.views.handlers.handler403'
+handler404 = 'raspsec.views.handlers.handler404'
+handler500 = 'raspsec.views.handlers.handler500'
