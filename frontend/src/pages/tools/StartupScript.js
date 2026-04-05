@@ -85,8 +85,8 @@ export default function StartupScript() {
 
   return (
     <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">{t("startupScript.title")}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{t("startupScript.title")}</h1>
         <div className="flex items-center gap-3">
           {isActive ? (
             <Button variant="destructive" size="sm" onClick={stopScript}>
@@ -121,7 +121,7 @@ export default function StartupScript() {
       {/* Enable toggle + status */}
       <Card className="mb-4">
         <CardContent className="pt-5 pb-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <div className={cn(
                 "p-2.5 rounded-lg",

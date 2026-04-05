@@ -30,14 +30,14 @@ const typeIcon = {
 };
 
 const SectionHeader = ({ children }) => (
-  <div className="bg-muted/50 -mx-6 px-6 py-2 border-y border-border mb-4">
+  <div className="bg-muted/50 -mx-3 sm:-mx-6 px-3 sm:px-6 py-2 border-y border-border mb-4">
     <h3 className="text-sm font-semibold text-foreground">{children}</h3>
   </div>
 );
 
 const FieldRow = ({ label, help, children }) => (
-  <div className="flex items-start gap-4 py-3 border-b border-border/30 last:border-0">
-    <div className="w-40 shrink-0 pt-1.5">
+  <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4 py-3 border-b border-border/30 last:border-0">
+    <div className="sm:w-40 shrink-0 sm:pt-1.5">
       <Label className="text-sm font-medium">{label}</Label>
     </div>
     <div className="flex-1 min-w-0">
@@ -134,16 +134,16 @@ export default function DeviceEdit() {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button variant="outline" size="sm" onClick={() => navigate("/network/devices")}>
             <ArrowLeft size={14} />
           </Button>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">{t("devices.tabs.interfaces")} /</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold">{t("devices.tabs.interfaces")} /</h1>
             <div className="flex items-center gap-2">
               <Icon size={20} className={iface.up ? "text-emerald-400" : "text-muted-foreground"} />
-              <span className="text-2xl font-bold text-primary">{name}</span>
+              <span className="text-xl sm:text-2xl font-bold text-primary">{name}</span>
             </div>
           </div>
         </div>
@@ -513,7 +513,7 @@ export default function DeviceEdit() {
           )}
 
           {/* Save */}
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mt-6 pt-4 border-t border-border">
             <div className="flex items-center gap-3">
               <Button onClick={handleSave} loading={saving}>
                 <Save size={14} /> {t("common.save")}

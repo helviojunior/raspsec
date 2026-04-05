@@ -1062,6 +1062,20 @@
     {
       "hash": "3f3ad2a87827618cfa858c5ab1bc71093c1daae0",
       "message": "Fix API 500 errors during startup and add proper error handlers"
+    },
+    {
+      "hash": "30b03ce6575b235bdb956f685f4707ddaa401b5e",
+      "message": "Fix rtl8812au build failure caused by kernel CONFIG_WERROR",
+      "skipped": true
+    },
+    {
+      "hash": "cc21b2733f1790e841645dbc562938a7a6c27c56",
+      "message": "Use KCFLAGS instead of EXTRA_CFLAGS for rtl8812au -Wno-error",
+      "skipped": true
+    },
+    {
+      "hash": "cf10f17dee36ef6d21eb97544a3ea682582edca3",
+      "message": "Make entire frontend responsive for mobile devices"
     }
   ],
   "last_build_hash": "8e5f947edfcbb92dcc354ed94b3d90e95eb4611e"

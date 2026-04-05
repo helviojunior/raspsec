@@ -176,14 +176,15 @@ export default function Files() {
               {t("files.emptyDirectory")}
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[400px]">
               <thead>
                 <tr className="border-b border-border text-muted-foreground text-left text-xs">
-                  <th className="px-4 py-2.5 font-medium w-10"></th>
+                  <th className="px-2 sm:px-4 py-2.5 font-medium w-10"></th>
                   <th className="px-2 py-2.5 font-medium">{t("files.name")}</th>
                   <th className="px-2 py-2.5 font-medium text-right w-24">{t("files.size")}</th>
-                  <th className="px-2 py-2.5 font-medium text-right w-40">{t("files.modified")}</th>
-                  <th className="px-4 py-2.5 font-medium text-right w-20">{t("files.actions")}</th>
+                  <th className="px-2 py-2.5 font-medium text-right w-40 hidden sm:table-cell">{t("files.modified")}</th>
+                  <th className="px-2 sm:px-4 py-2.5 font-medium text-right w-20">{t("files.actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -192,10 +193,10 @@ export default function Files() {
                     onClick={goUp}
                     className="border-b border-border/50 hover:bg-accent transition-colors cursor-pointer"
                   >
-                    <td className="px-4 py-2 text-muted-foreground"><ArrowLeft size={16} /></td>
+                    <td className="px-2 sm:px-4 py-2 text-muted-foreground"><ArrowLeft size={16} /></td>
                     <td className="px-2 py-2 text-muted-foreground">..</td>
                     <td></td>
-                    <td></td>
+                    <td className="hidden sm:table-cell"></td>
                     <td></td>
                   </tr>
                 )}
@@ -238,12 +239,12 @@ export default function Files() {
                       <td className="px-2 py-2 text-right text-xs text-muted-foreground font-mono">
                         {formatSize(entry.size)}
                       </td>
-                      <td className="px-2 py-2 text-right text-xs text-muted-foreground">
+                      <td className="px-2 py-2 text-right text-xs text-muted-foreground hidden sm:table-cell">
                         {formatDate(entry.modified)}
                       </td>
-                      <td className="px-4 py-2 text-right">
+                      <td className="px-2 sm:px-4 py-2 text-right">
                         {!entry.is_dir && (
-                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-end gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => downloadFile(entry.name)}
                               className="p-1 text-muted-foreground hover:text-primary transition-colors"
@@ -266,6 +267,7 @@ export default function Files() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </CardContent>
       </Card>

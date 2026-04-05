@@ -406,7 +406,8 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
           </div>
         )}
 
-        <table className="w-full text-sm" ref={tableRef}>
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[600px]" ref={tableRef}>
           <thead>
             <tr className="border-b border-border text-muted-foreground">
               <th className="w-8"></th>
@@ -430,6 +431,7 @@ function RulesChainTable({ chain, chainRules, allRules, onToggle, onEdit, onDele
             )}
           </tbody>
         </table>
+        </div>
 
         {isDragging && dragState && userRules[dragState.origIndex] && createPortal(
           <div style={ghostStyle}>
@@ -479,7 +481,7 @@ function RuleForm({ rule, onSave, onCancel }) {
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Chain</Label>
             <select value={form.chain} onChange={(e) => setForm({ ...form, chain: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">
@@ -716,7 +718,8 @@ function NatTab() {
             </div>
           )}
 
-          <table className="w-full text-sm" ref={tableRef}>
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[700px]" ref={tableRef}>
             <thead>
               <tr className="border-b border-border text-muted-foreground">
                 <th className="w-8"></th>
@@ -742,6 +745,7 @@ function NatTab() {
               )}
             </tbody>
           </table>
+          </div>
 
           {isDragging && dragState && userNatRules[dragState.origIndex] && createPortal(
             <div style={ghostStyle}>
@@ -793,7 +797,7 @@ function NatForm({ rule, onSave, onCancel }) {
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Source Chain</Label>
             <select value={form.source_chain} onChange={(e) => setForm({ ...form, source_chain: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">

@@ -279,7 +279,7 @@ function SSHKeysTab() {
           </h2>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
             <div className="space-y-2">
               <Label>{t("settings.ssh.name")}</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("settings.ssh.namePlaceholder")} />

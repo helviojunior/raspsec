@@ -25,6 +25,8 @@ import {
   Plug,
   Radio,
   Route,
+  Menu,
+  X,
 } from "lucide-react";
 import { useAuth } from "contexts/AuthContext";
 import { cn } from "lib/utils";
@@ -123,6 +125,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
   const [hoveredMenu, setHoveredMenu] = useState(null);
   const [flyoutPosition, setFlyoutPosition] = useState({ top: 0 });
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const hoverTimeoutRef = useRef(null);
   const location = useLocation();
 
@@ -150,7 +153,12 @@ export default function AppLayout({ darkMode, setDarkMode }) {
     if (!sidebarCollapsed) setHoveredMenu(null);
   }, [sidebarCollapsed]);
 
-  const effectiveCollapsed = isSmallScreen || sidebarCollapsed;
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  const effectiveCollapsed = (isSmallScreen && !mobileMenuOpen) || (!isSmallScreen && sidebarCollapsed);
 
   const toggleMenu = (menuId) => {
     if (!effectiveCollapsed) {
@@ -179,6 +187,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
     if (action === "webshell") {
       setShellOpen(true);
     }
+    setMobileMenuOpen(false);
   };
 
   const renderMenuItem = (item) => {
@@ -354,23 +363,37 @@ export default function AppLayout({ darkMode, setDarkMode }) {
     <div className="flex flex-col h-screen overflow-hidden bg-background">
       {/* Top Header */}
       <header className="flex items-center justify-between bg-card border-b border-border z-50">
-        <div className="flex items-center justify-center px-4 py-3 border-r border-border w-52">
-          <img
-            src="/assets/raspsec_light.png"
-            alt="RaspSec"
-            className="h-7 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]"
-          />
+        <div className="flex items-center gap-2">
+          {/* Mobile hamburger */}
+          {isSmallScreen && (
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-3 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          )}
+          <div className={cn(
+            "flex items-center justify-center px-4 py-3",
+            !isSmallScreen && "border-r border-border w-52"
+          )}>
+            <img
+              src="/assets/raspsec_light.png"
+              alt="RaspSec"
+              className="h-7 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]"
+            />
+          </div>
         </div>
 
-        <div className="flex items-center gap-4 flex-1 justify-end px-6 py-3">
-          {/* User info */}
-          <div className="text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end px-3 sm:px-6 py-3">
+          {/* User info - hidden on very small screens */}
+          <div className="text-sm text-muted-foreground hidden sm:block">
             <span className="font-medium text-foreground">
               {user?.first_name || user?.username}
             </span>
           </div>
 
-          <div className="h-6 w-px bg-border" />
+          <div className="h-6 w-px bg-border hidden sm:block" />
 
           {/* Language Toggle */}
           <button
@@ -381,7 +404,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
             {i18n.language.startsWith("pt") ? "PT" : "EN"}
           </button>
 
-          <div className="h-6 w-px bg-border" />
+          <div className="h-6 w-px bg-border hidden sm:block" />
 
           {/* Dark Mode Toggle */}
           <button
@@ -391,7 +414,7 @@ export default function AppLayout({ darkMode, setDarkMode }) {
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
-          <div className="h-6 w-px bg-border" />
+          <div className="h-6 w-px bg-border hidden sm:block" />
 
           {/* Logout */}
           <button
@@ -399,25 +422,38 @@ export default function AppLayout({ darkMode, setDarkMode }) {
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <LogOut size={16} />
-            <span>{t("common.logout")}</span>
+            <span className="hidden sm:inline">{t("common.logout")}</span>
           </button>
         </div>
       </header>
 
       {/* Main container - Sidebar + Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Mobile sidebar overlay backdrop */}
+        {isSmallScreen && mobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
         <aside
           className={cn(
-            "relative bg-card border-r border-border transition-all duration-300 ease-in-out flex-shrink-0",
-            effectiveCollapsed ? "w-16" : "w-52"
+            "bg-card border-r border-border transition-all duration-300 ease-in-out flex-shrink-0",
+            isSmallScreen
+              ? cn(
+                  "fixed top-0 left-0 h-full z-50 w-64 pt-[57px]",
+                  mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+                )
+              : cn("relative", effectiveCollapsed ? "w-16" : "w-52")
           )}
         >
           <div className="flex flex-col h-full">
             <nav
               className={cn(
                 "flex-1 space-y-0.5 overflow-y-auto scrollbar-thin pt-2",
-                effectiveCollapsed ? "px-2" : "px-0"
+                !isSmallScreen && effectiveCollapsed ? "px-2" : "px-0"
               )}
             >
               {menuStructure.map(renderMenuItem)}
@@ -427,13 +463,13 @@ export default function AppLayout({ darkMode, setDarkMode }) {
             <div
               className={cn(
                 "border-t border-border transition-all duration-300 flex items-end relative",
-                isSmallScreen ? "hidden" : "flex",
-                effectiveCollapsed
+                isSmallScreen ? "p-3 justify-between min-h-[70px]" : "flex",
+                !isSmallScreen && effectiveCollapsed
                   ? "p-2 justify-center min-h-[60px]"
-                  : "p-3 justify-between min-h-[70px]"
+                  : !isSmallScreen && "p-3 justify-between min-h-[70px]"
               )}
             >
-              {!effectiveCollapsed && (
+              {(isSmallScreen || !effectiveCollapsed) && (
                 <div className="text-xs text-muted-foreground">
                   <div className="text-[11px] font-medium">RaspSec v{appVersion}</div>
                   <div className="text-[10px] text-muted-foreground/60">
@@ -442,28 +478,30 @@ export default function AppLayout({ darkMode, setDarkMode }) {
                 </div>
               )}
 
-              <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className={cn(
-                  "flex items-center justify-center transition-all duration-200",
-                  effectiveCollapsed
-                    ? "w-10 h-10 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50 shadow-sm"
-                    : "absolute right-0 bottom-[10px] w-[35px] h-[45px] rounded-l-lg bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {effectiveCollapsed ? (
-                  <ChevronRight size={18} />
-                ) : (
-                  <ChevronLeft size={20} />
-                )}
-              </button>
+              {!isSmallScreen && (
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className={cn(
+                    "flex items-center justify-center transition-all duration-200",
+                    effectiveCollapsed
+                      ? "w-10 h-10 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50 shadow-sm"
+                      : "absolute right-0 bottom-[10px] w-[35px] h-[45px] rounded-l-lg bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {effectiveCollapsed ? (
+                    <ChevronRight size={18} />
+                  ) : (
+                    <ChevronLeft size={20} />
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </aside>
 
         {/* Page Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <main className="flex-1 overflow-y-auto p-6 bg-background relative"
+          <main className="flex-1 overflow-y-auto p-3 sm:p-6 bg-background relative"
             style={shellOpen ? { paddingBottom: undefined } : undefined}
           >
             <Outlet />

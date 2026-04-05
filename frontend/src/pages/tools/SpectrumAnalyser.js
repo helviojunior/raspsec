@@ -64,7 +64,7 @@ function SpectrumChart({ networks, band, highlightBssid, onNetworkClick }) {
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width } = entry.contentRect;
-        setDimensions({ width: Math.max(600, width), height: Math.max(300, Math.min(500, width * 0.45)) });
+        setDimensions({ width: Math.max(320, width), height: Math.max(250, Math.min(500, width * 0.5)) });
       }
     });
     ro.observe(container);

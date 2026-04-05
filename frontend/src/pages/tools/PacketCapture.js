@@ -164,7 +164,7 @@ export default function PacketCapture() {
       <Card>
         <CardContent className="pt-5">
           <div className="flex items-end gap-4 flex-wrap">
-            <div className="w-40">
+            <div className="w-full sm:w-40">
               <Label>{t("packetCapture.interface")}</Label>
               <select
                 value={selectedIface}
@@ -187,7 +187,7 @@ export default function PacketCapture() {
                 disabled={capturing}
               />
             </div>
-            <div className="w-32">
+            <div className="w-full sm:w-32">
               <Label>{t("packetCapture.maxPackets")} <span className="text-muted-foreground">({t("packetCapture.maxPacketsUnlimited")})</span></Label>
               <Input
                 type="number"

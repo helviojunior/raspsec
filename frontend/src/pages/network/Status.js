@@ -190,7 +190,7 @@ function StatusTab() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
                   <th className="text-left py-3 px-4 font-medium">{t("networkStatus.destination")}</th>

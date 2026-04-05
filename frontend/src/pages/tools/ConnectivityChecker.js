@@ -51,13 +51,13 @@ export default function ConnectivityChecker() {
     <div className="animate-fade-in">
       <h1 className="text-2xl font-bold tracking-tight mb-6">{t("connectivity.title")}</h1>
 
-      <div className="flex gap-1 mb-6 border-b border-border">
+      <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto scrollbar-thin">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
+              "flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap",
               activeTab === tab.id
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -140,7 +140,7 @@ function PingTab() {
                 onKeyDown={(e) => e.key === "Enter" && run()}
               />
             </div>
-            <div className="w-24">
+            <div className="w-full sm:w-24">
               <Label>{t("connectivity.count")}</Label>
               <Input
                 type="number" min="1" max="20"
@@ -148,7 +148,7 @@ function PingTab() {
                 onChange={(e) => setCount(parseInt(e.target.value) || 4)}
               />
             </div>
-            <div className="w-32">
+            <div className="w-full sm:w-32">
               <Label>{t("common.interface")} <span className="text-muted-foreground">({t("common.optional")})</span></Label>
               <select
                 value={iface}
@@ -209,7 +209,7 @@ function DnsCheckTab() {
                 onKeyDown={(e) => e.key === "Enter" && run()}
               />
             </div>
-            <div className="w-28">
+            <div className="w-full sm:w-28">
               <Label>{t("connectivity.type")}</Label>
               <select
                 value={type}
@@ -219,7 +219,7 @@ function DnsCheckTab() {
                 {DNS_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
-            <div className="w-40">
+            <div className="w-full sm:w-40">
               <Label>{t("connectivity.dnsServer")} <span className="text-muted-foreground">({t("common.optional")})</span></Label>
               <Input
                 value={server}
@@ -276,7 +276,7 @@ function HttpCheckTab() {
                 onKeyDown={(e) => e.key === "Enter" && run()}
               />
             </div>
-            <div className="w-28">
+            <div className="w-full sm:w-28">
               <Label>{t("connectivity.method")}</Label>
               <select
                 value={method}
@@ -336,7 +336,7 @@ function TracerouteTab() {
                 onKeyDown={(e) => e.key === "Enter" && run()}
               />
             </div>
-            <div className="w-28">
+            <div className="w-full sm:w-28">
               <Label>{t("connectivity.maxHops")}</Label>
               <Input
                 type="number" min="1" max="30"

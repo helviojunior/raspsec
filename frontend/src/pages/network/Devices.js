@@ -113,13 +113,13 @@ export default function Devices() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-border">
+      <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto scrollbar-thin">
         {tabDefs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
+              "flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap",
               activeTab === tab.id
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -202,7 +202,7 @@ function InterfacesTab({ interfaces }) {
                     <Icon size={20} />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-base font-semibold text-foreground">{iface.name}</h3>
                       <span className={cn(
                         "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded",
@@ -248,7 +248,7 @@ function InterfacesTab({ interfaces }) {
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="mt-1 flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap">
                       <span>IP: <span className="text-foreground font-mono">{iface.ip || "—"}</span></span>
                       <span>MAC: <span className="text-foreground font-mono">{iface.mac || "—"}</span></span>
                     </div>
@@ -278,7 +278,7 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
           </h2>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-end">
             <div>
               <Label>{t("devices.parentInterface")}</Label>
               <select
@@ -333,7 +333,8 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
       ) : (
         <Card>
           <CardContent className="pt-4 pb-2">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[500px]">
               <thead>
                 <tr className="border-b border-border text-muted-foreground text-left">
                   <th className="pb-2 font-medium">{t("devices.vlanInterface")}</th>
@@ -373,6 +374,7 @@ function VlansTab({ vlans, interfaces, vlanForm, setVlanForm, addVlan, removeVla
                 })}
               </tbody>
             </table>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -469,7 +471,7 @@ function BridgeTab({ interfaces, bridge, setError, setSuccess, fetchData }) {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 items-end">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end">
                     <div>
                       <Label>{t("devices.interface1")}</Label>
                       <select
@@ -827,7 +829,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
           <CardContent>
             <div className="space-y-4 max-w-xl">
               {/* SSID */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>{t("devices.ssid")}</Label>
                   <Input
@@ -863,7 +865,7 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
 
               {/* Identity (802.1X) */}
               {needsIdentity && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>{t("devices.identity")}</Label>
                     <Input
@@ -1078,9 +1080,9 @@ function WifiClientTab({ wirelessInterfaces, setError, setSuccess }) {
               {profiles.map((p, idx) => (
                 <div
                   key={`${p.interface}-${p.ssid}-${idx}`}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-accent transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2.5 rounded-md hover:bg-accent transition-colors"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <Wifi size={14} className="text-muted-foreground" />
                     <div>
                       <span className="text-sm font-medium text-foreground">{p.ssid}</span>
