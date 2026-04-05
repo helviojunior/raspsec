@@ -366,12 +366,12 @@ class FirewallService:
                     fwd_cmd += " -j ACCEPT"
                     Exec.execute(fwd_cmd, raise_error=False)
 
-                # POSTROUTING SNAT: masquerade the source IP so return traffic routes back
+                # POSTROUTING MASQUERADE: use outgoing interface IP so return traffic routes back
                 if fwd.masquerade_source:
                     snat_cmd = f"sudo /usr/sbin/iptables -t nat -A POSTROUTING"
                     snat_cmd += f" -d {fwd.forward_ip} -p {proto}"
                     snat_cmd += f" -m multiport --dports {fwd.forward_port or fwd.ports}"
-                    snat_cmd += f" -j SNAT --to-source {fwd.dest_ip}"
+                    snat_cmd += " -j MASQUERADE"
                     Exec.execute(snat_cmd, raise_error=False)
 
         # ── Save rules persistently ──
