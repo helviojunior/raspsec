@@ -1076,6 +1076,15 @@
     {
       "hash": "cf10f17dee36ef6d21eb97544a3ea682582edca3",
       "message": "Make entire frontend responsive for mobile devices"
+    },
+    {
+      "hash": "8b1ee2fca2c414ba34696ece7257ce3729d4111b",
+      "message": "Inject app version at build time instead of using static 0.1.0",
+      "skipped": true
+    },
+    {
+      "hash": "1487b4e0f6b3578d38560344af8e03f38c92158b",
+      "message": "Add new screenshots"
     }
   ],
   "last_build_hash": "cf10f17dee36ef6d21eb97544a3ea682582edca3"
