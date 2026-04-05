@@ -1097,6 +1097,11 @@
     {
       "hash": "5a38ed6c555aae9f56899348bc104b18449b6781",
       "message": "Add linux_install.sh for Debian/Ubuntu setup and move build scripts to test/"
+    },
+    {
+      "hash": "44a928ef6d267a76ae35b047bcdce668914152d2",
+      "message": "Include linux_install.sh and LINUX_INSTALL.md in GitHub deploy scope",
+      "skipped": true
     }
   ],
   "last_build_hash": "00f4a918b3aef9826db2e4cf608e960d45731330"
