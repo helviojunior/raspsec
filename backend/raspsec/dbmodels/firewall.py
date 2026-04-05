@@ -78,6 +78,39 @@ class NatRule(Base):
         return f"{self.source_chain} -> {self.dest_chain} ({self.nat_type})"
 
 
+class ForwardingRule(Base):
+    """Port forwarding rules (DNAT + optional SNAT for source masquerade)."""
+
+    class Chain(models.TextChoices):
+        INTERNAL = "internal", "Internal"
+        IMPLANT = "implant", "Implant"
+        OUTSIDE = "outside", "Outside"
+
+    class Protocol(models.TextChoices):
+        TCP = "tcp", "TCP"
+        UDP = "udp", "UDP"
+        BOTH = "tcp_udp", "TCP+UDP"
+
+    source_chain = models.CharField(max_length=20, choices=Chain.choices)
+    dest_ip = models.CharField(max_length=50, help_text="Destination IP to match (e.g. 10.10.10.10)")
+    protocol = models.CharField(max_length=10, choices=Protocol.choices, default=Protocol.TCP)
+    ports = models.CharField(max_length=200, help_text="Comma-separated ports (e.g. 80,443,8080)")
+    forward_ip = models.CharField(max_length=50, help_text="Target host IP (e.g. 1.1.1.1)")
+    forward_port = models.CharField(max_length=50, blank=True, default="", help_text="Target port (empty = same as original)")
+    masquerade_source = models.BooleanField(default=False, help_text="Add SNAT rule to masquerade source IP")
+    priority = models.IntegerField(default=100)
+    description = models.CharField(max_length=200, blank=True, default="")
+
+    class Meta:
+        db_table = "raspsec_forwarding_rule"
+        ordering = ["priority"]
+        verbose_name = "Forwarding Rule"
+        verbose_name_plural = "Forwarding Rules"
+
+    def __str__(self):
+        return f"{self.source_chain} {self.dest_ip}:{self.ports} -> {self.forward_ip}:{self.forward_port or self.ports}"
+
+
 class ChainMapping(Base):
     """Maps network interfaces to firewall chains."""
 

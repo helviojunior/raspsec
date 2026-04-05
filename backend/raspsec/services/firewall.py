@@ -177,9 +177,57 @@ class FirewallService:
         FirewallService.apply()
 
     @staticmethod
+    def get_forwarding_rules():
+        from raspsec.dbmodels.firewall import ForwardingRule
+        return list(
+            ForwardingRule.objects.all()
+            .order_by("priority")
+            .values("id", "source_chain", "dest_ip", "protocol", "ports",
+                    "forward_ip", "forward_port", "masquerade_source",
+                    "priority", "description", "enabled")
+        )
+
+    @staticmethod
+    def save_forwarding_rule(data):
+        from raspsec.dbmodels.firewall import ForwardingRule
+        rule_id = data.get("id")
+        fields = {
+            "source_chain": data["source_chain"],
+            "dest_ip": data["dest_ip"],
+            "protocol": data.get("protocol", "tcp"),
+            "ports": data["ports"],
+            "forward_ip": data["forward_ip"],
+            "forward_port": data.get("forward_port", ""),
+            "masquerade_source": data.get("masquerade_source", False),
+            "priority": data.get("priority", 100),
+            "description": data.get("description", ""),
+            "enabled": data.get("enabled", True),
+        }
+        if rule_id:
+            ForwardingRule.objects.filter(id=rule_id).update(**fields)
+        else:
+            ForwardingRule.objects.filter().update(priority=models.F("priority") + 1)
+            fields["priority"] = 0
+            ForwardingRule.objects.create(**fields)
+        FirewallService.apply()
+
+    @staticmethod
+    def delete_forwarding_rule(rule_id):
+        from raspsec.dbmodels.firewall import ForwardingRule
+        ForwardingRule.objects.filter(id=rule_id).delete()
+        FirewallService.apply()
+
+    @staticmethod
+    def reorder_forwarding_rules(ordered_ids):
+        from raspsec.dbmodels.firewall import ForwardingRule
+        for i, rule_id in enumerate(ordered_ids):
+            ForwardingRule.objects.filter(id=rule_id).update(priority=i)
+        FirewallService.apply()
+
+    @staticmethod
     def apply():
         """Flush and rebuild all iptables rules from DB."""
-        from raspsec.dbmodels.firewall import ChainMapping, FirewallRule, NatRule
+        from raspsec.dbmodels.firewall import ChainMapping, FirewallRule, NatRule, ForwardingRule
 
         mappings = {m.interface: m.chain for m in ChainMapping.objects.all()}
         rules = FirewallRule.objects.filter(enabled=True).order_by("chain", "priority")
@@ -292,6 +340,39 @@ class FirewallService:
                             to_dest += f":{nat.dest_port}"
                         cmd += f" -j DNAT --to-destination {to_dest}"
                         Exec.execute(cmd, raise_error=False)
+
+        # ── Forwarding rules (DNAT + optional SNAT) ──
+        fwd_rules = ForwardingRule.objects.filter(enabled=True).order_by("priority")
+        for fwd in fwd_rules:
+            src_ifaces = [i for i, c in mappings.items() if c == fwd.source_chain]
+            protocols = ["tcp", "udp"] if fwd.protocol == "tcp_udp" else [fwd.protocol]
+
+            for proto in protocols:
+                for src_if in src_ifaces:
+                    # PREROUTING DNAT: redirect incoming traffic to forward target
+                    cmd = f"sudo /usr/sbin/iptables -t nat -A PREROUTING -i {src_if}"
+                    cmd += f" -d {fwd.dest_ip} -p {proto}"
+                    cmd += f" -m multiport --dports {fwd.ports}"
+                    to_dest = fwd.forward_ip
+                    if fwd.forward_port:
+                        to_dest += f":{fwd.forward_port}"
+                    cmd += f" -j DNAT --to-destination {to_dest}"
+                    Exec.execute(cmd, raise_error=False)
+
+                    # FORWARD: allow the DNATed traffic
+                    fwd_cmd = f"sudo /usr/sbin/iptables -A FORWARD -i {src_if}"
+                    fwd_cmd += f" -d {fwd.forward_ip} -p {proto}"
+                    fwd_cmd += f" -m multiport --dports {fwd.forward_port or fwd.ports}"
+                    fwd_cmd += " -j ACCEPT"
+                    Exec.execute(fwd_cmd, raise_error=False)
+
+                # POSTROUTING SNAT: masquerade the source IP so return traffic routes back
+                if fwd.masquerade_source:
+                    snat_cmd = f"sudo /usr/sbin/iptables -t nat -A POSTROUTING"
+                    snat_cmd += f" -d {fwd.forward_ip} -p {proto}"
+                    snat_cmd += f" -m multiport --dports {fwd.forward_port or fwd.ports}"
+                    snat_cmd += f" -j SNAT --to-source {fwd.dest_ip}"
+                    Exec.execute(snat_cmd, raise_error=False)
 
         # ── Save rules persistently ──
         Exec.execute("sudo /usr/sbin/iptables-save | sudo /usr/bin/tee /etc/iptables/rules.v4 > /dev/null", raise_error=False)

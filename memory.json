@@ -1085,6 +1085,10 @@
     {
       "hash": "1487b4e0f6b3578d38560344af8e03f38c92158b",
       "message": "Add new screenshots"
+    },
+    {
+      "hash": "a4c4858a76de1e3b47462676630cf415ad9da00d",
+      "message": "Add port forwarding tab to Firewall with DNAT and optional SNAT"
     }
   ],
   "last_build_hash": "1487b4e0f6b3578d38560344af8e03f38c92158b"

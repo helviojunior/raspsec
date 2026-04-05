@@ -12,6 +12,7 @@ class FirewallConfigView(APIView):
         return Response({
             "rules": FirewallService.get_rules(),
             "nat_rules": FirewallService.get_nat_rules(),
+            "forwarding_rules": FirewallService.get_forwarding_rules(),
             "chain_mappings": FirewallService.get_chain_mappings(),
         })
 
@@ -66,6 +67,31 @@ class NatRuleView(APIView):
         return Response({"detail": "Regra NAT removida com sucesso."})
 
 
+class ForwardingRuleView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        if not data.get("source_chain") or not data.get("dest_ip") or not data.get("ports") or not data.get("forward_ip"):
+            return Response({"detail": "Source chain, dest IP, ports and forward IP are required."}, status=400)
+        FirewallService.save_forwarding_rule(data)
+        return Response({"detail": "Forwarding rule saved."})
+
+    def put(self, request):
+        data = request.data
+        if not data.get("id"):
+            return Response({"detail": "Rule ID is required."}, status=400)
+        FirewallService.save_forwarding_rule(data)
+        return Response({"detail": "Forwarding rule updated."})
+
+    def delete(self, request):
+        rule_id = request.data.get("id") or request.query_params.get("id")
+        if not rule_id:
+            return Response({"detail": "Rule ID is required."}, status=400)
+        FirewallService.delete_forwarding_rule(rule_id)
+        return Response({"detail": "Forwarding rule deleted."})
+
+
 class FirewallReorderView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -76,6 +102,8 @@ class FirewallReorderView(APIView):
             return Response({"detail": "Lista de IDs é obrigatória."}, status=400)
         if rule_type == "nat":
             FirewallService.reorder_nat_rules(ordered_ids)
+        elif rule_type == "forwarding":
+            FirewallService.reorder_forwarding_rules(ordered_ids)
         else:
             FirewallService.reorder_rules(ordered_ids)
         return Response({"detail": "Ordem atualizada com sucesso."})

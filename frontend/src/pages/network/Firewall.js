@@ -9,7 +9,7 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Toggle } from "components/ui/toggle";
 import { cn } from "lib/utils";
-import { RulesIcon, NatIcon } from "components/icons";
+import { RulesIcon, NatIcon, ForwardingIcon } from "components/icons";
 
 const CHAINS = ["internal", "implant", "outside", "firewall"];
 const PROTOCOLS = ["any", "tcp", "udp", "icmp"];
@@ -145,18 +145,19 @@ export default function Firewall() {
   const tabs = [
     { id: "rules", label: t("firewall.tabs.rules"), icon: RulesIcon },
     { id: "nat", label: t("firewall.tabs.nat"), icon: NatIcon },
+    { id: "forwarding", label: t("firewall.tabs.forwarding"), icon: ForwardingIcon },
   ];
 
   return (
     <div className="animate-fade-in">
       <h1 className="text-2xl font-bold mb-6">{t("firewall.title")}</h1>
 
-      <div className="flex gap-1 mb-6 border-b border-border">
+      <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto scrollbar-thin">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
               activeTab === tab.id
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -170,6 +171,7 @@ export default function Firewall() {
 
       {activeTab === "rules" && <RulesTab />}
       {activeTab === "nat" && <NatTab />}
+      {activeTab === "forwarding" && <ForwardingTab />}
     </div>
   );
 }
@@ -841,6 +843,323 @@ function NatForm({ rule, onSave, onCancel }) {
           <div className="space-y-2 col-span-2">
             <Label>Description</Label>
             <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-4">
+          <Button onClick={handleSave} loading={saving} size="sm"><Save size={14} /> {form.id ? t("common.update") : t("common.create")}</Button>
+          <Button variant="outline" size="sm" onClick={onCancel}>{t("common.cancel")}</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+
+// ── Forwarding Tab ──
+
+const FWD_CHAINS = ["internal", "implant", "outside"];
+const FWD_PROTOCOLS = ["tcp", "udp", "tcp_udp"];
+
+function ForwardingTab() {
+  const { t } = useTranslation();
+  const [rules, setRules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editRule, setEditRule] = useState(null);
+  const [dirty, setDirty] = useState(false);
+  const [applying, setApplying] = useState(false);
+
+  const fetchRules = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get("/api/firewall/");
+      setRules(data.forwarding_rules || []);
+      setDirty(false);
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchRules(); }, [fetchRules]);
+
+  const deleteRule = async (id) => {
+    if (!window.confirm(t("firewall.confirmDeleteRule"))) return;
+    await api.delete("/api/firewall/forwarding/", { data: { id } });
+    setDirty(true);
+    fetchRules().then(() => setDirty(true));
+  };
+
+  const toggleRule = async (rule) => {
+    await api.put("/api/firewall/forwarding/", { ...rule, enabled: !rule.enabled });
+    setDirty(true);
+    fetchRules().then(() => setDirty(true));
+  };
+
+  const onSaved = () => {
+    setShowForm(false);
+    setEditRule(null);
+    setDirty(true);
+    fetchRules().then(() => setDirty(true));
+  };
+
+  const applyChanges = async () => {
+    setApplying(true);
+    try {
+      await api.post("/api/firewall/apply/");
+      setDirty(false);
+    } catch {
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const handleReorder = useCallback(async (fromIndex, toIndex) => {
+    const reordered = [...rules];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    await api.put("/api/firewall/reorder/", { type: "forwarding", ordered_ids: reordered.map(r => r.id) });
+    setDirty(true);
+    fetchRules().then(() => setDirty(true));
+  }, [rules, fetchRules]);
+
+  const {
+    tableRef, rowRefs, handleMouseDown,
+    isDragging, dragId, getDragIndex, getDropIndex, ghostStyle, dragState, reordering,
+  } = useDragReorder({
+    items: rules,
+    onReorder: handleReorder,
+  });
+
+  const dragIdx = getDragIndex();
+  const dropIdx = getDropIndex();
+
+  const renderRow = (rule, i, isGhost = false) => {
+    const startDrag = (e) => {
+      if (e.target.closest("button, [role='switch'], input, select")) return;
+      handleMouseDown(e, i, rule.id);
+    };
+    return (
+      <tr
+        key={isGhost ? `ghost-${rule.id}` : rule.id}
+        ref={isGhost ? undefined : (el) => { rowRefs.current[i] = el; }}
+        onMouseDown={isGhost ? undefined : startDrag}
+        className={cn(
+          "border-b border-border/50 transition-all",
+          !rule.enabled && "opacity-40",
+          isGhost && "bg-primary/10 border-primary/30 shadow-lg shadow-primary/10 rounded",
+          !isGhost && isDragging && dragId === rule.id && "opacity-0 h-0 overflow-hidden border-none",
+          !isGhost && !isDragging && "hover:bg-muted/20 cursor-grab",
+          !isGhost && isDragging && "cursor-grabbing",
+        )}
+      >
+        <td className="py-2 px-1 text-center">
+          <GripVertical size={14} className={cn("mx-auto transition-colors", isDragging && dragId === rule.id ? "text-primary" : "text-muted-foreground/50")} />
+        </td>
+        <td className={cn("py-2 px-3 font-medium capitalize", chainColor[rule.source_chain])}>{rule.source_chain}</td>
+        <td className="py-2 px-3 text-foreground font-mono">{rule.dest_ip}</td>
+        <td className="py-2 px-3 text-foreground uppercase text-xs">{rule.protocol === "tcp_udp" ? "TCP+UDP" : rule.protocol.toUpperCase()}</td>
+        <td className="py-2 px-3 text-foreground font-mono">{rule.ports}</td>
+        <td className="py-2 px-3 text-muted-foreground text-center"><ArrowRightLeft size={14} className="inline" /></td>
+        <td className="py-2 px-3 text-foreground font-mono">{rule.forward_ip}{rule.forward_port ? `:${rule.forward_port}` : ""}</td>
+        <td className="py-2 px-3 text-center">
+          {rule.masquerade_source && (
+            <span className="px-2 py-0.5 rounded text-xs font-medium border bg-amber-500/15 text-amber-400 border-amber-500/30">SNAT</span>
+          )}
+        </td>
+        <td className="py-2 px-3 text-muted-foreground">{rule.description}</td>
+        <td className="py-2 px-3">
+          {!isGhost && (
+            <div className="flex items-center justify-center gap-1">
+              <Toggle checked={rule.enabled} onChange={() => toggleRule(rule)} className="scale-75" />
+              <button onClick={() => { setEditRule(rule); setShowForm(true); }} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title={t("firewall.editTooltip")}><Pencil size={13} /></button>
+              <button onClick={() => deleteRule(rule.id)} className="p-1 text-muted-foreground hover:text-red-500 transition-colors" title={t("firewall.removeTooltip")}><Trash2 size={13} /></button>
+            </div>
+          )}
+        </td>
+      </tr>
+    );
+  };
+
+  const DropIndicator = () => (
+    <tr><td colSpan={10} className="p-0">
+      <div className="h-1 bg-primary rounded-full mx-2 my-0.5 shadow-sm shadow-primary/50" />
+    </td></tr>
+  );
+
+  const renderRows = () => {
+    if (!isDragging) return rules.map((rule, i) => renderRow(rule, i));
+    const rows = [];
+    for (let i = 0; i < rules.length; i++) {
+      if (i === dropIdx && dragIdx > dropIdx) rows.push(<DropIndicator key="drop-indicator" />);
+      rows.push(renderRow(rules[i], i));
+      if (i === dropIdx && dragIdx < dropIdx) rows.push(<DropIndicator key="drop-indicator" />);
+    }
+    return rows;
+  };
+
+  return (
+    <div className="space-y-6">
+      {dirty && (
+        <div className="flex items-center justify-between p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
+          <span>{t("firewall.pendingChanges")}</span>
+          <Button size="sm" onClick={applyChanges} loading={applying}>
+            <ShieldCheck size={14} /> {t("common.apply")}
+          </Button>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={fetchRules} loading={loading}>
+          <RefreshCw size={14} /> {t("common.refresh")}
+        </Button>
+        <Button size="sm" onClick={() => { setEditRule(null); setShowForm(true); }}>
+          <Plus size={14} /> {t("firewall.newForwardingRule")}
+        </Button>
+      </div>
+
+      {showForm && (
+        <ForwardingForm
+          rule={editRule}
+          onSave={onSaved}
+          onCancel={() => { setShowForm(false); setEditRule(null); }}
+        />
+      )}
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-lg font-semibold">{t("firewall.forwardingTitle")}</h2>
+        </CardHeader>
+        <CardContent className="relative">
+          {reordering && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/80 rounded-md backdrop-blur-sm">
+              <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+            </div>
+          )}
+
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[800px]" ref={tableRef}>
+            <thead>
+              <tr className="border-b border-border text-muted-foreground">
+                <th className="w-8"></th>
+                <th className="text-left py-2 px-3 font-medium">{t("firewall.sourceChain")}</th>
+                <th className="text-left py-2 px-3 font-medium">{t("firewall.destIp")}</th>
+                <th className="text-left py-2 px-3 font-medium">Protocol</th>
+                <th className="text-left py-2 px-3 font-medium">{t("firewall.ports")}</th>
+                <th className="text-center py-2 px-3 font-medium"></th>
+                <th className="text-left py-2 px-3 font-medium">{t("firewall.forwardIp")}</th>
+                <th className="text-center py-2 px-3 font-medium">SNAT</th>
+                <th className="text-left py-2 px-3 font-medium">Description</th>
+                <th className="text-center py-2 px-3 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {renderRows()}
+              {rules.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={10} className="py-6 text-center text-muted-foreground">
+                    {t("firewall.noForwardingRules")}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          </div>
+
+          {isDragging && dragState && rules[dragState.origIndex] && createPortal(
+            <div style={ghostStyle}>
+              <table className="w-full text-sm border border-primary/30 rounded-md bg-card shadow-xl shadow-primary/20">
+                <tbody>
+                  {renderRow(rules[dragState.origIndex], dragState.origIndex, true)}
+                </tbody>
+              </table>
+            </div>,
+            document.body
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+
+function ForwardingForm({ rule, onSave, onCancel }) {
+  const { t } = useTranslation();
+  const [form, setForm] = useState({
+    source_chain: rule?.source_chain || "outside",
+    dest_ip: rule?.dest_ip || "",
+    protocol: rule?.protocol || "tcp",
+    ports: rule?.ports || "",
+    forward_ip: rule?.forward_ip || "",
+    forward_port: rule?.forward_port || "",
+    masquerade_source: rule?.masquerade_source || false,
+    description: rule?.description || "",
+    id: rule?.id || null,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (form.id) {
+        await api.put("/api/firewall/forwarding/", form);
+      } else {
+        await api.post("/api/firewall/forwarding/", form);
+      }
+      onSave();
+    } catch {
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <Label>{t("firewall.sourceChain")}</Label>
+            <select value={form.source_chain} onChange={(e) => setForm({ ...form, source_chain: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">
+              {FWD_CHAINS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t("firewall.destIp")}</Label>
+            <Input value={form.dest_ip} onChange={(e) => setForm({ ...form, dest_ip: e.target.value })} placeholder="10.10.10.10" className="font-mono" />
+            <p className="text-[10px] text-muted-foreground">{t("firewall.destIpHelp")}</p>
+          </div>
+          <div className="space-y-2">
+            <Label>Protocol</Label>
+            <select value={form.protocol} onChange={(e) => setForm({ ...form, protocol: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm">
+              {FWD_PROTOCOLS.map((p) => <option key={p} value={p}>{p === "tcp_udp" ? "TCP+UDP" : p.toUpperCase()}</option>)}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t("firewall.ports")}</Label>
+            <Input value={form.ports} onChange={(e) => setForm({ ...form, ports: e.target.value })} placeholder="80,443,8080" className="font-mono" />
+            <p className="text-[10px] text-muted-foreground">{t("firewall.portsHelp")}</p>
+          </div>
+          <div className="space-y-2">
+            <Label>{t("firewall.forwardIp")}</Label>
+            <Input value={form.forward_ip} onChange={(e) => setForm({ ...form, forward_ip: e.target.value })} placeholder="1.1.1.1" className="font-mono" />
+          </div>
+          <div className="space-y-2">
+            <Label>{t("firewall.forwardPort")}</Label>
+            <Input value={form.forward_port} onChange={(e) => setForm({ ...form, forward_port: e.target.value })} placeholder="8080" className="font-mono" />
+            <p className="text-[10px] text-muted-foreground">{t("firewall.forwardPortHelp")}</p>
+          </div>
+          <div className="space-y-2 col-span-1 sm:col-span-2">
+            <Label>Description</Label>
+            <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
+        </div>
+        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
+          <div className="flex items-center gap-2">
+            <Toggle checked={form.masquerade_source} onChange={(v) => setForm({ ...form, masquerade_source: v })} />
+            <div>
+              <span className="text-sm font-medium">{t("firewall.masqueradeSource")}</span>
+              <p className="text-[10px] text-muted-foreground">{t("firewall.masqueradeSourceHelp")}</p>
+            </div>
           </div>
         </div>
         <div className="flex gap-2 mt-4">

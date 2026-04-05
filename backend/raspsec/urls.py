@@ -11,7 +11,7 @@ from raspsec.views.usb_gadget import UsbGadgetConfigView, UsbGadgetToggleView, U
 from raspsec.views.shell import ShellExecView, ShellInfoView
 from raspsec.views.netstat import NetworkStatusView, GatewayConfigView
 from raspsec.views.dns import DnsConfigView, DnsSyncView, DnsServersView
-from raspsec.views.firewall import FirewallConfigView, FirewallRuleView, NatRuleView, FirewallReorderView, FirewallApplyView
+from raspsec.views.firewall import FirewallConfigView, FirewallRuleView, NatRuleView, ForwardingRuleView, FirewallReorderView, FirewallApplyView
 from raspsec.views.vlan import VlanConfigView, VlanView, VlanApplyView
 from raspsec.views.devices import (
     DevicesView, DeviceToggleView, DeviceMacView, DeviceChainView,
@@ -81,6 +81,7 @@ urlpatterns = [
     path('api/firewall/', FirewallConfigView.as_view(), name='firewall-config'),
     path('api/firewall/rule/', FirewallRuleView.as_view(), name='firewall-rule'),
     path('api/firewall/nat/', NatRuleView.as_view(), name='firewall-nat'),
+    path('api/firewall/forwarding/', ForwardingRuleView.as_view(), name='firewall-forwarding'),
     path('api/firewall/reorder/', FirewallReorderView.as_view(), name='firewall-reorder'),
     path('api/firewall/apply/', FirewallApplyView.as_view(), name='firewall-apply'),
 
